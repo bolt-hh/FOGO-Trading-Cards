@@ -2164,7 +2164,17 @@ const setHint = (msg, cls) => {
 };
 
 // Called by the AppKit account subscription when a wallet connects
+// Guard: track which address we've already signed for to prevent re-signing
+// on AppKit's multiple subscription firings
+window._reownSignedAddress = null;
+
 window.handleReownConnection = async function(pubkey) {
+  // Already signed for this address this session — do nothing
+  if (window._reownSignedAddress === pubkey) return;
+  // Already in the middle of signing — do nothing
+  if (window._reownSigningInProgress) return;
+  window._reownSigningInProgress = true;
+
   // Disable connect button to prevent double-fire
   const btn = document.getElementById('reown-connect-btn');
   if (btn) btn.disabled = true;
@@ -2193,6 +2203,8 @@ window.handleReownConnection = async function(pubkey) {
     const sigBytes = signed?.signature ?? signed;
     signature = btoa(String.fromCharCode(...sigBytes));
   } catch (signErr) {
+    window._reownSigningInProgress = false; // release lock so user can retry
+    window._reownSignedAddress = null;
     window.handleReownDisconnection();
     showAppErr('Signature declined. You must sign to prove wallet ownership — no fees, no transaction.');
     return;
@@ -2205,6 +2217,10 @@ window.handleReownConnection = async function(pubkey) {
   STATE.signature       = signature;
   STATE.sig_nonce       = nonce;
 
+  // Mark this address as signed — prevents re-signing on AppKit re-fires
+  window._reownSignedAddress = pubkey;
+  window._reownSigningInProgress = false;
+
   document.getElementById('wallet-verified-badge').textContent = '✓ VERIFIED';
   setHint('Wallet ownership verified.', 'verified');
 
@@ -2215,6 +2231,8 @@ window.handleReownConnection = async function(pubkey) {
 
 // Called by AppKit when wallet disconnects, or manually
 window.handleReownDisconnection = function() {
+  window._reownSignedAddress = null;
+  window._reownSigningInProgress = false;
   document.getElementById('wallet-not-connected').style.display = 'block';
   document.getElementById('wallet-is-connected').style.display  = 'none';
   document.getElementById('wallet-connected-addr').textContent  = '—';
