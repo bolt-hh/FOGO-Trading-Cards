@@ -2681,16 +2681,14 @@ function filterSubmissions() {
 async function deleteEntry(id) {
   if (!id) return;
   if (!confirm('Delete this entry? This cannot be undone.')) return;
-  try {
-    if (db) {
-      await db.from('card_submissions').delete().eq('id', id);
-    }
-    // Remove from local state and re-render
-    STATE.allSubmissions = STATE.allSubmissions.filter(r => String(r.id) !== String(id));
-    renderSubmissionsTable(STATE.allSubmissions);
-  } catch(e) {
-    alert('Delete failed: ' + (e.message || e));
+  if (!db) { alert('Database not connected.'); return; }
+  const { error } = await db.from('card_submissions').delete().eq('id', id);
+  if (error) {
+    alert('Delete failed: ' + error.message);
+    return;
   }
+  STATE.allSubmissions = STATE.allSubmissions.filter(r => String(r.id) !== String(id));
+  renderSubmissionsTable(STATE.allSubmissions);
 }
 
 function toggleSelectAll(checkbox) {
@@ -2719,18 +2717,18 @@ async function deleteSelectedEntries() {
   const selected = Array.from(document.querySelectorAll('.entry-checkbox:checked'));
   if (!selected.length) return;
   if (!confirm(`Delete ${selected.length} selected entries? This cannot be undone.`)) return;
+  if (!db) { alert('Database not connected.'); return; }
   const ids = selected.map(el => el.getAttribute('data-id'));
-  try {
-    for (const id of ids) {
-      if (db) await db.from('card_submissions').delete().eq('id', id);
-      STATE.allSubmissions = STATE.allSubmissions.filter(r => String(r.id) !== String(id));
-    }
-    renderSubmissionsTable(STATE.allSubmissions);
-    const btn = document.getElementById('adminDeleteSelectedBtn');
-    if (btn) btn.classList.remove('visible');
-  } catch(e) {
-    alert('Bulk delete failed: ' + (e.message || e));
+  const failed = [];
+  for (const id of ids) {
+    const { error } = await db.from('card_submissions').delete().eq('id', id);
+    if (error) { failed.push(id); }
+    else { STATE.allSubmissions = STATE.allSubmissions.filter(r => String(r.id) !== String(id)); }
   }
+  renderSubmissionsTable(STATE.allSubmissions);
+  const btn = document.getElementById('adminDeleteSelectedBtn');
+  if (btn) btn.classList.remove('visible');
+  if (failed.length) alert(`${failed.length} entries could not be deleted.`);
 }
 
 /* ================================================================
