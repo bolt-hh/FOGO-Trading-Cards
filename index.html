@@ -7,7 +7,95 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath fill='%23ff3d00' d='M512 0A512 512 0 0 0 0 512a512 512 0 0 0 512 512 512 512 0 0 0 512-512A512 512 0 0 0 512 0Z'/%3E%3Cpath fill='%23fff' d='M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z'/%3E%3C%2Fsvg%3E">
 <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js">
+/* ================================================================
+   PARTICLE SYSTEM
+================================================================ */
+function initParticles() {
+  const canvas = document.getElementById('particle-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  const PARTICLE_COUNT = 50;
+  const particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor(fire) {
+      this.fire = fire;
+      this.reset();
+    }
+    reset() {
+      if (this.fire) {
+        this.x = Math.random() * W;
+        this.y = H + Math.random() * 60;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = -(0.4 + Math.random() * 0.9);
+        this.life = 0;
+        this.maxLife = 80 + Math.random() * 80;
+        this.r = 2 + Math.random() * 3;
+        // fire color: orange to red
+        const hue = 10 + Math.random() * 30;
+        this.color = `hsl(${hue},100%,55%)`;
+      } else {
+        this.x = Math.random() * W;
+        this.y = Math.random() * H;
+        this.vx = (Math.random() - 0.5) * 0.18;
+        this.vy = (Math.random() - 0.5) * 0.18;
+        this.life = Math.random() * 200;
+        this.maxLife = 200 + Math.random() * 200;
+        this.r = 1 + Math.random() * 2;
+        const g = Math.floor(200 + Math.random() * 55);
+        this.color = `rgb(${Math.floor(g*0.75)},${g},${Math.floor(g*0.65)})`;
+      }
+    }
+    update() {
+      this.x  += this.vx;
+      this.y  += this.vy;
+      this.life++;
+      if (this.fire) {
+        this.vx += (Math.random() - 0.5) * 0.06;
+        if (this.life > this.maxLife || this.y < H * 0.6) this.reset();
+      } else {
+        if (this.x < 0) this.x = W;
+        if (this.x > W) this.x = 0;
+        if (this.y < 0) this.y = H;
+        if (this.y > H) this.y = 0;
+      }
+    }
+    draw() {
+      const alpha = this.fire
+        ? Math.min(1, (this.life / 20)) * (1 - this.life / this.maxLife) * 0.65
+        : (0.15 + 0.15 * Math.sin(this.life * 0.04));
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.globalAlpha = alpha;
+      ctx.fill();
+    }
+  }
+
+  // Create mix of ambient + fire particles
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push(new Particle(i < 18)); // 18 fire, rest ambient
+  }
+
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image-more/3.4.1/dom-to-image-more.min.js"></script>
 <style>
 /* ================================================================
@@ -389,8 +477,8 @@ body::before{
    CARD WRAP + THE CARD
 ================================================================ */
 .card-wrap{display:none;}
-.card-wrap.on{display:block;animation:cardIn 0.55s cubic-bezier(0.16,1,0.3,1) forwards;}
-@keyframes cardIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.card-wrap.on{display:flex;justify-content:center;animation:cardIn 0.55s cubic-bezier(0.16,1,0.3,1) forwards;}
+@keyframes cardIn{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:none}}
 
 /* Locked state (below minimum volume) */
 .card-locked{
@@ -423,13 +511,16 @@ body::before{
 .eco-link-name{font-size:11px;font-weight:600;color:var(--text);display:block;}
 .eco-link-type{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--dim);margin-top:2px;letter-spacing:0.1em;text-transform:uppercase;}
 
-/* THE CARD */
+/* THE CARD — 9:16 portrait */
 .trader-card{
   position:relative;overflow:hidden;
   background:var(--panel);
-  border:1px solid rgba(213,235,213,0.1);
-  box-shadow:0 0 0 1px rgba(255,255,255,0.02),0 32px 90px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.03);
-  border-radius:2px;
+  width:360px;
+  aspect-ratio:9/16;
+  border:1px solid rgba(213,235,213,0.15);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.03),0 0 60px rgba(255,61,0,0.18),0 32px 90px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.04);
+  border-radius:10px;
+  flex-shrink:0;
 }
 .card-glow{
   position:absolute;bottom:-80px;left:50%;transform:translateX(-50%);
@@ -469,7 +560,7 @@ body::before{
 }
 .card-handle{
   font-family:'Clash Display',sans-serif;
-  font-size:clamp(22px,5vw,30px);font-weight:700;
+  font-size:clamp(24px,5vw,34px);font-weight:700;
   color:var(--text);letter-spacing:-0.02em;line-height:1;
   word-break:break-all;
 }
@@ -479,7 +570,7 @@ body::before{
   border-radius:2px;
 }
 .vol-num{
-  font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;
+  font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;
   color:var(--lime);line-height:1;text-shadow:0 0 20px var(--lime-glow);
   white-space:nowrap;
 }
@@ -491,7 +582,7 @@ body::before{
 .card-role{padding:14px 18px;display:flex;align-items:center;gap:12px;}
 .role-icon{font-size:26px;line-height:1;flex-shrink:0;}
 .role-name{
-  font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;
+  font-family:'Clash Display',sans-serif;font-size:20px;font-weight:700;
   color:var(--text);line-height:1;margin-bottom:4px;
 }
 .role-desc{font-size:11px;color:var(--dim);line-height:1.5;}
@@ -510,7 +601,7 @@ body::before{
 .proto-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;}
 
 /* Stats */
-.stats-grid{padding:0 18px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.stats-grid{padding:0 18px 14px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
 .stat{background:var(--panel2);border:1px solid var(--border);padding:11px 12px;border-radius:2px;transition:border-color 0.15s;overflow:hidden;}
 .stat:hover{border-color:rgba(195,251,165,0.2);}
 .s-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -1022,9 +1113,165 @@ body::before{
   .vol-num{font-size:16px;}
   .role-name{font-size:15px;}
 }
+
+/* ================================================================
+   GATE CTA BUTTON
+================================================================ */
+.btn-gate-cta{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--lime);border:none;
+  color:#070520;font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:800;letter-spacing:0.18em;
+  text-transform:uppercase;padding:18px 36px;cursor:pointer;
+  transition:all 0.18s;border-radius:6px;position:relative;overflow:hidden;
+  box-shadow:0 4px 28px rgba(195,251,165,0.20);
+}
+.btn-gate-cta:hover{background:#D4FDB8;box-shadow:0 6px 40px rgba(195,251,165,0.35);transform:translateY(-1px);}
+
+/* ================================================================
+   GATE HEADLINE SHIMMER
+================================================================ */
+.gate-headline span{
+  animation:headline-shimmer 4s ease-in-out infinite;
+}
+@keyframes headline-shimmer{
+  0%,100%{filter:brightness(1);}
+  50%{filter:brightness(1.18) drop-shadow(0 0 12px rgba(255,140,0,0.45));}
+}
+
+/* ================================================================
+   KOL SELECTOR PANEL
+================================================================ */
+.kol-selector-panel{
+  background:var(--panel);border:1px solid rgba(195,251,165,0.25);
+  border-radius:10px;padding:22px;margin-top:14px;
+  position:relative;
+}
+.kol-selector-panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--fire),var(--ember),var(--lime));
+  border-radius:10px 10px 0 0;
+}
+.kol-selector-head{
+  font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;
+  color:var(--text);margin-bottom:6px;
+}
+.kol-selector-sub{
+  font-size:11px;color:var(--dim);margin-bottom:16px;line-height:1.6;
+}
+.kol-selector-field{margin-bottom:14px;}
+.kol-select{
+  width:100%;background:var(--panel2);border:1px solid var(--border);
+  color:var(--text);font-family:'JetBrains Mono',monospace;
+  font-size:12px;padding:12px 14px;outline:none;
+  transition:border-color 0.15s;border-radius:4px;cursor:pointer;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23D5EBD5' stroke-opacity='.5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+  padding-right:36px;
+}
+.kol-select:focus{border-color:rgba(195,251,165,0.4);}
+.btn-kol-continue{
+  width:100%;background:linear-gradient(90deg,var(--fire),var(--ember));
+  border:none;color:#fff;font-family:'Inter',sans-serif;
+  font-size:12px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;
+  padding:15px;cursor:pointer;transition:all 0.15s;border-radius:6px;
+}
+.btn-kol-continue:hover:not(:disabled){filter:brightness(1.1);box-shadow:0 4px 22px rgba(255,80,0,0.30);}
+.btn-kol-continue:disabled{opacity:0.35;cursor:not-allowed;}
+
+/* ================================================================
+   STEP CARDS STAGGER ANIMATION
+================================================================ */
+.step-card{
+  animation:stepFadeIn 0.5s ease both;
+}
+.step-card:nth-child(1){animation-delay:0.05s;}
+.step-card:nth-child(2){animation-delay:0.12s;}
+.step-card:nth-child(3){animation-delay:0.19s;}
+.step-card:nth-child(4){animation-delay:0.26s;}
+@keyframes stepFadeIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+/* ================================================================
+   RAFFLE ENTER BUTTON GLOW PULSE (when enabled)
+================================================================ */
+.raffle-enter-btn:not(:disabled){
+  animation:raffle-glow 2.2s ease-in-out infinite;
+}
+@keyframes raffle-glow{
+  0%,100%{box-shadow:0 0 0 0 rgba(195,251,165,0);}
+  50%{box-shadow:0 0 0 6px rgba(195,251,165,0.15),0 4px 28px rgba(195,251,165,0.20);}
+}
+
+/* ================================================================
+   PROTO PILLS STAGGER
+================================================================ */
+.proto-pill{
+  animation:pillIn 0.4s ease both;
+}
+.proto-pill:nth-child(1){animation-delay:0s;}
+.proto-pill:nth-child(2){animation-delay:0.07s;}
+.proto-pill:nth-child(3){animation-delay:0.14s;}
+.proto-pill:nth-child(4){animation-delay:0.21s;}
+.proto-pill:nth-child(5){animation-delay:0.28s;}
+@keyframes pillIn{from{opacity:0;transform:scale(0.85);}to{opacity:1;transform:scale(1);}}
+
+/* ================================================================
+   PARTICLE CANVAS
+================================================================ */
+#particle-canvas{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0.6;
+}
+
+/* ================================================================
+   ADMIN — KOL MANAGEMENT TAB
+================================================================ */
+.kol-mgmt-form{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;
+}
+.kol-mgmt-form .field{margin-bottom:0;}
+.kol-table-full{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px;}
+.kol-table-full th{font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim);padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;}
+.kol-table-full td{padding:9px 10px;color:var(--sub);border-bottom:1px solid rgba(213,235,213,0.04);white-space:nowrap;}
+.kol-table-full tr:hover td{background:rgba(255,255,255,0.015);}
+.kol-table-full td.hi{color:var(--lime);font-weight:600;}
+.btn-toggle-kol{
+  background:rgba(195,251,165,0.07);border:1px solid rgba(195,251,165,0.25);
+  color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.08em;padding:4px 10px;cursor:pointer;border-radius:2px;
+  transition:all 0.15s;
+}
+.btn-toggle-kol:hover{background:rgba(195,251,165,0.14);}
+.btn-copy-link{
+  background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);
+  color:var(--ember);font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.08em;padding:4px 10px;cursor:pointer;border-radius:2px;
+  transition:all 0.15s;
+}
+.btn-copy-link:hover{background:rgba(255,61,0,0.15);}
+
+/* ================================================================
+   ADMIN — DASHBOARD TAB
+================================================================ */
+.dash-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.dash-stat{background:var(--panel);border:1px solid var(--border);padding:18px 16px;border-radius:4px;}
+.dash-stat-val{font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;color:var(--text);line-height:1;margin-bottom:5px;}
+.dash-stat-val.fire{background:linear-gradient(90deg,var(--fire),var(--lime));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.dash-stat-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim);}
+.dash-kol-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px;margin-bottom:20px;}
+.dash-kol-table th{font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim);padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;}
+.dash-kol-table td{padding:9px 10px;color:var(--sub);border-bottom:1px solid rgba(213,235,213,0.04);}
+.dash-kol-table td.hi{color:var(--lime);font-weight:600;}
+.bar-chart-wrap{display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:10px;}
+.bar-chart-bar{flex:1;background:linear-gradient(0deg,var(--fire),var(--ember));border-radius:2px 2px 0 0;min-height:2px;transition:height 0.3s ease;}
+.bar-chart-label{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--dim);text-align:center;margin-top:4px;white-space:nowrap;}
+.bar-chart-outer{display:flex;flex-direction:column;}
+@media(max-width:640px){.dash-stats-grid{grid-template-columns:1fr 1fr;}}
+
 </style>
 </head>
 <body>
+<canvas id="particle-canvas"></canvas>
 <div class="bg-layer bg-mesh-fire"></div>
 <div class="bg-layer bg-mesh-lime"></div>
 <div class="fire-bg"></div>
@@ -1092,16 +1339,15 @@ body::before{
       <div class="gate-eyebrow" id="t-gate-eyebrow">FOGO Community Activation</div>
       <h1 class="gate-headline" id="t-gate-headline">Prove Your<br><span id="t-gate-headline-span">Chain Presence</span></h1>
       <p class="gate-sub" id="t-gate-sub">Connect your SVM wallet to reveal your FOGO Trader Card. Exclusive to traders who've deployed capital on the FOGO ecosystem.</p>
+      <div style="margin-top:36px;">
+        <button class="btn-gate-cta" onclick="showView('view-app')">
+          <span class="btn-sheen"></span>
+          <span id="t-gate-btn">Connect Your Wallet →</span>
+        </button>
+      </div>
     </div>
-    <!-- Right: passcode form + tiers -->
+    <!-- Right: tier grid -->
     <div class="gate-card">
-      <label class="gate-form-label" id="t-gate-label">KOL Passcode</label>
-      <div id="gate-err" class="err-box" data-en="Invalid passcode. Check with your KOL and try again." data-ko="잘못된 패스코드입니다. KOL에게 확인하고 다시 시도하세요.">Invalid passcode. Check with your KOL and try again.</div>
-      <input class="gate-input" id="gate-code" type="text" placeholder="Enter passcode from your KOL..." autocomplete="off" spellcheck="false">
-      <button class="btn-primary" id="gate-btn" onclick="validatePasscode()">
-        <span class="btn-sheen"></span>
-        <span id="t-gate-btn">Unlock Trader Card</span>
-      </button>
       <div class="gate-divider"><span class="gate-divider-txt" id="t-gate-divider">Trader Tiers</span></div>
       <div class="gate-tiers" id="gate-tiers-grid">
         <div class="gate-tier"><span class="gate-tier-icon">⚡</span><div class="gate-tier-name" id="t-tier-1">Spot Accumulator</div><div class="gate-tier-range">$100+</div></div>
@@ -1199,7 +1445,7 @@ body::before{
           This card reads your live on-chain activity from the FOGO network (mainnet.fogo.io). Volume is aggregated across Ambient, Valiant, Brasa, Pyron, Ignition, and FogoLend. Minimum $100 in FOGO ecosystem volume required to generate a card.
         </div>
         <div style="text-align:left;margin-top:10px;">
-          <button onclick="resetAndGoHome()" style="background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer;padding:0;letter-spacing:0.05em;font-family:inherit;">← Change Passcode</button>
+          <button onclick="resetAndGoHome()" style="background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer;padding:0;letter-spacing:0.05em;font-family:inherit;" id="t-back-btn">← Back</button>
         </div>
       </div><!-- /.app-left -->
 
@@ -1385,6 +1631,24 @@ body::before{
         </div>
       </div>
 
+
+      <!-- KOL Selector — mandatory before raffle -->
+      <div id="kol-selector-panel" class="kol-selector-panel" style="display:none;">
+        <div class="kol-selector-head" id="t-kol-selector-head">Who referred you?</div>
+        <div class="kol-selector-sub" id="t-kol-selector-sub">Select the KOL who shared this campaign with you to continue.</div>
+        <div class="kol-selector-field">
+          <select class="kol-select" id="kol-select" onchange="onKolSelectChange()">
+            <option value="" id="t-kol-placeholder">— Select a KOL —</option>
+          </select>
+          <div id="kol-fallback-wrap" style="display:none;margin-top:10px;">
+            <input class="field-input" id="kol-fallback-input" type="text" placeholder="Enter KOL handle..." style="width:100%;" oninput="onKolFallbackInput()">
+          </div>
+        </div>
+        <button class="btn-kol-continue" id="kol-continue-btn" onclick="confirmKolSelection()" disabled>
+          <span id="t-kol-continue-btn">Continue →</span>
+        </button>
+      </div>
+
       <!-- Raffle entry flow (eligible wallets only) -->
       <div id="eligible-entry" style="display:none;">
 
@@ -1471,6 +1735,35 @@ body::before{
         </div>
       </div>
 
+      <!-- Admin Tabs -->
+      <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;">
+        <button class="admin-tab active" id="tab-dashboard" onclick="switchAdminTab('dashboard')">Dashboard</button>
+        <button class="admin-tab" id="tab-entries" onclick="switchAdminTab('entries')">All Entries</button>
+        <button class="admin-tab" id="tab-kols" onclick="switchAdminTab('kols')">KOLs</button>
+        <button class="admin-tab" id="tab-tester" onclick="switchAdminTab('tester')">Card Tester</button>
+        <button class="admin-tab" id="tab-config" onclick="switchAdminTab('config')">Config</button>
+      </div>
+
+      <!-- ── DASHBOARD TAB ───────────────────────────────────────── -->
+      <div id="admin-panel-dashboard" class="admin-panel-section">
+        <div class="dash-stats-grid" id="dash-stats-grid">
+          <div class="dash-stat"><div class="dash-stat-val fire" id="dash-total">0</div><div class="dash-stat-lbl">Total Entries</div></div>
+          <div class="dash-stat"><div class="dash-stat-val" id="dash-wallets">0</div><div class="dash-stat-lbl">Unique Wallets</div></div>
+          <div class="dash-stat"><div class="dash-stat-val" id="dash-bonus">0</div><div class="dash-stat-lbl">Bonus Entries</div></div>
+          <div class="dash-stat"><div class="dash-stat-val" id="dash-vol">$0</div><div class="dash-stat-lbl">Total Volume</div></div>
+        </div>
+        <div class="admin-section-full" style="margin-bottom:16px;">
+          <div class="admin-section-head">Entries by KOL</div>
+          <div id="dash-kol-breakdown"><div class="empty-state">Loading...</div></div>
+        </div>
+        <div class="admin-section-full">
+          <div class="admin-section-head">Entries by Day — Last 14 Days</div>
+          <div id="dash-day-chart"><div class="empty-state">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- ── ENTRIES TAB ────────────────────────────────────────── -->
+      <div id="admin-panel-entries" class="admin-panel-section" style="display:none;">
       <!-- Stats tiles -->
       <div class="stats-tiles">
         <div class="stat-tile">
@@ -1553,7 +1846,30 @@ body::before{
         </div>
       </div>
 
+      </div><!-- /#admin-panel-entries -->
+
+      <!-- ── KOLs TAB ──────────────────────────────────────────── -->
+      <div id="admin-panel-kols" class="admin-panel-section" style="display:none;">
+        <div class="admin-section-full">
+          <div class="admin-section-head">Add KOL</div>
+          <div class="kol-mgmt-form">
+            <div class="field"><label class="field-label">Name</label><input class="field-input" id="kol-add-name" type="text" placeholder="e.g. CryptoWhale"></div>
+            <div class="field"><label class="field-label">Handle (optional)</label><input class="field-input" id="kol-add-handle" type="text" placeholder="@handle"></div>
+          </div>
+          <button class="btn-small" onclick="addKol()">+ Add KOL</button>
+          <div id="kol-add-success" style="display:none;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lime);"></div>
+        </div>
+        <div class="admin-section-full">
+          <div class="admin-section-head">
+            All KOLs
+            <button class="btn-small" onclick="refreshAdmin()" style="font-size:9px;padding:5px 10px;">↻ Refresh</button>
+          </div>
+          <div id="kol-mgmt-table-wrap"><div class="empty-state">Loading...</div></div>
+        </div>
+      </div><!-- /#admin-panel-kols -->
+
       <!-- ── CARD TESTER ─────────────────────────────────────────── -->
+      <div id="admin-panel-tester" class="admin-panel-section" style="display:none;">
       <div class="admin-section-full" id="card-tester-section">
         <div class="admin-section-head">
           🧪 Card Tester
@@ -1599,6 +1915,11 @@ body::before{
         <div class="db-preview" id="db-preview">Select a tier above to preview the DB row...</div>
       </div>
 
+      </div><!-- /#card-tester-section -->
+      </div><!-- /#admin-panel-tester -->
+
+      <!-- ── CONFIG TAB ────────────────────────────────────────── -->
+      <div id="admin-panel-config" class="admin-panel-section" style="display:none;">
       <!-- Config panel -->
       <div class="admin-section-full">
         <div class="admin-section-head">Campaign Config (Live)</div>
@@ -1609,7 +1930,9 @@ body::before{
           To change volume thresholds, update the CONFIG.tiers array at the top of the script and redeploy.
         </p>
       </div>
-    </div>
+      </div><!-- /.admin-section-full config -->
+      </div><!-- /#admin-panel-config -->
+    </div><!-- /#admin-dashboard -->
   </div>
 </section>
 
@@ -1679,6 +2002,7 @@ let STATE = {
   passcode: null,
   kol_name: null,
   kol_id: null,
+  _preselectedKolId: null,
   wallet: null,
   wallet_provider: null,
   wallet_obj: null,
@@ -1696,6 +2020,7 @@ let STATE = {
   adminLoggedIn: false,
   allSubmissions: [],
   allPasscodes: [],
+  allKols: [],
 };
 
 /* ================================================================
@@ -1743,6 +2068,13 @@ window.addEventListener('DOMContentLoaded', () => {
     STATE.adminLoggedIn = true;
     showAdminDashboard();
   }
+  // Pre-select KOL from ?kol= URL param
+  const kolParam = params.get('kol');
+  if (kolParam) {
+    STATE._preselectedKolId = kolParam;
+  }
+  // Start particle system
+  initParticles();
 });
 
 function showView(id) {
@@ -1778,71 +2110,9 @@ function setPlatform(p) {
 }
 
 /* ================================================================
-   GATE — PASSCODE VALIDATION
+   GATE — No passcode. Direct CTA to view-app.
+   KOL selection happens inline in view-card after card is generated.
 ================================================================ */
-async function validatePasscode() {
-  const code = document.getElementById('gate-code').value.trim().toUpperCase();
-  const btn = document.getElementById('gate-btn');
-  const err = document.getElementById('gate-err');
-  err.classList.remove('on');
-
-  if (!code) { showGateErr('Enter a passcode to continue.'); return; }
-
-  btn.disabled = true;
-  btn.textContent = 'Checking...';
-
-  try {
-    // Try Supabase first
-    if (db) {
-      const { data, error } = await db
-        .from('kol_passcodes')
-        .select('*')
-        .eq('passcode', code)
-        .eq('is_active', true)
-        .single();
-
-      if (error || !data) {
-        showGateErr('Invalid passcode. Check with your KOL and try again.');
-        btn.disabled = false;
-        btn.innerHTML = '<span class="btn-sheen"></span>Unlock Trader Card';
-        return;
-      }
-
-      STATE.passcode = code;
-      STATE.kol_name = data.kol_name;
-      STATE.kol_id   = data.id;
-    } else {
-      // Supabase not configured — block access entirely
-      showGateErr('System not configured. Please contact support.');
-      btn.disabled = false;
-      btn.innerHTML = '<span class="btn-sheen"></span>Unlock Trader Card';
-      return;
-    }
-
-    // Update KOL badges
-    const kolB1 = document.getElementById('kol-badge');   if (kolB1) kolB1.textContent = `KOL: ${STATE.kol_name}`;
-    const kolB2 = document.getElementById('kol-badge-2'); if (kolB2) kolB2.textContent = `KOL: ${STATE.kol_name}`;
-    const ppTxt = document.getElementById('prize-pool-txt'); if (ppTxt) ppTxt.textContent = CONFIG.prize_pool;
-
-    showView('view-app');
-  } catch(e) {
-    showGateErr('Error checking passcode. Try again.');
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '<span class="btn-sheen"></span>Unlock Trader Card';
-}
-
-function showGateErr(msg) {
-  const el = document.getElementById('gate-err');
-  el.textContent = msg;
-  el.classList.add('on');
-}
-
-// Allow Enter key on gate input
-document.getElementById('gate-code').addEventListener('keydown', e => {
-  if (e.key === 'Enter') validatePasscode();
-});
 
 /* ================================================================
    WALLET CONNECT + OWNERSHIP SIGNATURE
@@ -2005,6 +2275,13 @@ function resetAndGoHome() {
   STATE.raffleEntryCount = 1;
   STATE._testMode       = false;
   STATE._lastInsertedWallet = null;
+  STATE.kol_id          = null;
+  STATE.kol_name        = null;
+  STATE.passcode        = null;
+  _kolsLoaded = false;
+  // Reset KOL selector UI
+  const kolPanel = document.getElementById('kol-selector-panel');
+  if (kolPanel) kolPanel.style.display = 'none';
   showView('view-gate');
 }
 
@@ -2273,6 +2550,8 @@ function setEligibilityUI(vol) {
       const confirmCheck = document.getElementById('raffle-confirm-check');
       if (confirmCheck) confirmCheck.classList.remove('checked');
     }
+    // Show KOL selector if not yet selected
+    showKolSelectorIfNeeded();
   }
 }
 
@@ -2368,7 +2647,7 @@ async function enterRaffle() {
       wallet_signature: STATE.signature,
       sig_nonce:        STATE.sig_nonce,
       twitter_handle:   STATE.handle_stored || STATE.handle,
-      kol_passcode:     STATE.passcode || (STATE._testMode ? 'TEST-MODE' : null),
+      kol_passcode:     STATE.passcode || STATE.kol_name || (STATE._testMode ? 'TEST-MODE' : null),
       kol_id:           STATE.kol_id   || null,
       total_volume_usd: STATE.cardData?.vol || 0,
       tier_name:        tier?.name || null,
@@ -2556,6 +2835,7 @@ function showAdminDashboard() {
   refreshAdmin();
   renderTierConfig();
   renderTierTestGrid();
+  switchAdminTab('dashboard');
   // Wire live-update on tester inputs
   ['test-volume','test-txns','test-wallet','test-handle'].forEach(id => {
     const el = document.getElementById(id);
@@ -2563,20 +2843,34 @@ function showAdminDashboard() {
   });
 }
 
+function switchAdminTab(tab) {
+  const tabs = ['dashboard','entries','kols','tester','config'];
+  tabs.forEach(t => {
+    const panel = document.getElementById('admin-panel-' + t);
+    const btn   = document.getElementById('tab-' + t);
+    if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    if (btn)   btn.classList.toggle('active', t === tab);
+  });
+}
+
 async function refreshAdmin() {
   if (!STATE.adminLoggedIn) return;
 
-  const [subRes, kolRes] = await Promise.all([
+  const [subRes, kolRes, kolMgmtRes] = await Promise.all([
     dbSelect('card_submissions'),
     dbSelect('kol_passcodes'),
+    db ? db.from('kols').select('*').order('name').then(r => r) : Promise.resolve({ data: [], error: null }),
   ]);
 
   STATE.allSubmissions = subRes.data || [];
   STATE.allPasscodes   = kolRes.data || [];
+  STATE.allKols        = kolMgmtRes.data || [];
 
   renderAdminStats();
   renderKolTable();
   renderSubmissionsTable(STATE.allSubmissions);
+  renderKolMgmtTable();
+  renderDashboard();
 }
 
 function renderAdminStats() {
@@ -2586,10 +2880,73 @@ function renderAdminStats() {
   const activeKols = STATE.allPasscodes.filter(k => k.is_active).length;
   const xShared = total > 0 ? Math.round(subs.filter(r => r.shared_x).length / total * 100) : 0;
 
-  document.getElementById('a-total').textContent  = total.toLocaleString();
-  document.getElementById('a-vol').textContent    = fmtUsd(volSum);
-  document.getElementById('a-kols').textContent   = activeKols;
-  document.getElementById('a-shared').textContent = xShared + '%';
+  const aTotal  = document.getElementById('a-total');  if (aTotal)  aTotal.textContent  = total.toLocaleString();
+  const aVol    = document.getElementById('a-vol');    if (aVol)    aVol.textContent    = fmtUsd(volSum);
+  const aKols   = document.getElementById('a-kols');   if (aKols)   aKols.textContent   = activeKols;
+  const aShared = document.getElementById('a-shared'); if (aShared) aShared.textContent = xShared + '%';
+}
+
+function renderDashboard() {
+  const subs = STATE.allSubmissions;
+  const total   = subs.length;
+  const volSum  = subs.reduce((s, r) => s + (r.total_volume_usd || 0), 0);
+  const uniqueWallets = new Set(subs.map(r => r.wallet_address)).size;
+  const bonusEntries  = subs.filter(r => r.bonus_entry).length;
+
+  const el = id => document.getElementById(id);
+  if (el('dash-total'))   el('dash-total').textContent   = total.toLocaleString();
+  if (el('dash-wallets')) el('dash-wallets').textContent = uniqueWallets.toLocaleString();
+  if (el('dash-bonus'))   el('dash-bonus').textContent   = bonusEntries.toLocaleString();
+  if (el('dash-vol'))     el('dash-vol').textContent     = fmtUsd(volSum);
+
+  // By KOL breakdown
+  const kolBreak = el('dash-kol-breakdown');
+  if (kolBreak) {
+    const kolMap = {};
+    subs.forEach(s => {
+      const key = s.kol_id ? (s.kol_id + '') : (s.kol_passcode || 'Unknown');
+      if (!kolMap[key]) kolMap[key] = { name: s.kol_passcode || key, count: 0, vol: 0 };
+      kolMap[key].count++;
+      kolMap[key].vol += (s.total_volume_usd || 0);
+    });
+    // Also use kols table names
+    (STATE.allKols || []).forEach(k => {
+      const key = k.id + '';
+      if (kolMap[key]) kolMap[key].name = k.name + (k.handle ? ' (' + k.handle + ')' : '');
+    });
+    const rows = Object.values(kolMap).sort((a,b) => b.count - a.count);
+    if (!rows.length) {
+      kolBreak.innerHTML = '<div class="empty-state">No entries yet.</div>';
+    } else {
+      kolBreak.innerHTML = `<table class="dash-kol-table"><thead><tr><th>KOL</th><th>Entries</th><th>Volume</th></tr></thead><tbody>
+        ${rows.map(r => `<tr><td class="hi">${r.name}</td><td>${r.count}</td><td>${fmtUsd(r.vol)}</td></tr>`).join('')}
+      </tbody></table>`;
+    }
+  }
+
+  // Entries by day — last 14 days
+  const dayChart = el('dash-day-chart');
+  if (dayChart) {
+    const now = new Date();
+    const days = Array.from({length:14}, (_,i) => {
+      const d = new Date(now); d.setDate(d.getDate() - (13-i));
+      return d.toISOString().slice(0,10);
+    });
+    const dayCounts = {};
+    days.forEach(d => dayCounts[d] = 0);
+    subs.forEach(s => {
+      const day = (s.created_at || '').slice(0,10);
+      if (dayCounts[day] !== undefined) dayCounts[day]++;
+    });
+    const maxCount = Math.max(1, ...Object.values(dayCounts));
+    const bars = days.map(d => {
+      const count = dayCounts[d];
+      const pct = Math.round((count / maxCount) * 100);
+      const label = d.slice(5); // MM-DD
+      return `<div class="bar-chart-outer"><div class="bar-chart-bar" style="height:${Math.max(2,pct)}%;background:${count>0?'linear-gradient(0deg,var(--fire),var(--ember))':'rgba(213,235,213,0.08)'};" title="${d}: ${count}"></div><div class="bar-chart-label">${label}</div></div>`;
+    });
+    dayChart.innerHTML = `<div style="display:flex;align-items:flex-end;gap:3px;height:90px;">${bars.join('')}</div>`;
+  }
 }
 
 function renderKolTable() {
@@ -2949,6 +3306,192 @@ function exportCsv() {
   a.click();
 }
 
+/* ================================================================
+   KOL MANAGEMENT (Admin)
+================================================================ */
+async function addKol() {
+  const name   = document.getElementById('kol-add-name').value.trim();
+  const handle = document.getElementById('kol-add-handle').value.trim();
+  if (!name) { alert('Enter a KOL name.'); return; }
+  if (!db)   { alert('Database not connected.'); return; }
+
+  const { data, error } = await db.from('kols').insert({ name, handle: handle || null, active: true }).select().single();
+  if (error) { alert('Error: ' + error.message); return; }
+
+  const succ = document.getElementById('kol-add-success');
+  succ.style.display = 'block';
+  succ.textContent = 'Added: ' + name;
+  document.getElementById('kol-add-name').value  = '';
+  document.getElementById('kol-add-handle').value = '';
+  setTimeout(() => { succ.style.display = 'none'; }, 3000);
+  await refreshAdmin();
+}
+
+async function toggleKolActive(id, currentActive) {
+  if (!db) return;
+  await db.from('kols').update({ active: !currentActive }).eq('id', id);
+  await refreshAdmin();
+}
+
+async function deleteKol(id) {
+  if (!id) return;
+  if (!confirm('Delete this KOL? This cannot be undone.')) return;
+  if (!db) return;
+  await db.from('kols').delete().eq('id', id);
+  await refreshAdmin();
+}
+
+function copyKolLink(id) {
+  const url = window.location.origin + window.location.pathname + '?kol=' + id;
+  navigator.clipboard.writeText(url).then(() => {
+    const el = document.getElementById('kl-' + id);
+    if (el) { el.textContent = 'Copied!'; setTimeout(() => { el.textContent = 'Copy Link'; }, 2000); }
+  });
+}
+
+function renderKolMgmtTable() {
+  const wrap = document.getElementById('kol-mgmt-table-wrap');
+  if (!wrap) return;
+  const kols = STATE.allKols || [];
+  if (!kols.length) {
+    wrap.innerHTML = '<div class="empty-state">No KOLs yet. Add one above.</div>';
+    return;
+  }
+  // Count entries per kol_id
+  const counts = {}, volMap = {};
+  STATE.allSubmissions.forEach(s => {
+    const k = s.kol_id || 'unknown';
+    counts[k] = (counts[k] || 0) + 1;
+    volMap[k]  = (volMap[k]  || 0) + (s.total_volume_usd || 0);
+  });
+
+  let html = `<table class="kol-table-full"><thead><tr>
+    <th>Name</th><th>Handle</th><th>Status</th><th>Entries</th><th>Volume</th><th>Actions</th>
+  </tr></thead><tbody>`;
+  kols.forEach(k => {
+    const entries = counts[k.id] || 0;
+    const vol     = volMap[k.id]  || 0;
+    const dot = k.active ? '<span class="active-dot"></span>' : '<span class="inactive-dot"></span>';
+    html += `<tr>
+      <td class="hi">${k.name}</td>
+      <td>${k.handle || '—'}</td>
+      <td>${dot}${k.active ? 'Active' : 'Inactive'}</td>
+      <td class="hi">${entries}</td>
+      <td>${fmtUsd(vol)}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn-toggle-kol" onclick="toggleKolActive('${k.id}',${k.active})">${k.active ? 'Deactivate' : 'Activate'}</button>
+        <button class="btn-copy-link" id="kl-${k.id}" onclick="copyKolLink('${k.id}')">Copy Link</button>
+        <button class="btn-danger" onclick="deleteKol('${k.id}')">Del</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+/* ================================================================
+   KOL SELECTOR (inline in view-card)
+================================================================ */
+let _kolsLoaded = false;
+
+async function showKolSelectorIfNeeded() {
+  const panel = document.getElementById('kol-selector-panel');
+  const eligibleEntry = document.getElementById('eligible-entry');
+  if (!panel) return;
+
+  // If already selected, keep eligible-entry visible
+  if (STATE.kol_id) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  // Show selector, hide raffle until KOL chosen
+  panel.style.display = 'block';
+  if (eligibleEntry) eligibleEntry.style.display = 'none';
+
+  // Load KOLs from Supabase if not yet loaded
+  if (!_kolsLoaded) {
+    await loadKolsForSelector();
+    _kolsLoaded = true;
+  }
+}
+
+async function loadKolsForSelector() {
+  if (!db) {
+    // Show fallback text input
+    document.getElementById('kol-fallback-wrap').style.display = 'block';
+    document.getElementById('kol-select').style.display = 'none';
+    return;
+  }
+  try {
+    const { data, error } = await db.from('kols').select('id,name,handle').eq('active', true).order('name');
+    if (error || !data || !data.length) {
+      document.getElementById('kol-fallback-wrap').style.display = 'block';
+      document.getElementById('kol-select').style.display = 'none';
+      return;
+    }
+    const sel = document.getElementById('kol-select');
+    // Clear existing options except placeholder
+    while (sel.options.length > 1) sel.remove(1);
+    data.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k.id;
+      opt.textContent = k.name + (k.handle ? ' (' + k.handle + ')' : '');
+      sel.appendChild(opt);
+    });
+    // Pre-select from URL param
+    if (STATE._preselectedKolId) {
+      const match = data.find(k => k.id === STATE._preselectedKolId || k.id.toString() === STATE._preselectedKolId);
+      if (match) {
+        sel.value = match.id;
+        onKolSelectChange();
+      }
+    }
+    sel.style.display = 'block';
+  } catch(e) {
+    document.getElementById('kol-fallback-wrap').style.display = 'block';
+    document.getElementById('kol-select').style.display = 'none';
+  }
+}
+
+function onKolSelectChange() {
+  const sel = document.getElementById('kol-select');
+  const btn = document.getElementById('kol-continue-btn');
+  if (btn) btn.disabled = !sel.value;
+}
+
+function onKolFallbackInput() {
+  const inp = document.getElementById('kol-fallback-input');
+  const btn = document.getElementById('kol-continue-btn');
+  if (btn) btn.disabled = !(inp.value.trim());
+}
+
+function confirmKolSelection() {
+  const sel = document.getElementById('kol-select');
+  const fallback = document.getElementById('kol-fallback-input');
+  const panel = document.getElementById('kol-selector-panel');
+  const eligibleEntry = document.getElementById('eligible-entry');
+
+  if (sel && sel.style.display !== 'none' && sel.value) {
+    STATE.kol_id   = sel.value;
+    STATE.kol_name = sel.options[sel.selectedIndex].text.split(' (')[0];
+  } else if (fallback && fallback.value.trim()) {
+    STATE.kol_id   = null;
+    STATE.kol_name = fallback.value.trim();
+    STATE.passcode = fallback.value.trim();
+  } else {
+    return;
+  }
+
+  // Update KOL badges
+  const kolB1 = document.getElementById('kol-badge');   if (kolB1) kolB1.textContent = `KOL: ${STATE.kol_name}`;
+  const kolB2 = document.getElementById('kol-badge-2'); if (kolB2) kolB2.textContent = `KOL: ${STATE.kol_name}`;
+
+  // Hide selector, show raffle
+  if (panel) panel.style.display = 'none';
+  if (eligibleEntry) eligibleEntry.style.display = 'block';
+}
+
 // Admin enter key
 document.getElementById('admin-pass-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') adminLogin();
@@ -2966,7 +3509,6 @@ const TRANSLATIONS = {
     gate_sub:           "Connect your SVM wallet to reveal your FOGO Trader Card. Exclusive to traders who've deployed capital on the FOGO ecosystem.",
     gate_label:         'KOL Passcode',
     gate_placeholder:   'Enter passcode from your KOL...',
-    gate_btn:           'Unlock Trader Card',
     gate_divider:       'Trader Tiers',
     tier_names:         ['Spot Accumulator','Tactical Trader','Momentum Operator','Perp Architect','Alpha Extractor','FOGO Apex'],
     stat_protocols:     'Protocols',
@@ -3024,6 +3566,13 @@ const TRANSLATIONS = {
     raffle_done_title:     'You\'re in the Draw',
     raffle_done_sub:       'Good luck. Results announced by your KOL.',
     raffle_bonus_confirmed:'Bonus entry submitted. Good luck! Results announced by your KOL.',
+    // KOL selector
+    kol_selector_head:  'Who referred you?',
+    kol_selector_sub:   'Select the KOL who shared this campaign with you to continue.',
+    kol_placeholder:    '— Select a KOL —',
+    kol_continue_btn:   'Continue →',
+    // Gate CTA
+    gate_btn:           'Connect Your Wallet →',
   },
   ko: {
     gate_eyebrow:       'FOGO 커뮤니티 활성화',
@@ -3032,7 +3581,6 @@ const TRANSLATIONS = {
     gate_sub:           'FOGO 트레이더 카드를 확인하려면 SVM 지갑을 연결하세요. FOGO 생태계에 자본을 배치한 트레이더에게만 제공됩니다.',
     gate_label:         'KOL 패스코드',
     gate_placeholder:   'KOL에서 패스코드를 입력하세요...',
-    gate_btn:           '트레이더 카드 잠금 해제',
     gate_divider:       '트레이더 등급',
     tier_names:         ['현물 누적자','전술적 트레이더','모멘텀 오퍼레이터','퍼프 아키텍트','알파 추출자','FOGO 에이펙스'],
     stat_protocols:     '프로토콜',
@@ -3090,6 +3638,13 @@ const TRANSLATIONS = {
     raffle_done_title:     '추첨에 참가되었습니다',
     raffle_done_sub:       '행운을 빕니다. 결과는 KOL이 발표합니다.',
     raffle_bonus_confirmed:'보너스 참가가 제출되었습니다. 행운을 빕니다! 결과는 KOL이 발표합니다.',
+    // KOL selector
+    kol_selector_head:  '누가 소개해 드렸나요?',
+    kol_selector_sub:   '이 캠페인을 공유한 KOL을 선택하여 계속 진행하세요.',
+    kol_placeholder:    '— KOL 선택 —',
+    kol_continue_btn:   '계속하기 →',
+    // Gate CTA
+    gate_btn:           '지갑 연결하기 →',
   }
 };
 
@@ -3217,6 +3772,13 @@ function setLanguage(lang) {
   setTxt('t-skip-btn',         t.skip_btn);
   setTxt('t-raffle-done-title',t.raffle_done_title);
   setTxt('t-raffle-done-sub',  t.raffle_done_sub);
+  // KOL selector
+  setTxt('t-kol-selector-head', t.kol_selector_head || 'Who referred you?');
+  setTxt('t-kol-selector-sub',  t.kol_selector_sub  || 'Select the KOL who referred you.');
+  setTxt('t-kol-placeholder',   t.kol_placeholder   || '— Select a KOL —');
+  setTxt('t-kol-continue-btn',  t.kol_continue_btn  || 'Continue →');
+  setTxt('t-gate-btn',          t.gate_btn          || 'Connect Your Wallet →');
+
   // Re-apply tier note with current entry count if card is loaded
   if (STATE.raffleEntryCount) {
     const n = STATE.raffleEntryCount;
