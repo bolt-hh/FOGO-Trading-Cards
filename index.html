@@ -1,0 +1,3266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOGO | Trader Card</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath fill='%23ff3d00' d='M512 0A512 512 0 0 0 0 512a512 512 0 0 0 512 512 512 512 0 0 0 512-512A512 512 0 0 0 512 0Z'/%3E%3Cpath fill='%23fff' d='M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z'/%3E%3C%2Fsvg%3E">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image-more/3.4.1/dom-to-image-more.min.js"></script>
+<style>
+/* ================================================================
+   FOGO DESIGN SYSTEM
+   bg:#080420  fire:#FF3D00  lime:#C3FBA5  text:#D5EBD5
+   font: Clash Display (heads) / Inter (body) / JetBrains Mono (code)
+================================================================ */
+:root {
+  --bg:        #080420;
+  --bg2:       #0C0930;
+  --panel:     #110D32;
+  --panel2:    #160F38;
+  --panel3:    #1C1540;
+  --border:    rgba(213,235,213,0.08);
+  --border-hi: rgba(213,235,213,0.18);
+  --fire:      #FF3D00;
+  --ember:     #FF6B00;
+  --orange:    #FF8C00;
+  --lime:      #C3FBA5;
+  --lime-dim:  rgba(195,251,165,0.12);
+  --lime-glow: rgba(195,251,165,0.22);
+  --text:      #D5EBD5;
+  --sub:       rgba(213,235,213,0.65);
+  --dim:       rgba(213,235,213,0.40);
+  --dimmer:    rgba(213,235,213,0.22);
+  --red:       #FF4D4D;
+  --green:     #4ADE80;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  min-height:100vh;
+  font-family:'Inter',sans-serif;
+  color:var(--text);
+  overflow-x:hidden;
+  position:relative;
+}
+/* Global dot grid */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:radial-gradient(circle,rgba(213,235,213,0.04) 1px,transparent 1px);
+  background-size:26px 26px;pointer-events:none;z-index:0;
+}
+/* Hero fire glow */
+.fire-bg{
+  position:fixed;bottom:-200px;left:50%;transform:translateX(-50%);
+  width:1000px;height:500px;
+  background:radial-gradient(ellipse,rgba(255,61,0,0.14) 0%,transparent 65%);
+  pointer-events:none;z-index:0;
+}
+/* BG mesh overlays (from PFP Generator) */
+.bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.bg-mesh-fire{background:radial-gradient(ellipse 55% 60% at 80% 90%,rgba(255,61,0,0.14) 0%,transparent 55%);}
+.bg-mesh-lime{background:radial-gradient(ellipse 50% 55% at 10% 15%,rgba(195,251,165,0.09) 0%,transparent 55%);}
+
+/* ================================================================
+   NAV BAR
+================================================================ */
+.nav{position:sticky;top:0;z-index:50;background:rgba(8,4,32,0.72);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1800px;margin:0 auto;padding:14px 36px;display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.nav-brand{display:flex;align-items:center;gap:8px;text-decoration:none;cursor:pointer;background:none;border:none;padding:0;width:auto;}
+.nav-brand-mark{width:32px;height:32px;border-radius:50%;background:var(--fire);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(255,61,0,0.30);flex-shrink:0;}
+.nav-brand-mark svg{width:18px;height:18px;}
+.nav-brand-text{display:flex;flex-direction:column;gap:1px;width:auto;}
+.nav-brand-wordmark{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.04em;color:var(--text);white-space:nowrap;}
+.nav-brand-version{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:0.14em;text-transform:uppercase;white-space:nowrap;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.live-status{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--dim);padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:rgba(195,251,165,0.04);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime);animation:pulse-live 2s ease-in-out infinite;}
+@keyframes pulse-live{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.4);opacity:0.5;}}
+@media(max-width:760px){.live-status{display:none;}}
+@media(max-width:560px){.nav-inner{padding:12px 16px;}.nav-brand-version{display:none;}}
+
+/* ================================================================
+   TICKER BAR
+================================================================ */
+.ticker-wrap{width:100%;overflow:hidden;background:rgba(12,9,48,0.85);border-bottom:1px solid var(--border);border-top:1px solid var(--border);position:relative;z-index:40;height:34px;display:flex;align-items:center;}
+.ticker-wrap::before,.ticker-wrap::after{content:'';position:absolute;top:0;width:80px;height:100%;z-index:2;pointer-events:none;}
+.ticker-wrap::before{left:0;background:linear-gradient(90deg,rgba(12,9,48,1),transparent);}
+.ticker-wrap::after{right:0;background:linear-gradient(270deg,rgba(12,9,48,1),transparent);}
+.ticker-track{display:flex;align-items:center;gap:0;white-space:nowrap;animation:ticker-scroll 28s linear infinite;}
+.ticker-track:hover{animation-play-state:paused;}
+.ticker-item{display:inline-flex;align-items:center;gap:9px;padding:0 28px;}
+.ticker-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:var(--dimmer);}
+.ticker-name{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--sub);text-decoration:none;transition:color 0.15s;}
+.ticker-name:hover{color:var(--lime);}
+.ticker-name.hl{color:rgba(195,251,165,0.55);}
+.ticker-name.hl:hover{color:var(--lime);}
+.ticker-dot{width:3px;height:3px;border-radius:50%;background:var(--border-hi);flex-shrink:0;}
+.ticker-pipe{width:1px;height:14px;background:var(--border);flex-shrink:0;margin:0 4px;}
+@keyframes ticker-scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+/* ================================================================
+   STEPS BAR
+================================================================ */
+/* Steps bar — 2×2 inside left column, full-width on mobile */
+.steps-bar{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:0;position:relative;}
+.step-card{position:relative;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;overflow:hidden;transition:border-color 0.2s;}
+.step-card:hover{border-color:var(--border-hi);}
+.step-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.step-card:nth-child(1)::before{background:var(--fire);}
+.step-card:nth-child(2)::before{background:linear-gradient(90deg,var(--fire),var(--ember));}
+.step-card:nth-child(3)::before{background:linear-gradient(90deg,var(--ember),var(--lime));}
+.step-card:nth-child(4)::before{background:var(--lime);}
+.step-num{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.26em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;}
+.step-title{font-family:'Clash Display',sans-serif;font-size:15px;font-weight:600;color:var(--text);line-height:1.25;margin-bottom:6px;}
+.step-body{font-size:12px;color:var(--sub);line-height:1.55;}
+@media(max-width:960px){.steps-bar{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.steps-bar{grid-template-columns:1fr;}}
+
+/* ================================================================
+   PRIZE / COUNTDOWN BAR
+================================================================ */
+.prize-bar{display:grid;grid-template-columns:1fr 1px 1fr;align-items:stretch;gap:0;background:var(--panel);border:1px solid rgba(195,251,165,0.30);border-radius:14px;overflow:hidden;margin-bottom:20px;box-shadow:0 0 32px rgba(195,251,165,0.06);}
+.prize-bar-prizes{display:flex;align-items:center;justify-content:center;gap:0;padding:0;}
+.prize-pill{display:flex;align-items:center;gap:12px;padding:20px 28px;flex:1;}
+.prize-pill-icon{font-size:22px;flex-shrink:0;}
+.prize-pill-text{font-family:'Clash Display',sans-serif;font-size:15px;font-weight:600;color:var(--text);line-height:1.35;}
+.prize-pill-text span{color:var(--lime);font-size:17px;}
+.prize-pill-text .sub{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:400;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase;display:block;margin-top:2px;}
+.prize-bar-div{background:var(--border);width:1px;}
+.countdown-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 32px;background:linear-gradient(135deg,rgba(255,90,30,0.07) 0%,rgba(255,60,10,0.03) 100%);}
+.countdown-label{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;}
+.countdown-digits{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:var(--fire);letter-spacing:0.08em;text-shadow:0 0 20px rgba(255,90,30,0.7),0 0 40px rgba(255,90,30,0.35),0 0 6px rgba(255,90,30,0.9);}
+.countdown-digits.urgent{animation:pulse-fire 0.8s ease-in-out infinite;}
+@keyframes pulse-fire{0%,100%{text-shadow:0 0 20px rgba(255,90,30,0.9),0 0 40px rgba(255,90,30,0.5),0 0 6px rgba(255,90,30,1);}50%{text-shadow:0 0 8px rgba(255,90,30,0.4),0 0 16px rgba(255,90,30,0.2);}}
+@media(max-width:640px){.prize-bar{grid-template-columns:1fr;grid-template-rows:auto auto auto;}.prize-bar-div{width:100%;height:1px;}.countdown-box{align-items:flex-start;padding:16px 20px;}.prize-pill{padding:16px 20px;}}
+
+/* ---- VIEWS ---- */
+.view{display:none;position:relative;z-index:1;}
+.view.active{display:flex;flex-direction:column;}
+
+/* ================================================================
+   GATE VIEW
+================================================================ */
+#view-gate{
+  min-height:100vh;align-items:flex-start;
+  padding:0 0 80px;
+}
+/* Full-width container matching PFP Generator .wrap */
+.gate-inner{
+  width:100%;max-width:1360px;margin:0 auto;
+  padding:72px 28px;
+  display:grid;
+  grid-template-columns:1fr 520px;
+  gap:72px;
+  align-items:center;
+  text-align:left;
+}
+/* Hide old elements now covered by sticky nav */
+.gate-top-bar{display:none !important;}
+.gate-logo{display:none !important;}
+/* Hero text column */
+.gate-hero-text{display:flex;flex-direction:column;align-items:flex-start;}
+.gate-eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--lime);padding:7px 14px;
+  border:1px solid rgba(195,251,165,0.30);border-radius:100px;
+  background:rgba(195,251,165,0.05);margin-bottom:28px;
+}
+.gate-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px var(--lime);animation:pulse-live 2s infinite;}
+.gate-headline{
+  font-family:'Clash Display',sans-serif;
+  font-size:clamp(40px,5.5vw,72px);font-weight:700;
+  color:var(--text);line-height:0.95;letter-spacing:-0.025em;margin-bottom:22px;
+}
+.gate-headline span{
+  background:linear-gradient(90deg,var(--fire),var(--ember) 40%,var(--lime) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.gate-sub{
+  font-size:17px;color:var(--sub);line-height:1.65;max-width:540px;font-weight:300;
+  margin-bottom:0;
+}
+@media(max-width:960px){.gate-inner{grid-template-columns:1fr;gap:40px;padding:48px 20px;}}
+@media(max-width:560px){.gate-inner{padding:32px 16px;}}
+.gate-card{
+  width:100%;background:var(--panel);
+  border:1px solid var(--border);
+  padding:28px;
+}
+.gate-form-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px;letter-spacing:0.24em;text-transform:uppercase;
+  color:var(--dim);display:block;margin-bottom:8px;
+  text-align:left;
+}
+.gate-input{
+  width:100%;background:var(--bg2);
+  border:1px solid var(--border);
+  color:var(--text);font-family:'JetBrains Mono',monospace;
+  font-size:13px;padding:13px 14px;outline:none;
+  transition:border-color 0.15s;letter-spacing:0.06em;
+  margin-bottom:14px;
+  border-radius:2px;
+}
+.gate-input:focus{border-color:rgba(195,251,165,0.35);box-shadow:0 0 0 1px rgba(195,251,165,0.08);}
+.gate-input::placeholder{color:var(--dimmer);font-size:11px;}
+.btn-primary{
+  width:100%;background:var(--lime);border:none;
+  color:#070520;font-family:'Inter',sans-serif;
+  font-size:11px;font-weight:800;letter-spacing:0.18em;
+  text-transform:uppercase;padding:15px;cursor:pointer;
+  transition:all 0.15s;border-radius:4px;position:relative;overflow:hidden;
+}
+.btn-primary:hover:not(:disabled){background:#D4FDB8;box-shadow:0 4px 28px var(--lime-glow);}
+.btn-primary:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-sheen{
+  position:absolute;top:0;left:-100%;width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.22),transparent);
+  animation:sheen 3s infinite;
+}
+@keyframes sheen{0%{left:-100%}100%{left:220%}}
+.gate-divider{
+  display:flex;align-items:center;gap:12px;margin:20px 0;
+}
+.gate-divider::before,.gate-divider::after{
+  content:'';flex:1;height:1px;background:var(--border);
+}
+.gate-divider-txt{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:0.2em;text-transform:uppercase;color:var(--dimmer);
+}
+.gate-tiers{
+  width:100%;display:grid;grid-template-columns:1fr 1fr;gap:6px;
+  margin-top:20px;
+}
+.gate-tier{
+  background:var(--panel2);border:1px solid var(--border);
+  padding:10px 12px;text-align:left;
+}
+.gate-tier-icon{font-size:16px;display:block;margin-bottom:4px;}
+.gate-tier-name{font-size:11px;font-weight:600;color:var(--text);line-height:1;}
+.gate-tier-range{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  color:var(--dim);margin-top:3px;letter-spacing:0.04em;
+}
+.gate-tier.apex{border-color:rgba(195,251,165,0.25);background:rgba(195,251,165,0.04);}
+.gate-tier.apex .gate-tier-name{color:var(--lime);}
+
+.err-box{
+  display:none;width:100%;
+  border:1px solid rgba(255,77,77,0.3);background:rgba(255,77,77,0.06);
+  padding:10px 14px;margin-bottom:14px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:#FF8080;letter-spacing:0.04em;
+  border-radius:2px;text-align:left;
+}
+.err-box.on{display:block;}
+
+/* ================================================================
+   APP VIEW (WALLET FORM)
+================================================================ */
+#view-app{
+  min-height:100vh;align-items:flex-start;padding:48px 0 80px;
+}
+.app-inner{width:100%;max-width:1360px;margin:0 auto;padding:0 28px;}
+
+/* Sticky nav replaces the old per-view header — hide it */
+.site-header{display:none;}
+
+/* 2-column layout: steps/info left, wallet form right */
+.app-main-grid{
+  display:grid;
+  grid-template-columns:1fr 480px;
+  gap:28px;
+  align-items:flex-start;
+  margin-top:24px;
+}
+.app-left{}
+.app-right{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:24px;
+  position:sticky;
+  top:92px;
+  /* Lime top accent line like PFP Generator gen-panel */
+  position:sticky;
+}
+.app-right::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(195,251,165,0.35),transparent);
+  border-radius:14px 14px 0 0;
+}
+/* Remove old narrow wrapper — replaced by app-main-grid */
+.wallet-section{max-width:none;margin:0;}
+@media(max-width:960px){.app-main-grid{grid-template-columns:1fr;}
+  .app-right{position:relative;top:0;}
+}
+.hdr-logo{display:flex;align-items:center;gap:8px;}
+.hdr-logo-mark{font-size:20px;}
+.hdr-logo-text{
+  font-family:'Clash Display',sans-serif;
+  font-size:18px;font-weight:700;color:var(--text);letter-spacing:0.06em;
+}
+.hdr-kol{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--lime);background:rgba(195,251,165,0.08);
+  border:1px solid rgba(195,251,165,0.2);padding:4px 10px;
+  border-radius:2px;
+}
+
+.section-card{
+  background:var(--panel);border:1px solid var(--border);
+  padding:22px;margin-bottom:14px;border-radius:2px;
+}
+/* Inside app-right panel the section-card has no extra border */
+.app-right .section-card{background:transparent;border:none;padding:0;margin-bottom:0;}
+.section-head{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:0.24em;text-transform:uppercase;color:var(--dim);
+  padding-bottom:14px;border-bottom:1px solid var(--border);
+  margin-bottom:18px;
+}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.field:last-of-type{margin-bottom:0;}
+.field-label{
+  display:flex;align-items:center;gap:5px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);
+}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.dot-sol{background:#9945FF;}
+.dot-x{background:var(--lime);}
+.dot-tg{background:#2AABEE;}
+.platform-toggle{display:flex;gap:3px;margin-bottom:8px;}
+.platform-btn{
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
+  letter-spacing:0.07em;padding:5px 14px;border:1px solid var(--border);
+  background:transparent;color:var(--dimmer);cursor:pointer;
+  border-radius:4px;transition:all 0.15s;
+}
+.platform-btn.active{background:var(--lime);color:#070520;border-color:var(--lime);}
+.platform-btn.active.tg{background:#2AABEE;border-color:#2AABEE;color:#fff;}
+.platform-btn:hover:not(.active){color:var(--text);}
+.field-input{
+  background:var(--panel2);border:1px solid var(--border);
+  color:var(--text);font-family:'JetBrains Mono',monospace;
+  font-size:11px;padding:11px 12px;outline:none;
+  transition:border-color 0.15s;letter-spacing:0.02em;width:100%;
+  border-radius:2px;
+}
+.field-input:focus{border-color:rgba(195,251,165,0.3);box-shadow:0 0 0 1px rgba(195,251,165,0.07);}
+.field-input::placeholder{color:var(--dimmer);font-size:10px;}
+.hint-box{
+  font-size:10px;color:var(--dim);
+  background:rgba(255,255,255,0.02);
+  border-left:2px solid rgba(195,251,165,0.3);
+  padding:9px 11px;margin-bottom:14px;line-height:1.6;border-radius:0 2px 2px 0;
+}
+.notice{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:rgba(213,235,213,0.58);line-height:1.7;letter-spacing:0.04em;
+  border:1px solid rgba(213,235,213,0.12);padding:10px 13px;margin-bottom:16px;
+  background:rgba(255,255,255,0.02);border-radius:2px;
+}
+
+/* ================================================================
+   LOADING
+================================================================ */
+.loading{display:none;text-align:center;padding:52px 20px;}
+.loading.on{display:block;}
+.spinner{
+  width:36px;height:36px;
+  border:1px solid rgba(195,251,165,0.12);border-top-color:var(--lime);
+  border-radius:50%;animation:spin 0.7s linear infinite;
+  margin:0 auto 14px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:0.14em;}
+.load-step{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);margin-top:8px;min-height:16px;letter-spacing:0.1em;}
+
+/* ================================================================
+   CARD WRAP + THE CARD
+================================================================ */
+.card-wrap{display:none;}
+.card-wrap.on{display:block;animation:cardIn 0.55s cubic-bezier(0.16,1,0.3,1) forwards;}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+
+/* Locked state (below minimum volume) */
+.card-locked{
+  background:var(--panel);border:1px solid rgba(255,77,77,0.25);
+  padding:32px 24px;text-align:center;margin-bottom:12px;
+  border-radius:2px;
+}
+.locked-icon{font-size:36px;margin-bottom:12px;}
+.locked-title{
+  font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;
+  color:var(--text);margin-bottom:8px;
+}
+.locked-sub{font-size:12px;color:var(--dim);line-height:1.6;margin-bottom:20px;}
+.locked-vol{
+  display:inline-block;
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  color:#FF8080;background:rgba(255,77,77,0.08);
+  border:1px solid rgba(255,77,77,0.2);padding:4px 12px;margin-bottom:20px;
+  border-radius:2px;
+}
+.ecosystem-links{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:0;
+}
+.eco-link{
+  background:var(--panel2);border:1px solid var(--border);
+  padding:10px 8px;text-align:center;text-decoration:none;
+  transition:all 0.15s;border-radius:2px;
+}
+.eco-link:hover{border-color:var(--border-hi);background:var(--panel3);}
+.eco-link-name{font-size:11px;font-weight:600;color:var(--text);display:block;}
+.eco-link-type{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--dim);margin-top:2px;letter-spacing:0.1em;text-transform:uppercase;}
+
+/* THE CARD */
+.trader-card{
+  position:relative;overflow:hidden;
+  background:var(--panel);
+  border:1px solid rgba(213,235,213,0.1);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.02),0 32px 90px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.03);
+  border-radius:2px;
+}
+.card-glow{
+  position:absolute;bottom:-80px;left:50%;transform:translateX(-50%);
+  width:130%;height:240px;
+  background:radial-gradient(ellipse,rgba(255,61,0,0.2) 0%,transparent 65%);
+  pointer-events:none;z-index:0;
+}
+.card-dots{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(213,235,213,0.035) 1px,transparent 1px);
+  background-size:20px 20px;pointer-events:none;z-index:1;
+}
+.card-topbar{
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--fire) 20%,var(--ember) 50%,var(--lime) 80%,transparent);
+  position:relative;z-index:5;
+}
+.card-topbar::after{
+  content:'';position:absolute;inset:0;background:inherit;filter:blur(6px);opacity:0.6;
+}
+.c-z{position:relative;z-index:4;}
+
+/* Card header */
+.card-logos{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px 0;
+}
+.c-logo{display:flex;align-items:center;gap:6px;opacity:0.9;}
+.c-logo-mark{font-size:16px;}
+.c-logo-txt{font-family:'Clash Display',sans-serif;font-size:14px;font-weight:700;color:var(--text);letter-spacing:0.06em;}
+.c-series{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:0.2em;text-transform:uppercase;}
+
+/* Identity */
+.card-identity{
+  padding:12px 18px 14px;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.card-handle{
+  font-family:'Clash Display',sans-serif;
+  font-size:clamp(22px,5vw,30px);font-weight:700;
+  color:var(--text);letter-spacing:-0.02em;line-height:1;
+  word-break:break-all;
+}
+.vol-block{
+  flex-shrink:0;border:1px solid rgba(195,251,165,0.25);
+  background:rgba(195,251,165,0.06);padding:8px 12px;text-align:center;
+  border-radius:2px;
+}
+.vol-num{
+  font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;
+  color:var(--lime);line-height:1;text-shadow:0 0 20px var(--lime-glow);
+  white-space:nowrap;
+}
+.vol-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-top:3px;}
+
+.card-hr{height:1px;margin:0 18px;background:var(--border);}
+
+/* Role */
+.card-role{padding:14px 18px;display:flex;align-items:center;gap:12px;}
+.role-icon{font-size:26px;line-height:1;flex-shrink:0;}
+.role-name{
+  font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;
+  color:var(--text);line-height:1;margin-bottom:4px;
+}
+.role-desc{font-size:11px;color:var(--dim);line-height:1.5;}
+
+/* Protocol badges */
+.proto-row{padding:0 18px 12px;display:flex;gap:5px;flex-wrap:wrap;}
+.proto-pill{
+  display:flex;align-items:center;gap:4px;
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:0.1em;text-transform:uppercase;
+  padding:3px 8px;border:1px solid;border-radius:2px;
+}
+.proto-pill.sol{border-color:rgba(153,69,255,0.3);color:rgba(180,130,255,0.85);background:rgba(153,69,255,0.06);}
+.proto-pill.fogo{border-color:rgba(255,61,0,0.3);color:rgba(255,120,60,0.9);background:rgba(255,61,0,0.06);}
+.proto-pill.ambient{border-color:rgba(195,251,165,0.25);color:rgba(195,251,165,0.75);background:rgba(195,251,165,0.04);}
+.proto-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;}
+
+/* Stats */
+.stats-grid{padding:0 18px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.stat{background:var(--panel2);border:1px solid var(--border);padding:11px 12px;border-radius:2px;transition:border-color 0.15s;overflow:hidden;}
+.stat:hover{border-color:rgba(195,251,165,0.2);}
+.s-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.s-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:var(--sub);line-height:1.35;word-break:break-word;}
+.s-val.hi{color:var(--lime);font-size:14px;}
+.s-val.pos{color:var(--green);}
+.s-val.neg{color:var(--red);}
+
+/* Activity bar */
+.activity{padding:0 18px 14px;}
+.act-row{display:flex;justify-content:space-between;margin-bottom:6px;}
+.act-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);}
+.act-pct{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--lime);}
+.act-track{height:3px;background:rgba(255,255,255,0.05);overflow:hidden;border-radius:2px;}
+.act-fill{height:100%;background:linear-gradient(90deg,var(--fire),var(--ember) 50%,var(--lime));transition:width 1.8s cubic-bezier(0.16,1,0.3,1);}
+
+/* Traits */
+.traits-row{padding:0 18px 14px;display:flex;gap:5px;flex-wrap:wrap;}
+.trait{
+  font-family:'JetBrains Mono',monospace;font-size:7px;
+  letter-spacing:0.12em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid rgba(213,235,213,0.1);
+  color:rgba(213,235,213,0.5);background:rgba(213,235,213,0.02);border-radius:2px;
+  white-space:nowrap;
+}
+
+/* Card footer */
+.card-foot{
+  padding:14px 20px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.foot-addr{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.05em;}
+.foot-brand{display:flex;align-items:center;gap:6px;}
+.foot-brand-mark{font-size:14px;}
+.foot-brand-txt{font-family:'Clash Display',sans-serif;font-size:14px;font-weight:600;color:rgba(213,235,213,0.5);letter-spacing:0.08em;}
+
+/* Actions */
+.actions{display:flex;gap:8px;margin-top:12px;}
+.act-btn{
+  flex:1;background:transparent;border:1px solid var(--border);
+  color:var(--dim);font-family:'Inter',sans-serif;
+  font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+  padding:11px 8px;cursor:pointer;transition:all 0.15s;border-radius:2px;
+}
+.act-btn:hover{border-color:rgba(195,251,165,0.3);color:var(--lime);background:var(--lime-dim);}
+.act-btn.primary{background:rgba(195,251,165,0.08);border-color:rgba(195,251,165,0.3);color:var(--lime);}
+.act-btn.primary:hover{background:rgba(195,251,165,0.16);box-shadow:0 2px 18px var(--lime-dim);}
+.act-btn:disabled{opacity:0.35;cursor:not-allowed;}
+
+/* Ineligible CTA */
+.ineligible-cta{
+  background:var(--panel);border:1px solid rgba(255,77,77,0.2);
+  padding:20px;margin-top:12px;border-radius:2px;text-align:center;
+}
+.ineligible-badge{
+  display:inline-block;font-family:'JetBrains Mono',monospace;
+  font-size:8px;letter-spacing:0.18em;text-transform:uppercase;
+  padding:4px 10px;border-radius:2px;margin-bottom:12px;
+  background:rgba(255,77,77,0.1);color:var(--red);border:1px solid rgba(255,77,77,0.25);
+}
+.ineligible-title{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.ineligible-sub{font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:16px;}
+.ineligible-sub strong{color:var(--lime);}
+
+/* Wallet Connect */
+.wallet-options{display:flex;gap:8px;margin-bottom:10px;}
+.wallet-opt{
+  flex:1;padding:11px 8px;
+  background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all 0.18s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.wallet-opt:hover:not(:disabled){background:var(--panel3);border-color:var(--border-hi);}
+.wallet-opt:disabled{opacity:0.45;cursor:not-allowed;}
+.wallet-opt .wo-logo{font-size:16px;line-height:1;}
+.wallet-connected-row{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px;background:var(--panel2);border:1px solid rgba(74,222,128,0.25);
+  border-radius:8px;margin-bottom:8px;
+}
+.wallet-connected-dot{width:8px;height:8px;background:var(--green);border-radius:50%;flex-shrink:0;box-shadow:0 0 6px rgba(74,222,128,0.5);}
+.wallet-connected-addr{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);flex:1;}
+.wallet-verified-badge{font-size:9px;color:var(--green);letter-spacing:0.1em;text-transform:uppercase;font-weight:700;}
+.wallet-disconnect-btn{
+  padding:4px 10px;background:transparent;border:1px solid var(--border);
+  border-radius:5px;color:var(--dim);font-size:10px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;
+}
+.wallet-disconnect-btn:hover{border-color:var(--fire);color:var(--fire);}
+.wallet-sign-hint{font-size:10px;color:var(--dim);margin-bottom:2px;line-height:1.5;padding:0 2px;}
+.wallet-sign-hint.verified{color:rgba(74,222,128,0.8);}
+.wallet-sign-hint.error{color:var(--red);}
+.no-wallet-link{font-size:10px;color:var(--dim);text-align:center;margin-top:8px;line-height:1.6;}
+.no-wallet-link a{color:var(--lime);text-decoration:none;}
+.no-wallet-link a:hover{text-decoration:underline;}
+
+/* ── Raffle Entry UI ─────────────────────────────── */
+.raffle-card{
+  background:var(--panel);border:1px solid var(--border);
+  padding:20px;margin-top:12px;border-radius:2px;
+}
+.raffle-eyebrow{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:0.22em;text-transform:uppercase;color:var(--dim);margin-bottom:14px;
+}
+.raffle-entries-badge{
+  display:inline-block;
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
+  letter-spacing:0.12em;color:var(--lime);
+  background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);
+  padding:6px 14px;border-radius:2px;margin-bottom:8px;
+}
+.raffle-tier-note{
+  font-size:11px;color:var(--dim);margin-bottom:18px;line-height:1.5;
+}
+/* Raffle confirmation checkbox */
+.raffle-confirm{
+  display:flex;align-items:flex-start;gap:11px;
+  margin-bottom:16px;padding:13px 14px;
+  background:rgba(195,251,165,0.04);
+  border:1px solid rgba(195,251,165,0.18);
+  border-radius:4px;cursor:pointer;user-select:none;
+  transition:border-color 0.15s,background 0.15s;
+}
+.raffle-confirm:hover{background:rgba(195,251,165,0.07);border-color:rgba(195,251,165,0.28);}
+.raffle-confirm-check{
+  width:17px;height:17px;flex-shrink:0;margin-top:1px;
+  border-radius:3px;border:1.5px solid rgba(195,251,165,0.4);
+  background:transparent;display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;
+}
+.raffle-confirm-check.checked{
+  background:var(--lime);border-color:var(--lime);
+}
+.raffle-confirm-check.checked::after{
+  content:'✓';font-size:10px;font-weight:800;color:#070520;line-height:1;
+}
+.raffle-confirm-body{font-size:11px;line-height:1.6;color:var(--sub);}
+.raffle-confirm-body strong{
+  display:block;color:var(--text);font-weight:600;margin-bottom:3px;font-size:11.5px;
+}
+.raffle-confirm-warn{
+  display:flex;align-items:center;gap:5px;
+  margin-top:6px;font-size:10px;color:rgba(255,77,77,0.75);font-style:italic;
+}
+.raffle-enter-btn{
+  width:100%;background:var(--lime);border:none;
+  color:#070520;font-family:'Inter',sans-serif;font-size:12px;font-weight:800;
+  letter-spacing:0.18em;text-transform:uppercase;padding:16px;cursor:pointer;
+  transition:all 0.15s;border-radius:4px;
+}
+.raffle-enter-btn:hover{background:#D4FDB8;box-shadow:0 4px 28px var(--lime-glow);}
+.raffle-enter-btn:disabled{opacity:0.35;pointer-events:none;cursor:not-allowed;}
+/* Step 2 */
+.raffle-success-icon{font-size:26px;margin-bottom:8px;}
+.raffle-success-title{
+  font-family:'Clash Display',sans-serif;font-size:17px;font-weight:700;
+  color:var(--lime);margin-bottom:4px;
+}
+.raffle-success-sub{font-size:11px;color:var(--dim);margin-bottom:18px;line-height:1.5;}
+.raffle-bonus-panel{
+  border-top:1px solid var(--border);padding-top:16px;
+}
+.raffle-bonus-head{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.18em;text-transform:uppercase;color:var(--text);margin-bottom:6px;
+}
+.raffle-bonus-sub{font-size:10px;color:var(--dim);margin-bottom:14px;line-height:1.5;}
+.raffle-share-btns{display:flex;gap:8px;margin-bottom:12px;}
+.raffle-share-btn{
+  flex:1;border:1px solid var(--border);background:var(--panel2);
+  color:var(--text);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;
+  padding:10px 8px;cursor:pointer;border-radius:4px;transition:all 0.15s;
+}
+.raffle-share-btn:hover{border-color:var(--border-hi);background:var(--panel);}
+.raffle-share-btn.tg{border-color:rgba(42,171,238,0.3);}
+.raffle-share-btn.tg:hover{border-color:rgba(42,171,238,0.6);color:#2AABEE;}
+.raffle-link-wrap{display:flex;gap:8px;margin-bottom:10px;}
+.raffle-link-input{
+  flex:1;background:var(--bg2);border:1px solid var(--border);
+  color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;
+  padding:10px 12px;border-radius:4px;outline:none;transition:border-color 0.15s;
+}
+.raffle-link-input:focus{border-color:var(--border-hi);}
+.raffle-link-btn{
+  background:var(--lime);border:none;color:#070520;
+  font-family:'Inter',sans-serif;font-size:10px;font-weight:800;
+  letter-spacing:0.12em;text-transform:uppercase;padding:10px 14px;
+  cursor:pointer;border-radius:4px;white-space:nowrap;transition:all 0.15s;
+}
+.raffle-link-btn:hover{background:#D4FDB8;}
+.raffle-link-btn:disabled{opacity:0.5;pointer-events:none;}
+.raffle-skip-btn{
+  background:none;border:none;color:var(--dim);font-size:10px;
+  cursor:pointer;padding:4px 0;text-decoration:underline;
+  font-family:'Inter',sans-serif;transition:color 0.15s;
+}
+.raffle-skip-btn:hover{color:var(--text);}
+/* Done state */
+.raffle-done-card{text-align:center;}
+.raffle-done-icon{font-size:30px;margin-bottom:10px;}
+.raffle-done-title{
+  font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;
+  color:var(--lime);margin-bottom:6px;
+}
+.raffle-done-sub{font-size:11px;color:var(--dim);line-height:1.6;}
+
+/* ================================================================
+   ADMIN VIEW
+================================================================ */
+
+/* Admin tab styling (from PFP Generator) */
+.admin-tab{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;padding:10px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--dim);cursor:pointer;transition:all 0.15s;margin-bottom:-1px;}
+.admin-tab:hover{color:var(--text);}
+.admin-tab.active{color:var(--lime);border-bottom-color:var(--lime);}
+/* Admin entry table (from PFP Generator) */
+.admin-entry-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px;}
+.admin-entry-table th{text-align:left;padding:8px 12px;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--border);}
+.admin-entry-table td{padding:10px 12px;color:var(--sub);border-bottom:1px solid var(--border);vertical-align:middle;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.admin-entry-table tr:hover td{background:rgba(255,255,255,0.02);}
+.admin-entry-table input[type=checkbox]{accent-color:var(--lime);width:14px;height:14px;cursor:pointer;}
+#adminDeleteSelectedBtn{background:rgba(255,69,0,0.12);border:1px solid rgba(255,69,0,0.35);color:rgba(255,69,0,0.85);font-family:'Inter',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:11px 20px;cursor:pointer;border-radius:6px;transition:all 0.15s;display:none;}
+#adminDeleteSelectedBtn:hover{background:rgba(255,69,0,0.22);border-color:var(--fire);color:var(--fire);}
+#adminDeleteSelectedBtn.visible{display:inline-block;}
+
+#view-admin{min-height:100vh;padding:40px 20px 80px;align-items:center;}
+.admin-inner{width:100%;max-width:900px;margin:0 auto;}
+.admin-gate{
+  max-width:420px;margin:0 auto;
+  background:var(--panel);border:1px solid var(--border);
+  padding:28px;text-align:center;border-radius:2px;
+}
+.admin-gate-title{font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.admin-gate-sub{font-size:12px;color:var(--dim);margin-bottom:22px;}
+.admin-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--border);
+}
+.admin-title{font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;color:var(--text);}
+.admin-sub{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.14em;margin-top:4px;}
+.admin-logout{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;
+  color:var(--dim);background:transparent;border:1px solid var(--border);
+  padding:6px 14px;cursor:pointer;border-radius:2px;transition:all 0.15s;
+}
+.admin-logout:hover{border-color:var(--border-hi);color:var(--text);}
+
+/* Stats tiles */
+.stats-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.stat-tile{background:var(--panel);border:1px solid var(--border);padding:18px 16px;border-radius:2px;}
+.tile-val{
+  font-family:'Clash Display',sans-serif;font-size:28px;font-weight:700;
+  color:var(--text);line-height:1;margin-bottom:6px;
+}
+.tile-val.fire{background:linear-gradient(90deg,var(--fire),var(--lime));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.tile-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim);}
+
+/* Admin sections */
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.admin-section{background:var(--panel);border:1px solid var(--border);padding:20px;border-radius:2px;}
+.admin-section-full{background:var(--panel);border:1px solid var(--border);padding:20px;margin-bottom:16px;border-radius:2px;}
+.admin-section-head{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;
+  text-transform:uppercase;color:var(--dim);
+  padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.admin-table{width:100%;border-collapse:collapse;}
+.admin-table th{
+  font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:0.18em;
+  text-transform:uppercase;color:var(--dim);padding:8px 10px;
+  border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;
+}
+.admin-table td{
+  font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--sub);
+  padding:9px 10px;border-bottom:1px solid rgba(213,235,213,0.04);
+  white-space:nowrap;
+}
+.admin-table tr:hover td{background:rgba(255,255,255,0.015);}
+.admin-table td.hi{color:var(--lime);font-weight:500;}
+.admin-table td.addr{color:var(--dim);font-size:9px;}
+/* Card Tester */
+.tier-test-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px;}
+.tier-test-card{
+  background:var(--panel2);border:1px solid var(--border);border-radius:4px;
+  padding:14px 16px;cursor:pointer;transition:all 0.15s;
+  display:flex;flex-direction:column;gap:4px;
+}
+.tier-test-card:hover{border-color:rgba(195,251,165,0.4);background:rgba(195,251,165,0.04);}
+.tier-test-card.selected{border-color:var(--lime);background:rgba(195,251,165,0.07);}
+.tier-test-icon{font-size:20px;margin-bottom:4px;}
+.tier-test-name{font-family:'Clash Display',sans-serif;font-size:13px;font-weight:700;color:var(--text);}
+.tier-test-range{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);letter-spacing:0.08em;}
+.tester-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.tester-tag{
+  display:inline-block;font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:0.12em;padding:3px 8px;border-radius:3px;
+  background:rgba(255,200,60,0.12);color:#ffc83c;border:1px solid rgba(255,200,60,0.2);
+  margin-bottom:8px;
+}
+.db-preview{
+  background:#070520;border:1px solid var(--border);border-radius:3px;
+  padding:14px;font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--dim);line-height:1.7;overflow-x:auto;white-space:pre;
+  max-height:180px;overflow-y:auto;
+}
+.db-preview .key{color:rgba(195,251,165,0.6);}
+.db-preview .val{color:var(--text);}
+.db-preview .null{color:rgba(255,255,255,0.2);}
+
+/* Create passcode form */
+.passcode-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.passcode-form .field{margin-bottom:0;}
+.btn-small{
+  background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.3);
+  color:var(--lime);font-family:'Inter',sans-serif;font-size:10px;
+  font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  padding:10px 16px;cursor:pointer;border-radius:2px;transition:all 0.15s;
+  white-space:nowrap;
+}
+.btn-small:hover{background:rgba(195,251,165,0.16);}
+.btn-danger{
+  background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.25);
+  color:#FF8080;font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.1em;padding:5px 10px;cursor:pointer;border-radius:2px;
+  transition:all 0.15s;
+}
+.btn-danger:hover{background:rgba(255,77,77,0.14);}
+.passcode-badge{
+  display:inline-block;font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:0.1em;background:rgba(195,251,165,0.08);
+  color:var(--lime);border:1px solid rgba(195,251,165,0.2);
+  padding:3px 9px;border-radius:2px;cursor:pointer;
+  transition:all 0.15s;
+}
+.passcode-badge:hover{background:rgba(195,251,165,0.15);}
+.active-dot{
+  display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--lime);margin-right:5px;
+  box-shadow:0 0 6px var(--lime);animation:pulse 2s infinite;
+}
+.inactive-dot{
+  display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--dim);margin-right:5px;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.copy-flash{color:var(--lime);font-size:9px;display:none;margin-left:6px;}
+.copy-flash.on{display:inline;}
+
+/* Admin empty state */
+.empty-state{
+  text-align:center;padding:32px 20px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dimmer);letter-spacing:0.1em;
+}
+
+/* ================================================================
+   LANGUAGE TOGGLE
+================================================================ */
+.lang-toggle-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.lang-toggle-hint{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:0.18em;text-transform:uppercase;
+  color:rgba(213,235,213,0.45);line-height:1;
+}
+.lang-toggle{
+  display:flex;align-items:center;gap:3px;
+  background:var(--panel2);border:1px solid var(--border);
+  border-radius:6px;padding:3px;flex-shrink:0;
+}
+.lang-btn{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  letter-spacing:0.08em;padding:8px 18px;border:none;
+  background:transparent;color:var(--dimmer);cursor:pointer;
+  border-radius:4px;transition:all 0.15s;
+}
+.lang-btn.active{background:var(--lime);color:#070520;}
+.lang-btn:hover:not(.active){color:var(--text);}
+
+/* ================================================================
+   POWERED BY HOLO HIVE
+================================================================ */
+.powered-by{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:18px 20px;margin-top:20px;
+  border-top:1px solid var(--border);
+}
+.powered-by-lbl{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:0.18em;text-transform:uppercase;color:var(--dimmer);
+}
+.powered-by-brand{
+  display:flex;align-items:center;gap:6px;
+  text-decoration:none;transition:opacity 0.15s;
+}
+.powered-by-brand:hover{opacity:0.75;}
+.powered-by-name{
+  font-family:'Clash Display',sans-serif;font-size:12px;
+  font-weight:700;color:rgba(213,235,213,0.45);letter-spacing:0.06em;
+}
+/* Fixed bottom-right badge */
+.powered-by-fixed{
+  position:fixed;bottom:28px;right:32px;z-index:9999;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(10,12,26,0.88);
+  border:1px solid rgba(58,173,173,0.55);
+  border-radius:40px;
+  padding:10px 20px 10px 14px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 0 32px rgba(58,173,173,0.22),0 2px 20px rgba(0,0,0,0.6);
+  text-decoration:none;
+  transition:opacity 0.2s,box-shadow 0.2s;
+  cursor:pointer;
+}
+.powered-by-fixed:hover{
+  opacity:0.9;
+  box-shadow:0 0 44px rgba(58,173,173,0.35),0 2px 24px rgba(0,0,0,0.65);
+}
+.powered-by-fixed-text{display:flex;flex-direction:column;gap:1px;}
+.powered-by-fixed-lbl{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  letter-spacing:0.2em;text-transform:uppercase;
+  color:rgba(58,173,173,1);line-height:1;
+}
+.powered-by-fixed-name{
+  font-family:'Clash Display',sans-serif;font-size:16px;
+  font-weight:700;color:#e8f5e8;letter-spacing:0.05em;line-height:1.15;
+}
+/* Card-level HH footer */
+.card-hh{display:flex;align-items:center;gap:6px;}
+.card-hh-sep{
+  font-family:'Clash Display',sans-serif;font-size:14px;
+  font-weight:400;color:rgba(213,235,213,0.28);line-height:1;flex-shrink:0;
+}
+.card-hh-name{
+  font-family:'Clash Display',sans-serif;font-size:13px;
+  font-weight:700;color:rgba(213,235,213,0.36);letter-spacing:0.06em;
+}
+
+/* ================================================================
+   GATE VISUAL IMPROVEMENTS
+================================================================ */
+.gate-glow-left{
+  position:fixed;top:0;left:-200px;width:500px;height:100vh;
+  background:radial-gradient(ellipse at left,rgba(195,251,165,0.055) 0%,transparent 65%);
+  pointer-events:none;z-index:0;
+}
+.gate-glow-right{
+  position:fixed;top:0;right:-200px;width:500px;height:100vh;
+  background:radial-gradient(ellipse at right,rgba(255,61,0,0.06) 0%,transparent 65%);
+  pointer-events:none;z-index:0;
+}
+.gate-top-bar{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;align-items:center;justify-content:flex-end;
+  padding:20px 28px;
+}
+.eco-stats-strip{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  margin-top:16px;width:100%;
+}
+.eco-stat{
+  background:var(--panel2);border:1px solid var(--border);
+  padding:12px;text-align:center;border-radius:2px;
+}
+.eco-stat-val{
+  font-family:'Clash Display',sans-serif;font-size:17px;font-weight:700;
+  color:var(--lime);line-height:1;margin-bottom:4px;
+}
+.eco-stat-lbl{
+  font-family:'JetBrains Mono',monospace;font-size:7px;
+  letter-spacing:0.18em;text-transform:uppercase;color:var(--dimmer);
+}
+/* Info strip — horizontal unified stat bar */
+.info-strip{
+  display:flex;align-items:stretch;gap:0;margin-bottom:20px;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;
+}
+.info-chip{
+  flex:1;display:flex;align-items:center;gap:12px;
+  padding:18px 22px;
+  border-right:1px solid var(--border);
+}
+.info-chip:last-child{border-right:none;}
+.info-chip-icon{font-size:22px;flex-shrink:0;line-height:1;}
+.info-chip-txt{
+  font-family:'JetBrains Mono',monospace;font-size:11px;
+  font-weight:600;letter-spacing:0.10em;text-transform:uppercase;
+  color:var(--sub);line-height:1.35;
+}
+
+/* ================================================================
+   MOBILE RESPONSIVE
+================================================================ */
+@media(max-width:640px){
+  .stats-tiles{grid-template-columns:1fr 1fr;}
+  .admin-grid{grid-template-columns:1fr;}
+  .passcode-form{grid-template-columns:1fr;}
+  .gate-tiers{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .actions{flex-wrap:wrap;}
+  .act-btn{min-width:calc(50% - 4px);}
+  .admin-table{font-size:9px;}
+  .admin-table th{font-size:6px;}
+  .tile-val{font-size:22px;}
+}
+@media(max-width:400px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .card-handle{font-size:20px;}
+  .vol-num{font-size:16px;}
+  .role-name{font-size:15px;}
+}
+</style>
+</head>
+<body>
+<div class="bg-layer bg-mesh-fire"></div>
+<div class="bg-layer bg-mesh-lime"></div>
+<div class="fire-bg"></div>
+<div class="gate-glow-left"></div>
+<div class="gate-glow-right"></div>
+
+<!-- ================================================================ STICKY NAV (shown on all views) ================================================================ -->
+<nav class="nav" id="site-nav">
+  <div class="nav-inner">
+    <div class="nav-brand" onclick="resetAndGoHome()" title="FOGO Trader Card" role="button" tabindex="0">
+      <div class="nav-brand-mark">
+        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+          <path fill="#fff" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/>
+        </svg>
+      </div>
+      <div class="nav-brand-text">
+        <span class="nav-brand-wordmark">FOGO</span>
+        <span class="nav-brand-version" id="t-nav-version">Trader Card · Community Activation</span>
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="live-status"><span class="live-dot"></span><span id="t-nav-live">Community Activation Live</span></div>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button class="lang-btn active" id="nav-lang-en" type="button" onclick="setLanguage('en')">EN</button>
+        <button class="lang-btn" id="nav-lang-ko" type="button" onclick="setLanguage('ko')">한국어</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ================================================================ ECOSYSTEM TICKER ================================================================ -->
+<div class="ticker-wrap" aria-hidden="true">
+  <div class="ticker-track">
+    <!-- Set 1 -->
+    <div class="ticker-item"><span class="ticker-label">Ecosystem</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer">Pyron</a><div class="ticker-dot"></div><a href="https://perps.ambient.finance" class="ticker-name" target="_blank" rel="noopener noreferrer">Ambient</a></div>
+    <div class="ticker-item"><span class="ticker-label">40ms blocks</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">Firedancer · SVM L1</span></div>
+    <div class="ticker-item"><span class="ticker-label">Flames Season 2</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">200M $FOGO</span></div>
+    <div class="ticker-item"><span class="ticker-label">Explore</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer">Pyron</a><div class="ticker-dot"></div><a href="https://perps.ambient.finance" class="ticker-name" target="_blank" rel="noopener noreferrer">Ambient</a></div>
+    <div class="ticker-item"><span class="ticker-label">40ms blocks</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">Firedancer · SVM L1</span></div>
+    <!-- Set 2 — exact duplicate for seamless loop -->
+    <div class="ticker-item"><span class="ticker-label">Ecosystem</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer">Pyron</a><div class="ticker-dot"></div><a href="https://perps.ambient.finance" class="ticker-name" target="_blank" rel="noopener noreferrer">Ambient</a></div>
+    <div class="ticker-item"><span class="ticker-label">40ms blocks</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">Firedancer · SVM L1</span></div>
+    <div class="ticker-item"><span class="ticker-label">Flames Season 2</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">200M $FOGO</span></div>
+    <div class="ticker-item"><span class="ticker-label">Explore</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer">Pyron</a><div class="ticker-dot"></div><a href="https://perps.ambient.finance" class="ticker-name" target="_blank" rel="noopener noreferrer">Ambient</a></div>
+    <div class="ticker-item"><span class="ticker-label">40ms blocks</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">Firedancer · SVM L1</span></div>
+  </div>
+</div>
+
+<!-- ================================================================ GATE ================================================================ -->
+<section id="view-gate" class="view active" style="position:relative;">
+  <!-- Language toggle top-right -->
+  <div class="gate-top-bar">
+    <div class="lang-toggle-wrap">
+      <div class="lang-toggle">
+        <button type="button" class="lang-btn active" id="lang-en" onclick="setLanguage('en')">EN</button>
+        <button type="button" class="lang-btn" id="lang-ko" onclick="setLanguage('ko')">한국어</button>
+      </div>
+      <span class="lang-toggle-hint" id="t-lang-hint">Select Language</span>
+    </div>
+  </div>
+
+  <div class="gate-inner">
+    <!-- Left: hero text column -->
+    <div class="gate-hero-text">
+      <div class="gate-eyebrow" id="t-gate-eyebrow">FOGO Community Activation</div>
+      <h1 class="gate-headline" id="t-gate-headline">Prove Your<br><span id="t-gate-headline-span">Chain Presence</span></h1>
+      <p class="gate-sub" id="t-gate-sub">Connect your SVM wallet to reveal your FOGO Trader Card. Exclusive to traders who've deployed capital on the FOGO ecosystem.</p>
+    </div>
+    <!-- Right: passcode form + tiers -->
+    <div class="gate-card">
+      <label class="gate-form-label" id="t-gate-label">KOL Passcode</label>
+      <div id="gate-err" class="err-box" data-en="Invalid passcode. Check with your KOL and try again." data-ko="잘못된 패스코드입니다. KOL에게 확인하고 다시 시도하세요.">Invalid passcode. Check with your KOL and try again.</div>
+      <input class="gate-input" id="gate-code" type="text" placeholder="Enter passcode from your KOL..." autocomplete="off" spellcheck="false">
+      <button class="btn-primary" id="gate-btn" onclick="validatePasscode()">
+        <span class="btn-sheen"></span>
+        <span id="t-gate-btn">Unlock Trader Card</span>
+      </button>
+      <div class="gate-divider"><span class="gate-divider-txt" id="t-gate-divider">Trader Tiers</span></div>
+      <div class="gate-tiers" id="gate-tiers-grid">
+        <div class="gate-tier"><span class="gate-tier-icon">⚡</span><div class="gate-tier-name" id="t-tier-1">Spot Accumulator</div><div class="gate-tier-range">$100+</div></div>
+        <div class="gate-tier"><span class="gate-tier-icon">🎯</span><div class="gate-tier-name" id="t-tier-2">Tactical Trader</div><div class="gate-tier-range">$1,000+</div></div>
+        <div class="gate-tier"><span class="gate-tier-icon">📈</span><div class="gate-tier-name" id="t-tier-3">Momentum Operator</div><div class="gate-tier-range">$5,000+</div></div>
+        <div class="gate-tier"><span class="gate-tier-icon">👑</span><div class="gate-tier-name" id="t-tier-4">Perp Architect</div><div class="gate-tier-range">$10,000+</div></div>
+        <div class="gate-tier"><span class="gate-tier-icon">🔥</span><div class="gate-tier-name" id="t-tier-5">Alpha Extractor</div><div class="gate-tier-range">$25,000+</div></div>
+        <div class="gate-tier apex"><span class="gate-tier-icon">⚔️</span><div class="gate-tier-name" id="t-tier-6">FOGO Apex</div><div class="gate-tier-range">$100,000+</div></div>
+      </div>
+
+      <!-- Ecosystem stats strip -->
+      <div class="eco-stats-strip">
+        <div class="eco-stat"><div class="eco-stat-val">7</div><div class="eco-stat-lbl" id="t-stat-protocols">Protocols</div></div>
+        <div class="eco-stat"><div class="eco-stat-val">S2</div><div class="eco-stat-lbl" id="t-stat-season">Season</div></div>
+        <div class="eco-stat"><div class="eco-stat-val">On-Chain</div><div class="eco-stat-lbl" id="t-stat-verified">Verified</div></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================================================================ APP (WALLET FORM) ================================================================ -->
+<section id="view-app" class="view">
+  <div class="app-inner">
+    <div class="site-header">
+      <div class="hdr-logo" onclick="resetAndGoHome()" style="cursor:pointer;" title="FOGO Trader Card">
+        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="flex-shrink:0;">
+          <path fill="#ff3d00" d="M512 0A512 512 0 0 0 0 512a512 512 0 0 0 512 512 512 512 0 0 0 512-512A512 512 0 0 0 512 0Z"/>
+          <path fill="#fff" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/>
+        </svg>
+        <span class="hdr-logo-text">FOGO</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="lang-toggle-wrap">
+          <div class="lang-toggle">
+            <button type="button" class="lang-btn active" id="lang-en-2" onclick="setLanguage('en')">EN</button>
+            <button type="button" class="lang-btn" id="lang-ko-2" onclick="setLanguage('ko')">한국어</button>
+          </div>
+          <span class="lang-toggle-hint" id="t-lang-hint-2">Select Language</span>
+        </div>
+        <div class="hdr-kol" id="kol-badge">KOL: —</div>
+      </div>
+    </div>
+
+    <!-- Info chips -->
+    <div class="info-strip">
+      <div class="info-chip"><span class="info-chip-icon">🔗</span><span class="info-chip-txt" id="t-chip-1">On-Chain Verified</span></div>
+      <div class="info-chip"><span class="info-chip-icon">⚡</span><span class="info-chip-txt" id="t-chip-2">FOGO Mainnet</span></div>
+      <div class="info-chip"><span class="info-chip-icon">🔒</span><span class="info-chip-txt" id="t-chip-3">No Fees · No Tx</span></div>
+      <div class="info-chip"><span class="info-chip-icon">🎴</span><span class="info-chip-txt" id="t-chip-4">7 Trader Tiers</span></div>
+    </div>
+
+    <!-- Prize / countdown bar -->
+    <div class="prize-bar" id="prize-bar-app">
+      <div class="prize-bar-prizes">
+        <div class="prize-pill">
+          <div class="prize-pill-icon">🏆</div>
+          <div class="prize-pill-text"><span id="t-prize-title">Season 2 Raffle — Community Prize Pool</span><span class="sub" id="t-prize-sub">Enter below</span></div>
+        </div>
+      </div>
+      <div class="prize-bar-div"></div>
+      <div class="countdown-box">
+        <div class="countdown-label" id="t-countdown-label">Draw closes in</div>
+        <div class="countdown-digits" id="countdownApp">--d --h --m --s</div>
+      </div>
+    </div>
+
+    <!-- 2-col grid: steps left, wallet form right -->
+    <div class="app-main-grid">
+      <div class="app-left">
+        <!-- Steps bar -->
+        <div class="steps-bar" id="steps-bar-app" aria-label="How to enter">
+          <div class="step-card">
+            <div class="step-num" id="t-step-n1">Step 01</div>
+            <div class="step-title" id="t-step-t1">Connect Wallet</div>
+            <div class="step-body" id="t-step-b1">Connect your SVM wallet (Phantom, Solflare, or Backpack)</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num" id="t-step-n2">Step 02</div>
+            <div class="step-title" id="t-step-t2">Verify Identity</div>
+            <div class="step-body" id="t-step-b2">Sign a message to prove wallet ownership. No transaction, no fees.</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num" id="t-step-n3">Step 03</div>
+            <div class="step-title" id="t-step-t3">View Your Card</div>
+            <div class="step-body" id="t-step-b3">Your on-chain trading history generates a unique Trader Card.</div>
+          </div>
+          <div class="step-card">
+            <div class="step-num" id="t-step-n4">Step 04</div>
+            <div class="step-title" id="t-step-t4">Enter Raffle</div>
+            <div class="step-body" id="t-step-b4">Eligible wallets can enter the Season 2 community raffle.</div>
+          </div>
+        </div>
+        <div class="notice" id="t-notice" style="margin-top:16px;">
+          This card reads your live on-chain activity from the FOGO network (mainnet.fogo.io). Volume is aggregated across Ambient, Valiant, Brasa, Pyron, Ignition, and FogoLend. Minimum $100 in FOGO ecosystem volume required to generate a card.
+        </div>
+        <div style="text-align:left;margin-top:10px;">
+          <button onclick="resetAndGoHome()" style="background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer;padding:0;letter-spacing:0.05em;font-family:inherit;">← Change Passcode</button>
+        </div>
+      </div><!-- /.app-left -->
+
+      <div class="app-right wallet-section">
+    <div class="section-card" style="background:transparent;border:none;padding:0;">
+      <div class="section-head" id="t-connect-head">Connect Your Wallet</div>
+
+      <!-- Wallet connect panel -->
+      <div class="field">
+        <label class="field-label"><span class="dot dot-sol"></span> <span id="t-sol-label">Solana / FOGO Wallet</span></label>
+
+        <!-- Not connected -->
+        <div id="wallet-not-connected">
+          <div class="wallet-options">
+            <button class="wallet-opt" id="opt-phantom"  onclick="connectWallet('phantom')">
+              <span class="wo-logo">👻</span> Phantom
+            </button>
+            <button class="wallet-opt" id="opt-solflare" onclick="connectWallet('solflare')">
+              <span class="wo-logo">☀️</span> Solflare
+            </button>
+            <button class="wallet-opt" id="opt-backpack" onclick="connectWallet('backpack')">
+              <span class="wo-logo">🎒</span> Backpack
+            </button>
+          </div>
+          <div class="no-wallet-link" id="t-no-wallet">
+            No wallet? Get <a href="https://phantom.app" target="_blank">Phantom</a>,
+            <a href="https://solflare.com" target="_blank">Solflare</a>, or
+            <a href="https://backpack.app" target="_blank">Backpack</a> — all free.
+          </div>
+        </div>
+
+        <!-- Connected -->
+        <div id="wallet-is-connected" style="display:none;">
+          <div class="wallet-connected-row">
+            <span class="wallet-connected-dot"></span>
+            <span class="wallet-connected-addr" id="wallet-connected-addr">—</span>
+            <span class="wallet-verified-badge" id="wallet-verified-badge"></span>
+            <button class="wallet-disconnect-btn" id="t-disconnect" onclick="disconnectWallet()">Disconnect</button>
+          </div>
+          <div class="wallet-sign-hint" id="wallet-sign-hint">Waiting for signature...</div>
+        </div>
+      </div>
+
+      <!-- Handle (X or Telegram) -->
+      <div class="field">
+        <label class="field-label"><span class="dot dot-x" id="handle-dot"></span> <span id="t-x-label">X / Twitter Handle</span></label>
+        <div class="platform-toggle">
+          <button type="button" class="platform-btn active" id="plat-x" onclick="setPlatform('x')">𝕏 Twitter</button>
+          <button type="button" class="platform-btn tg" id="plat-tg" onclick="setPlatform('tg')">✈ Telegram</button>
+        </div>
+        <input class="field-input" id="x-handle" type="text" placeholder="@yourhandle">
+      </div>
+
+      <div id="app-err" class="err-box" style="margin-top:12px;"></div>
+      <button class="btn-primary" id="gen-btn" onclick="generateCard()" style="margin-top:14px;" disabled>
+        <span class="btn-sheen"></span>
+        <span id="t-gen-btn">Generate My Trader Card</span>
+      </button>
+    </div>
+      </div><!-- /.app-right -->
+    </div><!-- /.app-main-grid -->
+
+    <div class="loading" id="loading" style="margin-top:24px;">
+      <div class="spinner"></div>
+      <div class="load-txt" id="t-load-txt">Reading FOGO chain data</div>
+      <div class="load-step" id="load-step">&nbsp;</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================================================================ CARD VIEW ================================================================ -->
+<section id="view-card" class="view">
+  <div class="app-inner">
+    <div class="site-header">
+      <div class="hdr-logo" onclick="resetAndGoHome()" style="cursor:pointer;" title="FOGO Trader Card">
+        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="24" height="24" style="flex-shrink:0;">
+          <path fill="#ff3d00" d="M512 0A512 512 0 0 0 0 512a512 512 0 0 0 512 512 512 512 0 0 0 512-512A512 512 0 0 0 512 0Z"/>
+          <path fill="#fff" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/>
+        </svg>
+        <span class="hdr-logo-text">FOGO</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="lang-toggle-wrap">
+          <div class="lang-toggle">
+            <button type="button" class="lang-btn active" id="lang-en-3" onclick="setLanguage('en')">EN</button>
+            <button type="button" class="lang-btn" id="lang-ko-3" onclick="setLanguage('ko')">한국어</button>
+          </div>
+          <span class="lang-toggle-hint" id="t-lang-hint-3">Select Language</span>
+        </div>
+        <div class="hdr-kol" id="kol-badge-2">KOL: —</div>
+      </div>
+    </div>
+
+    <!-- The actual card — always shown -->
+    <div class="card-wrap on" id="card-wrap">
+      <div class="trader-card" id="the-card">
+        <div class="card-glow"></div>
+        <div class="card-dots"></div>
+        <div class="card-topbar"></div>
+        <div class="card-logos c-z">
+          <div class="c-logo">
+            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="18" height="18" style="flex-shrink:0;">
+              <path fill="#ff3d00" d="M512 0A512 512 0 0 0 0 512a512 512 0 0 0 512 512 512 512 0 0 0 512-512A512 512 0 0 0 512 0Z"/>
+              <path fill="#fff" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/>
+            </svg>
+            <span class="c-logo-txt">FOGO</span>
+          </div>
+          <div class="c-series" id="c-series">Season II — Trader Card</div>
+        </div>
+        <div class="card-identity c-z">
+          <div class="card-handle" id="c-handle">@handle</div>
+          <div class="vol-block">
+            <div class="vol-num" id="c-vol">$0</div>
+            <div class="vol-lbl" id="t-vol-lbl">Volume</div>
+          </div>
+        </div>
+        <div class="card-hr c-z"></div>
+        <div class="card-role c-z">
+          <div class="role-icon" id="r-icon">🔍</div>
+          <div>
+            <div class="role-name" id="r-name">Chain Observer</div>
+            <div class="role-desc" id="r-desc">Early days. The market is watching back.</div>
+          </div>
+        </div>
+        <div class="proto-row c-z" id="proto-row"></div>
+        <div class="card-hr c-z"></div>
+        <div class="stats-grid c-z">
+          <div class="stat"><div class="s-lbl" id="t-s-age">Wallet Age</div><div class="s-val hi" id="s-age">--</div></div>
+          <div class="stat"><div class="s-lbl" id="t-s-txns">Txn Count</div><div class="s-val" id="s-txns">--</div></div>
+          <div class="stat"><div class="s-lbl" id="t-s-vol">Volume USD</div><div class="s-val hi" id="s-vol">--</div></div>
+          <div class="stat"><div class="s-lbl" id="t-s-proto">Top Protocol</div><div class="s-val" id="s-proto">--</div></div>
+          <div class="stat"><div class="s-lbl" id="t-s-tier">Tier</div><div class="s-val" id="s-tier">--</div></div>
+          <div class="stat"><div class="s-lbl" id="t-s-power">Power Score</div><div class="s-val hi" id="s-power">--</div></div>
+        </div>
+        <div class="activity c-z">
+          <div class="act-row">
+            <span class="act-lbl" id="t-chain-activity">Chain Activity</span>
+            <span class="act-pct" id="a-pct">0%</span>
+          </div>
+          <div class="act-track"><div class="act-fill" id="a-fill" style="width:0%"></div></div>
+        </div>
+        <div class="traits-row c-z" id="traits-row"></div>
+        <div class="card-foot c-z">
+          <div class="foot-addr" id="f-addr">—</div>
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div class="foot-brand">
+              <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="flex-shrink:0;">
+                <path fill="#ff3d00" d="M512 0A512 512 0 0 0 0 512a512 512 0 0 0 512 512 512 512 0 0 0 512-512A512 512 0 0 0 512 0Z"/>
+                <path fill="#fff" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/>
+              </svg>
+              <span class="foot-brand-txt">FOGO</span>
+            </div>
+            <span class="card-hh-sep" id="t-card-hh-lbl">×</span>
+            <div class="card-hh">
+              <img src="data:image/png;base64,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" width="18" height="18" style="object-fit:contain;flex-shrink:0;border-radius:3px;" alt="Holo Hive"/>
+              <span class="card-hh-name">Holo Hive</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card actions -->
+      <div class="actions">
+        <button class="act-btn primary" onclick="shareX()" id="t-share-x-btn">↗ Share on X</button>
+        <button class="act-btn" onclick="downloadCard()" id="dl-btn">⬇ <span id="t-save-card">Save Card</span></button>
+        <button class="act-btn" onclick="resetAndGoHome()" id="t-new-btn">New</button>
+      </div>
+
+      <!-- Ineligible CTA (shown when vol < $100) -->
+      <div class="ineligible-cta" id="ineligible-cta" style="display:none;">
+        <div class="ineligible-badge">⛔ NOT ELIGIBLE FOR THIS RAFFLE</div>
+        <div class="ineligible-title">You haven't been FOGO-pilled yet</div>
+        <div class="ineligible-sub">Reach <strong>$100 in FOGO ecosystem volume</strong> to qualify for the prize draw and mint a real Trader Card. You're <span id="ineligible-vol-txt">$0</span> away.</div>
+        <p style="font-size:10px;color:var(--dim);margin-bottom:10px;letter-spacing:0.05em;">Start trading on FOGO:</p>
+        <div class="ecosystem-links">
+          <a class="eco-link" href="https://ambient.finance" target="_blank"><span class="eco-link-name">Ambient</span><span class="eco-link-type">Perps DEX</span></a>
+          <a class="eco-link" href="https://valiant.trade" target="_blank"><span class="eco-link-name">Valiant</span><span class="eco-link-type">Spot & LP</span></a>
+          <a class="eco-link" href="https://fogolend.com" target="_blank"><span class="eco-link-name">Fogolend</span><span class="eco-link-type">Lending</span></a>
+          <a class="eco-link" href="https://brasa.finance" target="_blank"><span class="eco-link-name">Brasa</span><span class="eco-link-type">Liquid Staking</span></a>
+          <a class="eco-link" href="https://pyron.finance" target="_blank"><span class="eco-link-name">Pyron</span><span class="eco-link-type">Money Market</span></a>
+          <a class="eco-link" href="https://fogo.io/ecosystem" target="_blank"><span class="eco-link-name">More</span><span class="eco-link-type">Ecosystem</span></a>
+        </div>
+      </div>
+
+      <!-- Raffle entry flow (eligible wallets only) -->
+      <div id="eligible-entry" style="display:none;">
+
+        <!-- Step 1: Enter Raffle -->
+        <div id="raffle-step-1" class="raffle-card">
+          <div class="raffle-eyebrow" id="t-raffle-eyebrow">Raffle Entry</div>
+          <div class="raffle-entries-badge" id="raffle-entries-badge">1 ENTRY</div>
+          <div class="raffle-tier-note" id="t-raffle-tier-note">Your tier qualifies you for 1 raffle draw entry.</div>
+
+          <!-- Mandatory sharing confirmation -->
+          <div class="raffle-confirm" onclick="toggleRaffleConfirm()" id="raffle-confirm-box">
+            <div class="raffle-confirm-check" id="raffle-confirm-check"></div>
+            <div class="raffle-confirm-body">
+              <strong id="t-raffle-confirm-strong">I have downloaded my Trader Card and shared it in the KOL channel comments.</strong>
+              <span id="t-raffle-confirm-note">Raffle entries will be void if your card is not visible in the channel before the draw.</span>
+              <div class="raffle-confirm-warn">⚠ <span id="t-raffle-confirm-warn">Entries without proof of sharing are ineligible.</span></div>
+            </div>
+          </div>
+
+          <button class="raffle-enter-btn" id="raffle-enter-btn" onclick="enterRaffle()" disabled>
+            <span id="t-enter-raffle-btn">ENTER RAFFLE</span>
+          </button>
+        </div>
+
+        <!-- Step 2: Entry recorded + bonus share prompt -->
+        <div id="raffle-step-2" class="raffle-card" style="display:none;">
+          <div class="raffle-success-icon">🎟️</div>
+          <div class="raffle-success-title" id="t-entry-recorded">Entry Recorded</div>
+          <div class="raffle-success-sub" id="raffle-entry-count-msg">1 entry secured in the draw.</div>
+          <div class="raffle-bonus-panel">
+            <div class="raffle-bonus-head" id="t-bonus-head">Earn a Bonus Entry</div>
+            <div class="raffle-bonus-sub" id="t-bonus-sub">Share your card on socials and drop the post link below for an extra entry.</div>
+            <div class="raffle-share-btns">
+              <button class="raffle-share-btn" onclick="shareX()"><span id="t-raffle-share-x">𝕏 Share on X</span></button>
+              <button class="raffle-share-btn tg" onclick="shareTg()"><span id="t-raffle-share-tg">✈ Share on Telegram</span></button>
+            </div>
+            <div class="raffle-link-wrap">
+              <input class="raffle-link-input" id="social-link-input" type="url" placeholder="Paste your post link here..." />
+              <button class="raffle-link-btn" id="raffle-link-btn" onclick="submitSocialLink()"><span id="t-submit-link">Submit</span></button>
+            </div>
+            <button class="raffle-skip-btn" onclick="skipBonusEntry()" id="t-skip-btn">Skip — I'm done</button>
+          </div>
+        </div>
+
+        <!-- Final confirmation -->
+        <div id="raffle-done" class="raffle-card raffle-done-card" style="display:none;">
+          <div class="raffle-done-icon">🔥</div>
+          <div class="raffle-done-title" id="t-raffle-done-title">You're in the Draw</div>
+          <div class="raffle-done-sub" id="t-raffle-done-sub">Good luck. Results announced by your KOL.</div>
+          <button class="raffle-skip-btn" onclick="resetAndGoHome()" style="margin-top:18px;">← Start Over</button>
+        </div>
+
+      </div><!-- /eligible-entry -->
+
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ ADMIN VIEW ================================================================ -->
+<section id="view-admin" class="view">
+  <div class="admin-inner">
+    <!-- Admin password gate -->
+    <div id="admin-gate" class="admin-gate">
+      <div class="admin-gate-title">⚡ Admin Panel</div>
+      <div class="admin-gate-sub">Enter the admin password to access the FOGO Trader Card dashboard.</div>
+      <div id="admin-gate-err" class="err-box">Wrong password.</div>
+      <input class="gate-input" id="admin-pass-input" type="password" placeholder="Admin password..." style="margin-bottom:12px;">
+      <button class="btn-primary" onclick="adminLogin()">
+        <span class="btn-sheen"></span>
+        Access Dashboard
+      </button>
+    </div>
+
+    <!-- Admin dashboard (hidden until login) -->
+    <div id="admin-dashboard" style="display:none;">
+      <div class="admin-header">
+        <div>
+          <div class="admin-title">⚡ FOGO Trader Card — Admin</div>
+          <div class="admin-sub">Campaign dashboard &amp; KOL management</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="admin-logout" style="background:transparent;color:var(--dim);border:1px solid var(--border);" onclick="showView('view-gate')">← Back to Site</button>
+          <button class="admin-logout" onclick="adminLogout()">Logout</button>
+        </div>
+      </div>
+
+      <!-- Stats tiles -->
+      <div class="stats-tiles">
+        <div class="stat-tile">
+          <div class="tile-val fire" id="a-total">0</div>
+          <div class="tile-lbl">Total Entries</div>
+        </div>
+        <div class="stat-tile">
+          <div class="tile-val" id="a-vol">$0</div>
+          <div class="tile-lbl">Total Volume Tracked</div>
+        </div>
+        <div class="stat-tile">
+          <div class="tile-val" id="a-kols">0</div>
+          <div class="tile-lbl">Active KOLs</div>
+        </div>
+        <div class="stat-tile">
+          <div class="tile-val" id="a-shared">0%</div>
+          <div class="tile-lbl">Shared on X</div>
+        </div>
+      </div>
+
+      <!-- Two-col grid -->
+      <div class="admin-grid">
+        <!-- Create KOL passcode -->
+        <div class="admin-section">
+          <div class="admin-section-head">Create KOL Passcode</div>
+          <div class="passcode-form">
+            <div class="field"><label class="field-label">KOL Name</label><input class="field-input" id="new-kol-name" type="text" placeholder="e.g. CryptoWhale"></div>
+            <div class="field"><label class="field-label">X / Handle</label><input class="field-input" id="new-kol-handle" type="text" placeholder="@handle"></div>
+          </div>
+          <div class="field" style="margin-bottom:12px;">
+            <label class="field-label">Custom Passcode (optional)</label>
+            <input class="field-input" id="new-kol-code" type="text" placeholder="Leave blank to auto-generate">
+          </div>
+          <button class="btn-small" onclick="createPasscode()">+ Create Passcode</button>
+          <div id="create-success" style="display:none;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lime);"></div>
+        </div>
+
+        <!-- KOL performance -->
+        <div class="admin-section">
+          <div class="admin-section-head">
+            KOL Performance
+            <button class="btn-small" onclick="refreshAdmin()" style="font-size:9px;padding:5px 10px;">↻ Refresh</button>
+          </div>
+          <div id="kol-table-wrap">
+            <div class="empty-state">Loading KOL data...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submissions table -->
+      <div class="admin-section-full">
+        <div class="admin-section-head">
+          All Entries
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button id="adminDeleteSelectedBtn" onclick="deleteSelectedEntries()">Delete Selected</button>
+            <input class="field-input" id="search-wallet" type="text" placeholder="Search wallet..." style="width:200px;padding:5px 10px;font-size:10px;" oninput="filterSubmissions()">
+            <button class="btn-small" onclick="exportCsv()" style="font-size:9px;padding:5px 12px;">Export CSV</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="admin-entry-table" id="submissions-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" title="Select All"></th>
+                <th>Wallet</th>
+                <th>Handle</th>
+                <th>KOL</th>
+                <th>Volume</th>
+                <th>Tier</th>
+                <th>Entries</th>
+                <th>Social Link</th>
+                <th>Date</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="submissions-body">
+              <tr><td colspan="10"><div class="empty-state">No entries yet.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── CARD TESTER ─────────────────────────────────────────── -->
+      <div class="admin-section-full" id="card-tester-section">
+        <div class="admin-section-head">
+          🧪 Card Tester
+          <span class="tester-tag">TEST MODE — entries write to DB</span>
+        </div>
+
+        <!-- Step 1: pick tier -->
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">Step 1 — Select a tier to simulate</div>
+        <div class="tier-test-grid" id="tier-test-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Step 2: dummy inputs -->
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">Step 2 — Dummy data (editable)</div>
+        <div class="tester-fields">
+          <div class="field">
+            <label class="field-label">Dummy Wallet</label>
+            <input class="field-input" id="test-wallet" type="text" value="TEST-WALLET-BOLT-0001">
+          </div>
+          <div class="field">
+            <label class="field-label">Dummy Handle</label>
+            <input class="field-input" id="test-handle" type="text" value="@boltxbt">
+          </div>
+          <div class="field">
+            <label class="field-label">Volume (USD)</label>
+            <input class="field-input" id="test-volume" type="number" value="1500" min="0">
+          </div>
+          <div class="field">
+            <label class="field-label">Tx Count</label>
+            <input class="field-input" id="test-txns" type="number" value="42" min="0">
+          </div>
+        </div>
+
+        <!-- Step 3: launch -->
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">Step 3 — Launch card &amp; go through raffle flow</div>
+        <button class="btn-primary" id="test-launch-btn" onclick="launchTestCard()" style="max-width:320px;margin-bottom:20px;" disabled>
+          <span class="btn-sheen"></span>
+          Launch Test Card →
+        </button>
+
+        <!-- DB Preview -->
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;">DB Row Preview — what will be written on raffle submit</div>
+        <div class="db-preview" id="db-preview">Select a tier above to preview the DB row...</div>
+      </div>
+
+      <!-- Config panel -->
+      <div class="admin-section-full">
+        <div class="admin-section-head">Campaign Config (Live)</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;" id="tier-config">
+          <!-- Populated by JS -->
+        </div>
+        <p style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);margin-top:12px;line-height:1.6;">
+          To change volume thresholds, update the CONFIG.tiers array at the top of the script and redeploy.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ================================================================
+   CONFIG — Edit before deploying
+================================================================ */
+const CONFIG = {
+  // ── SUPABASE ──────────────────────────────────────────────────
+  // 1. Go to supabase.com, create a free project
+  // 2. Go to Settings > API
+  // 3. Copy "Project URL" and "anon public" key here
+  sb_url:          'https://nhdktvsllunlgdsaninx.supabase.co',
+  sb_key:          'sb_publishable_7UBiqJ-CTExbzHc9j_Nrdw_CzeHn0mD',
+  sb_project_ref:  'nhdktvsllunlgdsaninx',
+
+  // ── ADMIN ─────────────────────────────────────────────────────
+  admin_password_hash: '728f5bacc384b4ee31e14b220c461a30f8fcc746eda6b69397bca8f03d2e85de', // SHA-256 of admin password — raw password never stored here
+  admin_param: 'admin',        // URL param to show admin view (?admin=1)
+
+  // ── FOGO RPC ──────────────────────────────────────────────────
+  rpc: 'https://mainnet.fogo.io',
+
+  // ── CAMPAIGN ──────────────────────────────────────────────────
+  campaign_name: 'FOGO Trader Card',
+  season: 'Season II',
+  prize_pool: '$FOGO Prize Pool',
+
+  // ── VOLUME TIERS ──────────────────────────────────────────────
+  // min: minimum USD volume for this tier
+  // max: upper bound (exclusive)
+  tiers: [
+    { min: 0,       max: 100,    name: 'Yet to be FOGO-pilled', icon: '🌱', desc: 'The chain is waiting. Your FOGO journey starts here.',  traits: ['NOT YET PILLED','FUTURE TRADER','JUST ARRIVED'] },
+    { min: 100,     max: 1000,   name: 'Spot Accumulator',  icon: '⚡', desc: 'Building a base. Discipline before size.',               traits: ['SPOT NATIVE','STEADY HANDS','ACCUMULATE'] },
+    { min: 1000,    max: 5000,   name: 'Tactical Trader',   icon: '🎯', desc: 'Entry and exit sharper than most.',                      traits: ['PRICE ACTION','RISK MANAGED','CONSISTENT'] },
+    { min: 5000,    max: 10000,  name: 'Momentum Operator', icon: '📈', desc: 'You trade the narrative before the crowd finds it.',     traits: ['TREND ALIGNED','HIGH VELOCITY','CATALYSTS ONLY'] },
+    { min: 10000,   max: 25000,  name: 'Perp Architect',    icon: '👑', desc: 'Leverage is a tool. You built the toolbox.',            traits: ['PERPS NATIVE','POSITION SIZED','ORDERBOOK READ'] },
+    { min: 25000,   max: 100000, name: 'Alpha Extractor',   icon: '🔥', desc: 'The edge is yours. Most people do not know why yet.',   traits: ['MULTI-CHAIN','INFORMATION EDGE','VETERAN'] },
+    { min: 100000,  max: Infinity, name: 'FOGO Apex',       icon: '⚔️', desc: 'The chain is your instrument. You play it well.',       traits: ['APEX TIER','INSTITUTIONAL','CHAIN LEGEND','UNTOUCHABLE'] }
+  ],
+
+  // ── MINIMUM VOLUME TO QUALIFY ─────────────────────────────────
+  min_volume: 100, // USD — must match tiers[1].min
+
+  // ── KNOWN PROGRAM IDs on FOGO mainnet ─────────────────────────
+  // Update these once confirmed from protocol docs / fogoscan
+  programs: {
+    ambient:  '',
+    valiant:  '',
+    brasa:    '',
+    pyron:    '',
+    ignition: '',
+    fogolend: '',
+  },
+
+  // ── SOL PRICE FALLBACK ────────────────────────────────────────
+  sol_price_fallback: 80, // USD — fixed price, no external API
+
+  // ── RAFFLE END DATE ───────────────────────────────────────────
+  raffle_end_date: '2026-05-31T23:59:59Z', // ISO 8601 UTC — countdown target
+};
+
+/* ================================================================
+   STATE
+================================================================ */
+let STATE = {
+  passcode: null,
+  kol_name: null,
+  kol_id: null,
+  wallet: null,
+  wallet_provider: null,
+  wallet_obj: null,
+  signature: null,
+  sig_nonce: null,
+  handle: null,
+  handle_platform: 'x',
+  cardData: null,
+  alreadySubmitted: false,
+  existingCardData: null,
+  raffleEntered: false,
+  raffleEntryCount: 0,
+  _lastInsertedWallet: null,
+  submitted: false,
+  adminLoggedIn: false,
+  allSubmissions: [],
+  allPasscodes: [],
+};
+
+/* ================================================================
+   SUPABASE CLIENT
+================================================================ */
+let db = null;
+function initSupabase() {
+  if (CONFIG.sb_url === 'YOUR_SUPABASE_URL') return; // not configured
+  try {
+    db = supabase.createClient(CONFIG.sb_url, CONFIG.sb_key);
+  } catch(e) { console.warn('Supabase init failed:', e); }
+}
+initSupabase();
+
+async function dbInsert(table, row) {
+  if (!db) return { error: 'Supabase not configured' };
+  const { data, error } = await db.from(table).insert(row).select().single();
+  return { data, error };
+}
+async function dbSelect(table, filters = {}) {
+  if (!db) return { data: [], error: 'not configured' };
+  let q = db.from(table).select('*');
+  Object.entries(filters).forEach(([k, v]) => { q = q.eq(k, v); });
+  const { data, error } = await q.order('created_at', { ascending: false });
+  return { data: data || [], error };
+}
+async function dbUpdate(table, id, updates) {
+  if (!db) return { error: 'not configured' };
+  const { data, error } = await db.from(table).update(updates).eq('id', id);
+  return { data, error };
+}
+
+/* ================================================================
+   ROUTING — check URL params on load
+================================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get(CONFIG.admin_param)) {
+    showView('view-admin');
+  } else {
+    showView('view-gate');
+  }
+  // Pre-fill admin gate if already logged in this session
+  if (sessionStorage.getItem('fogo_admin')) {
+    STATE.adminLoggedIn = true;
+    showAdminDashboard();
+  }
+});
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+/* ================================================================
+   PLATFORM TOGGLE (X vs Telegram)
+================================================================ */
+function setPlatform(p) {
+  STATE.handle_platform = p;
+  const xBtn  = document.getElementById('plat-x');
+  const tgBtn = document.getElementById('plat-tg');
+  const dot   = document.getElementById('handle-dot');
+  const lbl   = document.getElementById('t-x-label');
+  const inp   = document.getElementById('x-handle');
+
+  if (p === 'tg') {
+    xBtn.classList.remove('active');
+    tgBtn.classList.add('active');
+    dot.className = 'dot dot-tg';
+    lbl.textContent = CURRENT_LANG === 'ko' ? '텔레그램 핸들' : 'Telegram Handle';
+    inp.placeholder = CURRENT_LANG === 'ko' ? '@텔레그램아이디' : '@telegramhandle';
+  } else {
+    tgBtn.classList.remove('active');
+    xBtn.classList.add('active');
+    dot.className = 'dot dot-x';
+    lbl.textContent = TRANSLATIONS[CURRENT_LANG]?.x_label || 'X / Twitter Handle';
+    inp.placeholder = CURRENT_LANG === 'ko' ? '@핸들명' : '@yourhandle';
+  }
+}
+
+/* ================================================================
+   GATE — PASSCODE VALIDATION
+================================================================ */
+async function validatePasscode() {
+  const code = document.getElementById('gate-code').value.trim().toUpperCase();
+  const btn = document.getElementById('gate-btn');
+  const err = document.getElementById('gate-err');
+  err.classList.remove('on');
+
+  if (!code) { showGateErr('Enter a passcode to continue.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Checking...';
+
+  try {
+    // Try Supabase first
+    if (db) {
+      const { data, error } = await db
+        .from('kol_passcodes')
+        .select('*')
+        .eq('passcode', code)
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        showGateErr('Invalid passcode. Check with your KOL and try again.');
+        btn.disabled = false;
+        btn.innerHTML = '<span class="btn-sheen"></span>Unlock Trader Card';
+        return;
+      }
+
+      STATE.passcode = code;
+      STATE.kol_name = data.kol_name;
+      STATE.kol_id   = data.id;
+    } else {
+      // Supabase not configured — block access entirely
+      showGateErr('System not configured. Please contact support.');
+      btn.disabled = false;
+      btn.innerHTML = '<span class="btn-sheen"></span>Unlock Trader Card';
+      return;
+    }
+
+    // Update KOL badges
+    const kolB1 = document.getElementById('kol-badge');   if (kolB1) kolB1.textContent = `KOL: ${STATE.kol_name}`;
+    const kolB2 = document.getElementById('kol-badge-2'); if (kolB2) kolB2.textContent = `KOL: ${STATE.kol_name}`;
+    const ppTxt = document.getElementById('prize-pool-txt'); if (ppTxt) ppTxt.textContent = CONFIG.prize_pool;
+
+    showView('view-app');
+  } catch(e) {
+    showGateErr('Error checking passcode. Try again.');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span class="btn-sheen"></span>Unlock Trader Card';
+}
+
+function showGateErr(msg) {
+  const el = document.getElementById('gate-err');
+  el.textContent = msg;
+  el.classList.add('on');
+}
+
+// Allow Enter key on gate input
+document.getElementById('gate-code').addEventListener('keydown', e => {
+  if (e.key === 'Enter') validatePasscode();
+});
+
+/* ================================================================
+   WALLET CONNECT + OWNERSHIP SIGNATURE
+================================================================ */
+const WALLET_PROVIDERS = {
+  phantom:  () => window?.phantom?.solana || (window?.solana?.isPhantom  ? window.solana  : null),
+  solflare: () => window?.solflare?.isSolflare ? window.solflare : null,
+  backpack: () => window?.backpack?.isBackpack  ? window.backpack  : null,
+};
+
+async function connectWallet(providerName) {
+  const getProvider = WALLET_PROVIDERS[providerName];
+  const provider    = getProvider?.();
+  const installUrls = { phantom:'https://phantom.app', solflare:'https://solflare.com', backpack:'https://backpack.app' };
+
+  if (!provider) {
+    const name = providerName.charAt(0).toUpperCase() + providerName.slice(1);
+    showAppErr(`${name} not detected. Install it at ${installUrls[providerName]} then refresh.`);
+    return;
+  }
+
+  // Disable all wallet buttons during attempt
+  ['phantom','solflare','backpack'].forEach(p => {
+    const b = document.getElementById('opt-' + p);
+    if (b) b.disabled = true;
+  });
+
+  const setHint = (msg, cls) => {
+    const el = document.getElementById('wallet-sign-hint');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'wallet-sign-hint' + (cls ? ' ' + cls : '');
+  };
+
+  try {
+    // 1. Connect
+    const resp   = await provider.connect();
+    const pubkey = resp.publicKey.toString();
+
+    // Show connected UI first
+    document.getElementById('wallet-not-connected').style.display = 'none';
+    document.getElementById('wallet-is-connected').style.display  = 'block';
+    const short = pubkey.slice(0,5) + '...' + pubkey.slice(-4);
+    document.getElementById('wallet-connected-addr').textContent  = short;
+    document.getElementById('wallet-verified-badge').textContent  = '';
+    setHint('Waiting for signature in your wallet…');
+
+    // 2. Sign a nonce message to prove ownership
+    const nonce   = Date.now();
+    const message = `FOGO Trader Card\nVerify ownership of: ${pubkey}\nNonce: ${nonce}\n\nThis request will not trigger a blockchain transaction or cost any fees.`;
+    const encoded = new TextEncoder().encode(message);
+
+    let sigBytes;
+    try {
+      const signed = await provider.signMessage(encoded, 'utf8');
+      sigBytes     = signed.signature;
+    } catch(signErr) {
+      // User rejected signature — disconnect cleanly
+      disconnectWallet();
+      showAppErr('Signature declined. You must sign to prove wallet ownership — no fees, no transaction.');
+      return;
+    }
+
+    const signature = btoa(String.fromCharCode(...sigBytes));
+
+    // 3. Save to state
+    STATE.wallet          = pubkey;
+    STATE.wallet_provider = providerName;
+    STATE.wallet_obj      = provider;
+    STATE.signature       = signature;
+    STATE.sig_nonce       = nonce;
+
+    document.getElementById('wallet-verified-badge').textContent = '✓ VERIFIED';
+    setHint('Wallet ownership verified.', 'verified');
+
+    // 4. Check for existing submission
+    await checkExistingSubmission(pubkey);
+
+    // 5. Enable generate button
+    document.getElementById('gen-btn').disabled = false;
+
+  } catch(e) {
+    // Re-enable wallet buttons on failure
+    ['phantom','solflare','backpack'].forEach(p => {
+      const b = document.getElementById('opt-' + p);
+      if (b) b.disabled = false;
+    });
+    const msg = e.code === 4001 ? 'Connection rejected.' : ('Connection failed: ' + (e.message || 'Unknown error'));
+    showAppErr(msg);
+    document.getElementById('wallet-not-connected').style.display = 'block';
+    document.getElementById('wallet-is-connected').style.display  = 'none';
+  }
+}
+
+function disconnectWallet() {
+  if (STATE.wallet_obj?.disconnect) {
+    try { STATE.wallet_obj.disconnect(); } catch {}
+  }
+  STATE.wallet          = null;
+  STATE.wallet_provider = null;
+  STATE.wallet_obj      = null;
+  STATE.signature       = null;
+  STATE.sig_nonce       = null;
+  STATE.alreadySubmitted = false;
+  STATE.existingCardData = null;
+
+  document.getElementById('wallet-not-connected').style.display = 'block';
+  document.getElementById('wallet-is-connected').style.display  = 'none';
+  document.getElementById('wallet-connected-addr').textContent  = '—';
+  document.getElementById('wallet-verified-badge').textContent  = '';
+
+  ['phantom','solflare','backpack'].forEach(p => {
+    const b = document.getElementById('opt-' + p);
+    if (b) b.disabled = false;
+  });
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled    = true;
+  btn.textContent = 'Generate My Trader Card'; // reset if it was changed
+  btn.innerHTML   = '<span class="btn-sheen"></span>Generate My Trader Card';
+}
+
+async function checkExistingSubmission(walletAddr) {
+  if (!db) return;
+  const { data } = await db
+    .from('card_submissions')
+    .select('id,tier_name,total_volume_usd,power_score,tx_count,protocols,created_at')
+    .eq('wallet_address', walletAddr)
+    .maybeSingle();
+
+  if (data) {
+    STATE.alreadySubmitted = true;
+    STATE.existingCardData = data;
+    const hint = document.getElementById('wallet-sign-hint');
+    if (hint) {
+      hint.textContent = `⚠️ Already entered: ${data.tier_name} · ${fmtUsd(data.total_volume_usd)} — viewing your existing card.`;
+      hint.className   = 'wallet-sign-hint';
+    }
+    document.getElementById('gen-btn').innerHTML = '<span class="btn-sheen"></span>View My Card';
+  }
+}
+
+function goBackAndDisconnect() {
+  disconnectWallet();
+  showView('view-app');
+}
+
+function resetAndGoHome() {
+  // Disconnect wallet and wipe all session state, then return to the passcode gate
+  disconnectWallet();
+  STATE.wallet          = null;
+  STATE.signature       = null;
+  STATE.sig_nonce       = null;
+  STATE.handle          = null;
+  STATE.handle_stored   = null;
+  STATE.passcode        = null;
+  STATE.kol_id          = null;
+  STATE.cardData        = null;
+  STATE.raffleEntered   = false;
+  STATE.raffleEntryCount = 1;
+  STATE._testMode       = false;
+  STATE._lastInsertedWallet = null;
+  showView('view-gate');
+}
+
+/* ================================================================
+   FOGO ON-CHAIN DATA FETCHING — Fogoscan indexer API
+   Volume = sum of OUT transfer values (capital deployed to FOGO ecosystem)
+================================================================ */
+const step = msg => { document.getElementById('load-step').textContent = msg; };
+
+// On production (deployed), requests go through the local proxy function to avoid CORS.
+// In local file:// dev, falls back to direct API (will fail in browser — use a local server).
+const FOGOSCAN_API = window.location.hostname === 'localhost' || window.location.protocol === 'file:'
+  ? 'https://api.fogoscan.com/v1'          // local dev / testing
+  : '/api/fogoscan';                        // Vercel: api/fogoscan.js  |  Netlify: netlify/functions/fogoscan.js (mapped via _redirects)
+
+// Token address → protocol (add more as protocols confirm their token mints)
+const TOKEN_PROTOCOL_MAP = {
+  'iFoGoY5nMWpuMJogR7xjUAWDJtygHDF17zREeP4MKuD': 'ignition', // iFOGO
+  'Brasa3xzkSC9XqMBEcN9v53x4oMkpb1nQwfaGMyJE88b': 'brasa',  // stBRASA
+};
+
+function formatAge(blockTime) {
+  if (!blockTime) return 'Unknown';
+  const d = Math.floor((Date.now() / 1000 - blockTime) / 86400);
+  if (d < 1) return '<1d';
+  if (d < 30) return `${d}d`;
+  if (d < 365) return `${Math.floor(d / 30)}mo`;
+  const y = Math.floor(d / 365), m = Math.floor((d % 365) / 30);
+  return `${y}yr${m > 0 ? ` ${m}mo` : ''}`;
+}
+
+function fmtUsd(n) {
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+  return '$' + n.toFixed(0);
+}
+
+function fmtUsdFull(n) {
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+async function fetchFogoData(address) {
+  const PAGE_SIZE   = 40;   // Fogoscan API max reliable page_size
+  const MAX_FETCH   = 1000; // cap total transfers fetched
+
+  // 1. Fetch transfer count + wallet balances in parallel
+  step('Connecting to Fogoscan...');
+  let totalCount = 0, acctLamports = 0, wFOGOPrice = 0, tokenData = [];
+  try {
+    const [countRes, acctRes, tokRes] = await Promise.all([
+      fetch(`${FOGOSCAN_API}/account/transfer/total?address=${address}&remove_spam=false&exclude_amount_zero=false`).then(r => r.json()),
+      fetch(`${FOGOSCAN_API}/account?address=${address}`).then(r => r.json()).catch(() => ({})),
+      fetch(`${FOGOSCAN_API}/account/tokens?address=${address}`).then(r => r.json()).catch(() => ({})),
+    ]);
+    if (!countRes.success) throw new Error('API error');
+    totalCount   = countRes.data || 0;
+    acctLamports = acctRes?.data?.lamports || 0;
+    wFOGOPrice   = Object.values(acctRes?.metadata?.tokens || {})[0]?.price_usdt || 0;
+    tokenData    = tokRes?.data?.tokens || [];
+  } catch(e) {
+    return { ok: false, sim: false, error: 'Could not reach Fogoscan API. Check your connection.' };
+  }
+
+  // Wallet balance on FOGO chain (native FOGO + all SPL tokens)
+  const nativeUsd   = (acctLamports / 1e9) * wFOGOPrice;
+  const tokenUsd    = tokenData.reduce((sum, t) => sum + (t.value || 0), 0);
+  const walletBalanceUsd = nativeUsd + tokenUsd;
+
+  if (totalCount === 0 && walletBalanceUsd === 0) {
+    return { ok: true, txCount: 0, volumeUsd: 0, walletAge: 'New', protocols: {}, topProtocol: 'FOGO', sim: false };
+  }
+
+  step(`Found ${totalCount} transfers. Loading data...`);
+
+  // 2. Fetch pages in parallel
+  const fetchCount = Math.min(totalCount, MAX_FETCH);
+  const numPages   = Math.ceil(fetchCount / PAGE_SIZE);
+
+  const pages = await Promise.all(
+    Array.from({ length: numPages }, (_, i) =>
+      fetch(`${FOGOSCAN_API}/account/transfer?address=${address}&page=${i + 1}&page_size=${PAGE_SIZE}&remove_spam=false&exclude_amount_zero=false`)
+        .then(r => r.json())
+        .catch(() => ({ data: [] }))
+    )
+  );
+
+  step('Computing volume...');
+
+  const transfers = pages.flatMap(p => Array.isArray(p.data) ? p.data : []);
+
+  // 3. Volume = sum of OUT transfers (capital deployed — avoids double-counting swaps)
+  let volumeUsd  = 0;
+  let oldestTime = null;
+  const protoCounts = { ambient: 0, valiant: 0, brasa: 0, pyron: 0, ignition: 0, fogolend: 0 };
+
+  transfers.forEach(t => {
+    if (t.block_time && (!oldestTime || t.block_time < oldestTime)) oldestTime = t.block_time;
+
+    // Only count capital leaving the wallet (deployed)
+    if (t.flow === 'out' && (t.value || 0) > 0) volumeUsd += t.value;
+
+    // Protocol detection via token address
+    const proto = TOKEN_PROTOCOL_MAP[t.token_address];
+    if (proto && protoCounts[proto] !== undefined) protoCounts[proto]++;
+
+    // Protocol detection via CONFIG program IDs (once known)
+    if (t.program_id) {
+      Object.entries(CONFIG.programs).forEach(([name, pid]) => {
+        if (pid && t.program_id === pid) protoCounts[name]++;
+      });
+    }
+  });
+
+  // If history exceeds MAX_FETCH, extrapolate the volume proportionally
+  if (totalCount > MAX_FETCH) {
+    volumeUsd = volumeUsd * (totalCount / MAX_FETCH);
+  }
+
+  // Add current wallet balance on FOGO chain (money still deployed / held)
+  volumeUsd += walletBalanceUsd;
+
+  const walletAge = formatAge(oldestTime);
+  const topProto  = Object.entries(protoCounts)
+    .filter(([, v]) => v > 0)
+    .sort(([, a], [, b]) => b - a)[0]?.[0] || 'FOGO';
+
+  return {
+    ok: true,
+    txCount: totalCount,
+    walletAge,
+    volumeUsd,
+    walletBalance: walletBalanceUsd,
+    protocols:   protoCounts,
+    topProtocol: topProto,
+    sim: false,
+  };
+}
+
+/* ================================================================
+   CARD LOGIC
+================================================================ */
+function getTier(volumeUsd) {
+  for (let i = CONFIG.tiers.length - 1; i >= 0; i--) {
+    if (volumeUsd >= CONFIG.tiers[i].min) return { ...CONFIG.tiers[i], index: i };
+  }
+  return { ...CONFIG.tiers[0], index: 0 };
+}
+
+function computePower(volumeUsd) {
+  if (volumeUsd < 100) return Math.min(14, Math.floor(volumeUsd * 0.14));
+  if (volumeUsd < 1000)   return 15 + Math.floor((volumeUsd - 100)   / 900   * 15);
+  if (volumeUsd < 5000)   return 30 + Math.floor((volumeUsd - 1000)  / 4000  * 20);
+  if (volumeUsd < 10000)  return 50 + Math.floor((volumeUsd - 5000)  / 5000  * 15);
+  if (volumeUsd < 25000)  return 65 + Math.floor((volumeUsd - 10000) / 15000 * 10);
+  if (volumeUsd < 100000) return 75 + Math.floor((volumeUsd - 25000) / 75000 * 15);
+  return 90 + Math.min(9, Math.floor((volumeUsd - 100000) / 100000 * 9));
+}
+
+async function generateCard() {
+  const errBox = document.getElementById('app-err');
+  errBox.classList.remove('on');
+
+  // Must have a connected + signed wallet
+  if (!STATE.wallet)    { showAppErr('Connect your wallet first.'); return; }
+  if (!STATE.signature) { showAppErr('Wallet signature missing. Disconnect and reconnect.'); return; }
+
+  const rawHandle = document.getElementById('x-handle').value.trim() || '@anon';
+  const cleanHandle = rawHandle.startsWith('@') ? rawHandle : '@' + rawHandle;
+  STATE.handle = cleanHandle;
+  // Prefix platform for DB storage so admin can distinguish
+  STATE.handle_stored = STATE.handle_platform === 'tg' ? 'TG:' + cleanHandle : cleanHandle;
+
+  // If already submitted, render existing card from DB data without re-fetching
+  if (STATE.alreadySubmitted && STATE.existingCardData) {
+    const d    = STATE.existingCardData;
+    const tier = getTier(d.total_volume_usd);
+    const power = d.power_score || computePower(d.total_volume_usd);
+    const synth = {
+      ok: true,
+      volumeUsd:   d.total_volume_usd,
+      txCount:     d.tx_count,
+      walletAge:   '—',
+      protocols:   d.protocols || {},
+      topProtocol: 'FOGO',
+    };
+    STATE.cardData = { data: synth, vol: d.total_volume_usd, tier, power };
+    renderCard(STATE.wallet, STATE.handle, synth, tier, power);
+    showView('view-card');
+    setEligibilityUI(d.total_volume_usd);
+
+    // Already entered — show done state directly
+    STATE.raffleEntered = true;
+    document.getElementById('raffle-step-1').style.display = 'none';
+    document.getElementById('raffle-step-2').style.display = 'none';
+    document.getElementById('raffle-done').style.display   = 'block';
+    return;
+  }
+
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('loading').classList.add('on');
+
+  try {
+    const data = await fetchFogoData(STATE.wallet);
+
+    document.getElementById('loading').classList.remove('on');
+    document.getElementById('gen-btn').disabled = false;
+
+    if (!data.ok) {
+      showAppErr(data.error || 'Could not load on-chain data. Check your connection and try again.');
+      return;
+    }
+
+    const vol   = data.volumeUsd || 0;
+    const tier  = getTier(vol);
+    const power = computePower(vol);
+
+    STATE.cardData = { data, vol, tier, power };
+
+    renderCard(STATE.wallet, STATE.handle, data, tier, power);
+    showView('view-card');
+    setEligibilityUI(vol);
+
+  } catch(e) {
+    document.getElementById('loading').classList.remove('on');
+    document.getElementById('gen-btn').disabled = false;
+    showAppErr('Unexpected error: ' + e.message);
+  }
+}
+
+function showAppErr(msg) {
+  const el = document.getElementById('app-err');
+  el.textContent = '> ' + msg;
+  el.classList.add('on');
+}
+
+function setEligibilityUI(vol) {
+  const eligible = vol >= CONFIG.min_volume;
+  document.getElementById('ineligible-cta').style.display  = eligible ? 'none' : 'block';
+  document.getElementById('eligible-entry').style.display  = eligible ? 'block' : 'none';
+  if (!eligible) {
+    const gap = CONFIG.min_volume - vol;
+    document.getElementById('ineligible-vol-txt').textContent = fmtUsd(gap) + ' more needed';
+  } else {
+    // Set entry count based on tier index
+    const tier       = STATE.cardData?.tier;
+    const entryCount = (tier && tier.index !== undefined) ? tier.index : 1;
+    const lang       = CURRENT_LANG || 'en';
+    const t          = TRANSLATIONS[lang] || TRANSLATIONS.en;
+    const plural     = entryCount === 1 ? (lang === 'ko' ? '회' : 'entry') : (lang === 'ko' ? '회' : 'entries');
+
+    const badgeEl = document.getElementById('raffle-entries-badge');
+    if (badgeEl) badgeEl.textContent = entryCount + (lang === 'ko' ? '회 참가' : (entryCount === 1 ? ' ENTRY' : ' ENTRIES'));
+
+    const noteEl = document.getElementById('t-raffle-tier-note');
+    if (noteEl) noteEl.textContent = (t.raffle_tier_note || 'Your tier qualifies you for {n} raffle draw {plural}.')
+      .replace('{n}', entryCount).replace('{plural}', plural);
+
+    // Reset raffle UI to step 1 (for fresh renders / re-tests)
+    if (!STATE.raffleEntered) {
+      const s1 = document.getElementById('raffle-step-1'); if (s1) s1.style.display = 'block';
+      const s2 = document.getElementById('raffle-step-2'); if (s2) s2.style.display = 'none';
+      const sd = document.getElementById('raffle-done');   if (sd) sd.style.display = 'none';
+      const eb = document.getElementById('raffle-enter-btn');
+      if (eb) { eb.disabled = true; eb.querySelector('#t-enter-raffle-btn') ? eb.querySelector('#t-enter-raffle-btn').textContent = t.enter_raffle_btn || 'ENTER RAFFLE' : eb.textContent = t.enter_raffle_btn || 'ENTER RAFFLE'; }
+      // Reset confirmation checkbox
+      const confirmCheck = document.getElementById('raffle-confirm-check');
+      if (confirmCheck) confirmCheck.classList.remove('checked');
+    }
+  }
+}
+
+function renderCard(wallet, handle, data, tier, power) {
+  const $ = id => document.getElementById(id);
+  const vol = data.volumeUsd || 0;
+  const actPct = Math.min(99, power + Math.floor(Math.random() * 4));
+
+  $('c-handle').textContent = handle;
+  $('c-vol').textContent    = fmtUsd(vol);
+  $('c-series').textContent = `${CONFIG.season} — ${tier.name === 'FOGO Apex' ? 'APEX EDITION' : tier.name.toUpperCase()}`;
+
+  $('r-icon').textContent   = tier.icon;
+  $('r-name').textContent   = tier.name;
+  $('r-desc').textContent   = tier.desc;
+
+  // Protocol badges
+  const protos = [];
+  protos.push(`<span class="proto-pill fogo"><span class="proto-dot" style="background:#FF3D00"></span>FOGO</span>`);
+  Object.entries(data.protocols || {}).forEach(([p, count]) => {
+    if (count > 0) {
+      const colors = { ambient:'#C3FBA5', valiant:'#9945FF', brasa:'#FF6B00', pyron:'#627EEA', ignition:'#FFD700', fogolend:'#4ADE80' };
+      protos.push(`<span class="proto-pill ambient"><span class="proto-dot" style="background:${colors[p]||'#888'}"></span>${p.toUpperCase()}</span>`);
+    }
+  });
+  $('proto-row').innerHTML = protos.join('');
+
+  // Stats
+  $('s-age').textContent   = data.walletAge || '--';
+  $('s-txns').textContent  = (data.txCount || 0).toLocaleString();
+  $('s-vol').textContent   = fmtUsd(vol);
+  $('s-proto').textContent = (data.topProtocol || 'FOGO').toUpperCase();
+  $('s-tier').textContent  = tier.name;
+  $('s-power').textContent = String(power).padStart(2, '0');
+
+  // Activity bar (animate after brief delay)
+  setTimeout(() => {
+    $('a-fill').style.width = actPct + '%';
+    $('a-pct').textContent  = actPct + '%';
+  }, 80);
+
+  // Traits
+  $('traits-row').innerHTML = tier.traits.map(t => `<span class="trait">${t}</span>`).join('');
+
+  // Footer
+  const short = wallet.length > 12 ? wallet.slice(0, 5) + '...' + wallet.slice(-4) : wallet;
+  $('f-addr').textContent = short;
+}
+
+/* ================================================================
+   SHARE + ENTRY
+================================================================ */
+function shareX() {
+  const tier   = STATE.cardData?.tier?.name || 'Chain Observer';
+  const vol    = STATE.cardData ? fmtUsd(STATE.cardData.vol) : '$0';
+  const handle = STATE.handle || '@anon';
+  const text   = `Just minted my FOGO Trader Card.\n\nTier: ${tier} | Volume: ${vol}\n\nWhat does your card say?\n\n${CONFIG.prize_pool}\n\n#FOGO #FogoChain #FasterCapital`;
+  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+}
+
+/* ================================================================
+   RAFFLE ENTRY FLOW
+================================================================ */
+
+function toggleRaffleConfirm() {
+  const check = document.getElementById('raffle-confirm-check');
+  const btn   = document.getElementById('raffle-enter-btn');
+  if (!check || !btn) return;
+  const isChecked = check.classList.toggle('checked');
+  btn.disabled = !isChecked;
+}
+
+async function enterRaffle() {
+  if (STATE.raffleEntered) return;
+  if (!STATE.wallet || !STATE.signature) return;
+
+  const btn = document.getElementById('raffle-enter-btn');
+  btn.disabled = true;
+  btn.textContent = 'Entering...';
+
+  const tier       = STATE.cardData?.tier;
+  const entryCount = (tier && tier.index !== undefined) ? tier.index : 1;
+
+  // ── Route through Edge Function for server-side signature verification ──
+  // The Edge Function (verify-raffle-entry) cryptographically verifies that the
+  // submitted wallet address matches the ed25519 signature before inserting.
+  // This prevents fake wallet entries — nobody can submit without actually owning the wallet.
+  const EDGE_FN = `https://${CONFIG.sb_project_ref}.supabase.co/functions/v1/verify-raffle-entry`;
+
+  try {
+    const payload = {
+      wallet_address:   STATE.wallet,
+      wallet_signature: STATE.signature,
+      sig_nonce:        STATE.sig_nonce,
+      twitter_handle:   STATE.handle_stored || STATE.handle,
+      kol_passcode:     STATE.passcode || (STATE._testMode ? 'TEST-MODE' : null),
+      kol_id:           STATE.kol_id   || null,
+      total_volume_usd: STATE.cardData?.vol || 0,
+      tier_name:        tier?.name || null,
+      power_score:      STATE.cardData?.power || 0,
+      tx_count:         STATE.cardData?.txCount || STATE.cardData?.data?.txCount || 0,
+      protocols:        STATE.cardData?.data?.protocols || {},
+      entry_count:      entryCount,
+    };
+
+    const res  = await fetch(EDGE_FN, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': CONFIG.sb_key },
+      body:    JSON.stringify(payload),
+    });
+    const json = await res.json();
+
+    if (!res.ok) {
+      // 409 = already entered — treat as success so user sees the done screen
+      if (res.status === 409) {
+        STATE.raffleEntered    = true;
+        STATE.raffleEntryCount = entryCount;
+        showRaffleDone();
+        return;
+      }
+      // Other errors (expired sig, invalid sig, etc.) — show message and re-enable button
+      btn.disabled    = false;
+      btn.textContent = 'Enter Raffle';
+      showAppErr(json.error || 'Entry failed. Please try again.');
+      return;
+    }
+
+    // Track the inserted wallet address (Edge Function may have suffixed it for test mode)
+    STATE._lastInsertedWallet = json.wallet || STATE.wallet;
+
+  } catch(e) {
+    // Network error — still allow UI to proceed (entry may or may not have recorded)
+    STATE._lastInsertedWallet = STATE.wallet;
+  }
+
+  STATE.raffleEntered    = true;
+  STATE.raffleEntryCount = entryCount;
+  showRaffleStep2(entryCount);
+}
+
+function showRaffleStep2(entryCount) {
+  document.getElementById('raffle-step-1').style.display = 'none';
+  document.getElementById('raffle-step-2').style.display = 'block';
+  const plural = entryCount === 1 ? 'entry' : 'entries';
+  const msg    = document.getElementById('raffle-entry-count-msg');
+  if (msg) {
+    const t = TRANSLATIONS[CURRENT_LANG];
+    msg.textContent = t?.raffle_entries_secured
+      ? t.raffle_entries_secured.replace('{n}', entryCount)
+      : entryCount + ' ' + plural + ' secured in the draw.';
+  }
+}
+
+async function submitSocialLink() {
+  const input = document.getElementById('social-link-input');
+  const link  = input?.value?.trim();
+  if (!link) return;
+
+  const btn = document.getElementById('raffle-link-btn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    if (db) {
+      const walletKey = STATE._lastInsertedWallet || STATE.wallet;
+      const { error } = await db
+        .from('card_submissions')
+        .update({ social_link: link, bonus_entry: true })
+        .eq('wallet_address', walletKey);
+
+      if (error) {
+        console.error('[FOGO] Social link save failed:', error.message);
+        // Re-enable button so user can retry
+        btn.disabled = false;
+        btn.textContent = 'Submit';
+        showAppErr('Could not save your link. Please try again.');
+        return;
+      }
+    }
+  } catch(e) {
+    console.error('[FOGO] submitSocialLink exception:', e);
+    btn.disabled = false;
+    btn.textContent = 'Submit';
+    showAppErr('Network error. Please try again.');
+    return;
+  }
+
+  showRaffleDone(true);
+}
+
+function skipBonusEntry() {
+  showRaffleDone(false);
+}
+
+function showRaffleDone(hasBonus) {
+  document.getElementById('raffle-step-2').style.display = 'none';
+  document.getElementById('raffle-done').style.display   = 'block';
+  if (hasBonus) {
+    const sub = document.getElementById('t-raffle-done-sub');
+    const t   = TRANSLATIONS[CURRENT_LANG];
+    if (sub) sub.textContent = t?.raffle_bonus_confirmed || 'Bonus entry submitted. Good luck! Results announced by your KOL.';
+  }
+}
+
+function shareTg() {
+  const tier = STATE.cardData?.tier?.name || 'Unknown';
+  const vol  = STATE.cardData ? fmtUsd(STATE.cardData.vol) : '$0';
+  const text = `Just minted my FOGO Trader Card.\n\nTier: ${tier} | Volume: ${vol}\n\nWhat does your card say?\n\n${CONFIG.prize_pool}\n\n#FOGO #FogoChain`;
+  window.open('https://t.me/share/url?url=' + encodeURIComponent(CONFIG.card_url || 'https://fogo.holohive.io') + '&text=' + encodeURIComponent(text), '_blank');
+}
+
+/* ================================================================
+   CARD DOWNLOAD
+================================================================ */
+async function downloadCard() {
+  const btn = document.getElementById('dl-btn');
+  const orig = btn.textContent;
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const card = document.getElementById('the-card');
+  const handle = (STATE.handle || 'anon').replace('@', '');
+
+  try {
+    if (typeof domtoimage !== 'undefined') {
+      const scale = 2;
+      const w = card.offsetWidth;
+      const h = card.offsetHeight;
+      const dataUrl = await domtoimage.toPng(card, {
+        width: w * scale, height: h * scale,
+        style: { transform: `scale(${scale})`, transformOrigin: 'top left', width: w + 'px', height: h + 'px' },
+        bgcolor: '#110D32',
+      });
+      const a = document.createElement('a');
+      a.download = `fogo-card-${handle}.png`;
+      a.href = dataUrl;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  } catch(e) { alert('Download failed. Try the Share on X button instead.'); }
+
+  btn.textContent = orig;
+  btn.disabled = false;
+}
+
+/* ================================================================
+   ADMIN PANEL
+================================================================ */
+async function adminLogin() {
+  const pass = document.getElementById('admin-pass-input').value;
+  const err  = document.getElementById('admin-gate-err');
+  err.classList.remove('on');
+
+  // Hash the input and compare against stored hash — raw password never lives in source
+  const encoded = new TextEncoder().encode(pass);
+  const hashBuf = await crypto.subtle.digest('SHA-256', encoded);
+  const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
+
+  if (hashHex !== CONFIG.admin_password_hash) {
+    err.classList.add('on');
+    return;
+  }
+
+  STATE.adminLoggedIn = true;
+  sessionStorage.setItem('fogo_admin', '1');
+  showAdminDashboard();
+}
+
+function adminLogout() {
+  STATE.adminLoggedIn = false;
+  sessionStorage.removeItem('fogo_admin');
+  document.getElementById('admin-gate').style.display = 'block';
+  document.getElementById('admin-dashboard').style.display = 'none';
+  document.getElementById('admin-pass-input').value = '';
+}
+
+function showAdminDashboard() {
+  document.getElementById('admin-gate').style.display = 'none';
+  document.getElementById('admin-dashboard').style.display = 'block';
+  refreshAdmin();
+  renderTierConfig();
+  renderTierTestGrid();
+  // Wire live-update on tester inputs
+  ['test-volume','test-txns','test-wallet','test-handle'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateDbPreview);
+  });
+}
+
+async function refreshAdmin() {
+  if (!STATE.adminLoggedIn) return;
+
+  const [subRes, kolRes] = await Promise.all([
+    dbSelect('card_submissions'),
+    dbSelect('kol_passcodes'),
+  ]);
+
+  STATE.allSubmissions = subRes.data || [];
+  STATE.allPasscodes   = kolRes.data || [];
+
+  renderAdminStats();
+  renderKolTable();
+  renderSubmissionsTable(STATE.allSubmissions);
+}
+
+function renderAdminStats() {
+  const subs = STATE.allSubmissions;
+  const total   = subs.length;
+  const volSum  = subs.reduce((s, r) => s + (r.total_volume_usd || 0), 0);
+  const activeKols = STATE.allPasscodes.filter(k => k.is_active).length;
+  const xShared = total > 0 ? Math.round(subs.filter(r => r.shared_x).length / total * 100) : 0;
+
+  document.getElementById('a-total').textContent  = total.toLocaleString();
+  document.getElementById('a-vol').textContent    = fmtUsd(volSum);
+  document.getElementById('a-kols').textContent   = activeKols;
+  document.getElementById('a-shared').textContent = xShared + '%';
+}
+
+function renderKolTable() {
+  const wrap = document.getElementById('kol-table-wrap');
+  const kols = STATE.allPasscodes;
+
+  if (!kols.length) {
+    wrap.innerHTML = '<div class="empty-state">No KOLs yet. Create one above.</div>';
+    return;
+  }
+
+  // Count entries per passcode
+  const counts = {};
+  const volMap  = {};
+  STATE.allSubmissions.forEach(s => {
+    const c = s.kol_passcode || 'unknown';
+    counts[c] = (counts[c] || 0) + 1;
+    volMap[c]  = (volMap[c]  || 0) + (s.total_volume_usd || 0);
+  });
+
+  let html = `<table class="admin-table"><thead><tr>
+    <th>KOL</th><th>Handle</th><th>Passcode</th><th>Entries</th><th>Vol Brought</th><th>Status</th><th></th>
+  </tr></thead><tbody>`;
+
+  kols.forEach(k => {
+    const entries = counts[k.passcode] || 0;
+    const vol     = volMap[k.passcode]  || 0;
+    const dot = k.is_active ? '<span class="active-dot"></span>' : '<span class="inactive-dot"></span>';
+    html += `<tr>
+      <td class="hi">${k.kol_name}</td>
+      <td>${k.kol_handle || '—'}</td>
+      <td>
+        <span class="passcode-badge" onclick="copyCode('${k.passcode}')">${k.passcode}</span>
+        <span class="copy-flash" id="cf-${k.passcode}">Copied!</span>
+      </td>
+      <td class="hi">${entries}</td>
+      <td>${fmtUsd(vol)}</td>
+      <td>${dot}${k.is_active ? 'Active' : 'Inactive'}</td>
+      <td><button class="btn-danger" onclick="toggleKol('${k.id}',${k.is_active})">${k.is_active ? 'Deactivate' : 'Activate'}</button></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function renderSubmissionsTable(data) {
+  const tbody = document.getElementById('submissions-body');
+
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">No entries yet.</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(r => {
+    const d = new Date(r.created_at);
+    const dateStr = d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const wallet = r.wallet_address ? r.wallet_address.slice(0, 8) + '...' : '—';
+    const isTest = (r.kol_passcode || '').includes('TEST') || (r.wallet_address || '').includes('TEST');
+    const testTag = isTest ? ' <span style="font-size:7px;background:rgba(255,200,0,0.15);color:#ffc800;border:1px solid rgba(255,200,0,0.3);padding:1px 4px;border-radius:2px;letter-spacing:0.08em;">TEST</span>' : '';
+    const socialCell = r.social_link
+      ? `<a href="${r.social_link}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>`
+      : (r.bonus_entry ? '⏳' : '—');
+    return `<tr>
+      <td><input type="checkbox" class="entry-checkbox" data-id="${r.id}" onchange="updateDeleteSelectedBtn()"></td>
+      <td class="addr" title="${r.wallet_address || ''}">${wallet}${testTag}</td>
+      <td>${r.twitter_handle || '—'}</td>
+      <td class="hi">${r.kol_passcode || '—'}</td>
+      <td class="hi">${fmtUsd(r.total_volume_usd || 0)}</td>
+      <td>${r.tier_name || '—'}</td>
+      <td class="hi">${r.entry_count ?? '—'}</td>
+      <td>${socialCell}</td>
+      <td class="addr">${dateStr}</td>
+      <td><button class="admin-del-btn" onclick="deleteEntry('${r.id}')">Del</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterSubmissions() {
+  const q = document.getElementById('search-wallet').value.toLowerCase();
+  const filtered = STATE.allSubmissions.filter(r =>
+    (r.wallet_address || '').toLowerCase().includes(q) ||
+    (r.twitter_handle || '').toLowerCase().includes(q) ||
+    (r.kol_passcode   || '').toLowerCase().includes(q)
+  );
+  renderSubmissionsTable(filtered);
+}
+
+async function deleteEntry(id) {
+  if (!id) return;
+  if (!confirm('Delete this entry? This cannot be undone.')) return;
+  try {
+    if (db) {
+      await db.from('card_submissions').delete().eq('id', id);
+    }
+    // Remove from local state and re-render
+    STATE.allSubmissions = STATE.allSubmissions.filter(r => String(r.id) !== String(id));
+    renderSubmissionsTable(STATE.allSubmissions);
+  } catch(e) {
+    alert('Delete failed: ' + (e.message || e));
+  }
+}
+
+function toggleSelectAll(checkbox) {
+  const boxes = document.querySelectorAll('.entry-checkbox');
+  boxes.forEach(b => { b.checked = checkbox.checked; });
+  updateDeleteSelectedBtn();
+}
+
+function updateDeleteSelectedBtn() {
+  const selected = document.querySelectorAll('.entry-checkbox:checked');
+  const btn = document.getElementById('adminDeleteSelectedBtn');
+  if (!btn) return;
+  if (selected.length > 0) {
+    btn.classList.add('visible');
+    btn.textContent = `Delete Selected (${selected.length})`;
+  } else {
+    btn.classList.remove('visible');
+  }
+  // Uncheck "select all" if not all are checked
+  const all = document.querySelectorAll('.entry-checkbox');
+  const selectAll = document.getElementById('selectAllCheckbox');
+  if (selectAll) selectAll.checked = all.length > 0 && selected.length === all.length;
+}
+
+async function deleteSelectedEntries() {
+  const selected = Array.from(document.querySelectorAll('.entry-checkbox:checked'));
+  if (!selected.length) return;
+  if (!confirm(`Delete ${selected.length} selected entries? This cannot be undone.`)) return;
+  const ids = selected.map(el => el.getAttribute('data-id'));
+  try {
+    for (const id of ids) {
+      if (db) await db.from('card_submissions').delete().eq('id', id);
+      STATE.allSubmissions = STATE.allSubmissions.filter(r => String(r.id) !== String(id));
+    }
+    renderSubmissionsTable(STATE.allSubmissions);
+    const btn = document.getElementById('adminDeleteSelectedBtn');
+    if (btn) btn.classList.remove('visible');
+  } catch(e) {
+    alert('Bulk delete failed: ' + (e.message || e));
+  }
+}
+
+/* ================================================================
+   COUNTDOWN TIMER
+================================================================ */
+function updateCountdown() {
+  const end = new Date(CONFIG.raffle_end_date).getTime();
+  const now = Date.now();
+  const diff = end - now;
+
+  const el = document.getElementById('countdownApp');
+  if (!el) return;
+
+  if (diff <= 0) {
+    el.textContent = 'DRAW LIVE';
+    el.classList.add('urgent');
+    return;
+  }
+
+  const totalSecs = Math.floor(diff / 1000);
+  const dd = Math.floor(totalSecs / 86400);
+  const hh = Math.floor((totalSecs % 86400) / 3600);
+  const mm = Math.floor((totalSecs % 3600) / 60);
+  const ss = totalSecs % 60;
+  el.textContent = `${dd}d ${String(hh).padStart(2,'0')}h ${String(mm).padStart(2,'0')}m ${String(ss).padStart(2,'0')}s`;
+  if (diff < 86400000) el.classList.add('urgent');
+}
+
+// Start countdown once DOM is ready
+window.addEventListener('DOMContentLoaded', () => {
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+});
+
+function renderTierConfig() {
+  const wrap = document.getElementById('tier-config');
+  wrap.innerHTML = CONFIG.tiers.map(t => `
+    <div style="background:var(--panel2);border:1px solid var(--border);padding:12px;border-radius:2px;">
+      <div style="font-size:18px;margin-bottom:6px;">${t.icon}</div>
+      <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px;">${t.name}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);">
+        ${t.min === 0 ? '< $100' : '$' + t.min.toLocaleString() + (t.max === Infinity ? '+' : ' – $' + t.max.toLocaleString())}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ================================================================
+   CARD TESTER
+================================================================ */
+let TEST_TIER_IDX = null;
+
+function renderTierTestGrid() {
+  const wrap = document.getElementById('tier-test-grid');
+  if (!wrap) return;
+  wrap.innerHTML = CONFIG.tiers.map((t, i) => `
+    <div class="tier-test-card" id="tier-test-${i}" onclick="selectTestTier(${i})">
+      <div class="tier-test-icon">${t.icon}</div>
+      <div class="tier-test-name">${t.name}</div>
+      <div class="tier-test-range">${t.min === 0 ? '< $100' : '$' + t.min.toLocaleString() + (t.max === Infinity ? '+' : ' – $' + t.max.toLocaleString())}</div>
+    </div>
+  `).join('');
+}
+
+function selectTestTier(idx) {
+  TEST_TIER_IDX = idx;
+  // Highlight selected
+  document.querySelectorAll('.tier-test-card').forEach((c, i) => {
+    c.classList.toggle('selected', i === idx);
+  });
+  // Auto-fill a sensible volume for this tier
+  const t = CONFIG.tiers[idx];
+  const vol = t.max === Infinity ? t.min * 2 : Math.round((t.min + t.max) / 2);
+  document.getElementById('test-volume').value = vol;
+  // Enable launch button
+  document.getElementById('test-launch-btn').disabled = false;
+  // Update DB preview
+  updateDbPreview();
+}
+
+function updateDbPreview() {
+  const preview = document.getElementById('db-preview');
+  if (TEST_TIER_IDX === null) return;
+  const tier   = CONFIG.tiers[TEST_TIER_IDX];
+  const vol    = parseFloat(document.getElementById('test-volume').value) || tier.min;
+  const txns   = parseInt(document.getElementById('test-txns').value) || 42;
+  const wallet = document.getElementById('test-wallet').value || 'TEST-WALLET-0001';
+  const handle = document.getElementById('test-handle').value || '@test';
+  const power  = Math.round((vol / 100) * 0.4 + txns * 0.6);
+
+  const row = {
+    wallet_address:    wallet,
+    twitter_handle:    handle,
+    kol_passcode:      STATE.passcode || '(none — set in gate first)',
+    total_volume_usd:  vol,
+    tier_name:         tier.name,
+    power_score:       power,
+    tx_count:          txns,
+    shared_x:          false,
+    shared_kol_channel:false,
+    created_at:        '(auto — timestamp at submit)',
+  };
+
+  preview.innerHTML = Object.entries(row).map(([k, v]) =>
+    `<span class="key">"${k}"</span>: <span class="${v === null || v === false ? 'null' : 'val'}">${JSON.stringify(v)}</span>`
+  ).join('\n');
+}
+
+function launchTestCard() {
+  if (TEST_TIER_IDX === null) { alert('Select a tier first.'); return; }
+
+  const tier   = CONFIG.tiers[TEST_TIER_IDX];
+  const vol    = parseFloat(document.getElementById('test-volume').value) || tier.min;
+  const txns   = parseInt(document.getElementById('test-txns').value) || 42;
+  const wallet = document.getElementById('test-wallet').value.trim() || 'TEST-WALLET-0001';
+  const rawH   = document.getElementById('test-handle').value.trim() || '@test';
+  const handle = rawH.startsWith('@') ? rawH : '@' + rawH;
+  const power  = Math.round((vol / 100) * 0.4 + txns * 0.6);
+
+  // Build fake chain data matching renderCard's expected shape
+  const fakeData = {
+    volumeUsd:   vol,
+    txCount:     txns,
+    walletAge:   'TEST',
+    topProtocol: 'FOGO',
+    protocols:   { fogo: txns },  // minimal protocol object
+  };
+
+  // Attach index to tier so entry count works correctly
+  const tierWithIdx = { ...tier, index: TEST_TIER_IDX };
+
+  // Prime STATE as if wallet connect + card gen ran
+  STATE.wallet          = wallet;
+  STATE.signature       = 'TEST-MODE-SIG';   // allows enterRaffle() to proceed
+  STATE.sig_nonce       = Date.now();        // required by Edge Function — test mode skips the actual check
+  STATE.handle          = handle;
+  STATE.handle_stored   = handle;
+  STATE.handle_platform = 'x';
+  STATE.cardData        = { vol, txCount: txns, tier: tierWithIdx };
+  STATE._testMode       = true;
+  STATE.raffleEntered   = false;  // reset so raffle can be re-tested
+
+  // Update KOL badge
+  const kolName = STATE.kol_name || 'TEST-KOL';
+  const kolB1 = document.getElementById('kol-badge');   if (kolB1) kolB1.textContent = `KOL: ${kolName}`;
+  const kolB2 = document.getElementById('kol-badge-2'); if (kolB2) kolB2.textContent = `KOL: ${kolName}`;
+  const ppTxt = document.getElementById('prize-pool-txt'); if (ppTxt) ppTxt.textContent = CONFIG.prize_pool;
+
+  // Navigate to card view and render
+  showView('view-card');
+  renderCard(wallet, handle, fakeData, tierWithIdx, power);
+  setEligibilityUI(vol);
+}
+
+// Live-update DB preview when inputs change
+['test-volume','test-txns','test-wallet','test-handle'].forEach(id => {
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateDbPreview);
+  });
+});
+
+// Create new KOL passcode
+async function createPasscode() {
+  const name   = document.getElementById('new-kol-name').value.trim();
+  const handle = document.getElementById('new-kol-handle').value.trim();
+  let   code   = document.getElementById('new-kol-code').value.trim().toUpperCase();
+
+  if (!name) { alert('Enter a KOL name.'); return; }
+  if (!code) {
+    // Auto-generate: FOGO-XXXX-YY
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    code = 'FOGO-' + Array.from({length: 4}, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+         + '-' + Array.from({length: 2}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  }
+
+  const row = { kol_name: name, kol_handle: handle || null, passcode: code, is_active: true };
+  const { data, error } = await dbInsert('kol_passcodes', row);
+
+  if (error) {
+    const msg = error.message?.includes('duplicate') ? 'That passcode already exists.' : 'Error: ' + error.message;
+    alert(msg);
+    return;
+  }
+
+  const succ = document.getElementById('create-success');
+  succ.style.display = 'block';
+  succ.innerHTML = `Created: <span class="passcode-badge" onclick="copyCode('${code}')">${code}</span> — share with ${name}`;
+
+  document.getElementById('new-kol-name').value  = '';
+  document.getElementById('new-kol-handle').value = '';
+  document.getElementById('new-kol-code').value   = '';
+
+  await refreshAdmin();
+}
+
+async function toggleKol(id, currentActive) {
+  await dbUpdate('kol_passcodes', id, { is_active: !currentActive });
+  await refreshAdmin();
+}
+
+function copyCode(code) {
+  navigator.clipboard.writeText(code).then(() => {
+    const el = document.getElementById('cf-' + code);
+    if (el) { el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 1800); }
+  });
+}
+
+function exportCsv() {
+  const rows = STATE.allSubmissions;
+  if (!rows.length) { alert('No data to export.'); return; }
+  const cols = ['wallet_address','twitter_handle','kol_passcode','total_volume_usd','tier_name','power_score','tx_count','entry_count','social_link','bonus_entry','shared_x','shared_kol_channel','created_at'];
+  const csv = [cols.join(','), ...rows.map(r => cols.map(c => JSON.stringify(r[c] ?? '')).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `fogo-entries-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// Admin enter key
+document.getElementById('admin-pass-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') adminLogin();
+});
+/* ================================================================
+   LANGUAGE / TRANSLATIONS
+================================================================ */
+let CURRENT_LANG = 'en';
+
+const TRANSLATIONS = {
+  en: {
+    gate_eyebrow:       'FOGO Community Activation',
+    gate_headline_line1:'Prove Your',
+    gate_headline_span: 'Chain Presence',
+    gate_sub:           "Connect your SVM wallet to reveal your FOGO Trader Card. Exclusive to traders who've deployed capital on the FOGO ecosystem.",
+    gate_label:         'KOL Passcode',
+    gate_placeholder:   'Enter passcode from your KOL...',
+    gate_btn:           'Unlock Trader Card',
+    gate_divider:       'Trader Tiers',
+    tier_names:         ['Spot Accumulator','Tactical Trader','Momentum Operator','Perp Architect','Alpha Extractor','FOGO Apex'],
+    stat_protocols:     'Protocols',
+    stat_season:        'Season',
+    stat_verified:      'Verified',
+    powered_lbl:        'Powered by',
+    lang_hint:          'Select Language',
+    // App view
+    chip_1:'On-Chain\nVerified', chip_2:'FOGO\nMainnet', chip_3:'No Fees\nNo Tx', chip_4:'7 Trader\nTiers',
+    notice:             'This card reads your live on-chain activity from the FOGO network (mainnet.fogo.io). Volume is aggregated across Ambient, Valiant, Brasa, Pyron, Ignition, and FogoLend. Minimum $100 in FOGO ecosystem volume required to generate a card.',
+    connect_head:       'Connect Your Wallet',
+    sol_label:          'Solana / FOGO Wallet',
+    x_label:            'X / Twitter Handle',
+    tg_label:           'Telegram Handle',
+    no_wallet:          'No wallet? Get <a href="https://phantom.app" target="_blank">Phantom</a>, <a href="https://solflare.com" target="_blank">Solflare</a>, or <a href="https://backpack.app" target="_blank">Backpack</a> — all free.',
+    disconnect:         'Disconnect',
+    gen_btn:            'Generate My Trader Card',
+    load_txt:           'Reading FOGO chain data',
+    // Card
+    vol_lbl:            'Volume',
+    s_age:              'Wallet Age',   s_txns: 'Txn Count',  s_vol: 'Volume USD',
+    s_proto:            'Top Protocol', s_tier: 'Tier',       s_power: 'Power Score',
+    chain_activity:     'Chain Activity',
+    card_hh_lbl:        '×',
+    share_x_btn:        '↗ Share on X',
+    save_card:          'Save Card',
+    new_btn:            'New',
+    // Nav
+    nav_version:           'Trader Card · Community Activation',
+    nav_live:              'Community Activation Live',
+    // Prize bar
+    prize_title:           'Season 2 Raffle — Community Prize Pool',
+    prize_sub:             'Enter below',
+    countdown_label:       'Draw closes in',
+    // Steps bar
+    step_n1: 'Step 01', step_t1: 'Connect Wallet',    step_b1: 'Connect your SVM wallet (Phantom, Solflare, or Backpack)',
+    step_n2: 'Step 02', step_t2: 'Verify Identity',   step_b2: 'Sign a message to prove wallet ownership. No transaction, no fees.',
+    step_n3: 'Step 03', step_t3: 'View Your Card',    step_b3: 'Your on-chain trading history generates a unique Trader Card.',
+    step_n4: 'Step 04', step_t4: 'Enter Raffle',      step_b4: 'Eligible wallets can enter the Season 2 community raffle.',
+    // Raffle entry
+    raffle_eyebrow:        'Raffle Entry',
+    raffle_tier_note:      'Your tier qualifies you for {n} raffle draw {plural}.',
+    raffle_confirm_strong: 'I have downloaded my Trader Card and shared it in the KOL channel comments.',
+    raffle_confirm_note:   'Raffle entries will be void if your card is not visible in the channel before the draw.',
+    raffle_confirm_warn:   'Entries without proof of sharing are ineligible.',
+    enter_raffle_btn:      'ENTER RAFFLE',
+    entry_recorded:        'Entry Recorded',
+    raffle_entries_secured:'{n} {plural} secured in the draw.',
+    bonus_head:            'Earn a Bonus Entry',
+    bonus_sub:             'Share your card on socials and drop the post link below for an extra entry.',
+    raffle_share_x:        '𝕏 Share on X',
+    raffle_share_tg:       '✈ Share on Telegram',
+    submit_link:           'Submit',
+    skip_btn:              'Skip — I\'m done',
+    raffle_done_title:     'You\'re in the Draw',
+    raffle_done_sub:       'Good luck. Results announced by your KOL.',
+    raffle_bonus_confirmed:'Bonus entry submitted. Good luck! Results announced by your KOL.',
+  },
+  ko: {
+    gate_eyebrow:       'FOGO 커뮤니티 활성화',
+    gate_headline_line1:'당신의',
+    gate_headline_span: '체인 존재감을 증명하세요',
+    gate_sub:           'FOGO 트레이더 카드를 확인하려면 SVM 지갑을 연결하세요. FOGO 생태계에 자본을 배치한 트레이더에게만 제공됩니다.',
+    gate_label:         'KOL 패스코드',
+    gate_placeholder:   'KOL에서 패스코드를 입력하세요...',
+    gate_btn:           '트레이더 카드 잠금 해제',
+    gate_divider:       '트레이더 등급',
+    tier_names:         ['현물 누적자','전술적 트레이더','모멘텀 오퍼레이터','퍼프 아키텍트','알파 추출자','FOGO 에이펙스'],
+    stat_protocols:     '프로토콜',
+    stat_season:        '시즌',
+    stat_verified:      '검증됨',
+    powered_lbl:        '제공',
+    lang_hint:          '언어 선택',
+    // App view
+    chip_1:'온체인\n검증됨', chip_2:'FOGO\n메인넷', chip_3:'수수료 없음\n거래 없음', chip_4:'7가지\n등급',
+    notice:             'FOGO 네트워크(mainnet.fogo.io)의 실시간 온체인 활동을 읽습니다. 거래량은 Ambient, Valiant, Brasa, Pyron, Ignition 및 FogoLend에서 집계됩니다. 카드 생성을 위해 최소 $100의 FOGO 생태계 거래량이 필요합니다.',
+    connect_head:       '지갑 연결',
+    sol_label:          '솔라나 / FOGO 지갑',
+    x_label:            'X / 트위터 핸들',
+    tg_label:           '텔레그램 핸들',
+    no_wallet:          '지갑이 없으신가요? <a href="https://phantom.app" target="_blank">Phantom</a>, <a href="https://solflare.com" target="_blank">Solflare</a>, 또는 <a href="https://backpack.app" target="_blank">Backpack</a>을 받으세요 — 모두 무료.',
+    disconnect:         '연결 해제',
+    gen_btn:            '내 트레이더 카드 생성',
+    load_txt:           'FOGO 체인 데이터 읽는 중',
+    // Card
+    vol_lbl:            '거래량',
+    s_age:              '지갑 나이',   s_txns: '거래 횟수', s_vol: '거래량 (USD)',
+    s_proto:            '주요 프로토콜', s_tier: '등급',    s_power: '파워 점수',
+    chain_activity:     '체인 활동',
+    card_hh_lbl:        '×',
+    share_x_btn:        '↗ X에 공유',
+    save_card:          '카드 저장',
+    new_btn:            '새로',
+    // Nav
+    nav_version:           '트레이더 카드 · 커뮤니티 활성화',
+    nav_live:              '커뮤니티 활성화 진행 중',
+    // Prize bar
+    prize_title:           '시즌 2 래플 — 커뮤니티 상금 풀',
+    prize_sub:             '아래에서 참가',
+    countdown_label:       '추첨 마감까지',
+    // Steps bar
+    step_n1: '스텝 01', step_t1: '지갑 연결',      step_b1: 'SVM 지갑을 연결하세요 (Phantom, Solflare, 또는 Backpack)',
+    step_n2: '스텝 02', step_t2: '신원 확인',      step_b2: '지갑 소유권을 증명하는 메시지에 서명하세요. 거래 없음, 수수료 없음.',
+    step_n3: '스텝 03', step_t3: '카드 확인',      step_b3: '온체인 거래 내역이 고유한 트레이더 카드를 생성합니다.',
+    step_n4: '스텝 04', step_t4: '래플 참가',      step_b4: '자격 있는 지갑은 시즌 2 커뮤니티 래플에 참가할 수 있습니다.',
+    // Raffle entry
+    raffle_eyebrow:        '추첨 참가',
+    raffle_tier_note:      '귀하의 등급은 추첨 {n}회 참가 자격을 드립니다.',
+    raffle_confirm_strong: '트레이더 카드를 다운로드하고 KOL 채널 댓글에 공유했습니다.',
+    raffle_confirm_note:   '추첨 전 채널에 카드가 확인되지 않으면 참가가 무효 처리됩니다.',
+    raffle_confirm_warn:   '공유 증명 없이 참가한 항목은 실격 처리됩니다.',
+    enter_raffle_btn:      '추첨 참가',
+    entry_recorded:        '참가 완료',
+    raffle_entries_secured:'{n}회 추첨 참가가 확정되었습니다.',
+    bonus_head:            '보너스 참가 획득',
+    bonus_sub:             '소셜 미디어에 카드를 공유하고 링크를 제출하면 추가 참가 기회를 드립니다.',
+    raffle_share_x:        '𝕏 X에 공유',
+    raffle_share_tg:       '✈ 텔레그램에 공유',
+    submit_link:           '제출',
+    skip_btn:              '건너뛰기 — 완료',
+    raffle_done_title:     '추첨에 참가되었습니다',
+    raffle_done_sub:       '행운을 빕니다. 결과는 KOL이 발표합니다.',
+    raffle_bonus_confirmed:'보너스 참가가 제출되었습니다. 행운을 빕니다! 결과는 KOL이 발표합니다.',
+  }
+};
+
+// Tier translations for card rendering
+const TIER_KO = [
+  { name: '아직 미입문',        desc: '체인이 기다리고 있습니다. FOGO 여정이 여기서 시작됩니다.',       traits: ['미입문','미래 트레이더','방금 도착'] },
+  { name: '현물 누적자',        desc: '기반을 쌓고 있습니다. 규모보다 규율이 먼저입니다.',               traits: ['현물 네이티브','안정적 손','누적 중'] },
+  { name: '전술적 트레이더',    desc: '진입과 청산이 대부분보다 날카롭습니다.',                           traits: ['프라이스 액션','리스크 관리','일관성'] },
+  { name: '모멘텀 오퍼레이터',  desc: '군중이 발견하기 전에 내러티브를 거래합니다.',                      traits: ['추세 정렬','고속도','촉매만'] },
+  { name: '퍼프 아키텍트',      desc: '레버리지는 도구입니다. 당신은 도구함을 만들었습니다.',             traits: ['퍼프 네이티브','포지션 사이즈','오더북 읽기'] },
+  { name: '알파 추출자',        desc: '엣지는 당신의 것입니다. 아직 대부분은 이유를 모릅니다.',           traits: ['멀티체인','정보 우위','베테랑'] },
+  { name: 'FOGO 에이펙스',      desc: '체인은 당신의 악기입니다. 당신은 그것을 잘 연주합니다.',           traits: ['에이펙스 등급','기관급','체인 레전드','넘사벽'] },
+];
+
+function setLanguage(lang) {
+  CURRENT_LANG = lang;
+  const t = TRANSLATIONS[lang];
+
+  // Toggle button states — all sets including nav
+  ['','2','3'].forEach(suffix => {
+    const enBtn = document.getElementById('lang-en' + (suffix ? '-' + suffix : ''));
+    const koBtn = document.getElementById('lang-ko' + (suffix ? '-' + suffix : ''));
+    if (enBtn) enBtn.classList.toggle('active', lang === 'en');
+    if (koBtn) koBtn.classList.toggle('active', lang === 'ko');
+  });
+  // Nav lang buttons
+  const navEn = document.getElementById('nav-lang-en');
+  const navKo = document.getElementById('nav-lang-ko');
+  if (navEn) navEn.classList.toggle('active', lang === 'en');
+  if (navKo) navKo.classList.toggle('active', lang === 'ko');
+
+  // ── GATE VIEW ────────────────────────────────────────────────────
+  const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const setHtml = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+
+  setTxt('t-gate-eyebrow',      t.gate_eyebrow);
+  setTxt('t-gate-headline',     t.gate_headline_line1 + '\n');
+  // Re-render headline properly
+  const hl = document.getElementById('t-gate-headline');
+  if (hl) hl.innerHTML = t.gate_headline_line1 + '<br><span id="t-gate-headline-span">' + t.gate_headline_span + '</span>';
+  setTxt('t-gate-sub',          t.gate_sub);
+  setTxt('t-gate-label',        t.gate_label);
+  setTxt('t-gate-btn',          t.gate_btn);
+  setTxt('t-gate-divider',      t.gate_divider);
+  document.getElementById('gate-code').placeholder = t.gate_placeholder;
+
+  // Tier names in gate grid
+  t.tier_names.forEach((name, i) => setTxt('t-tier-' + (i + 1), name));
+
+  // Eco stats
+  setTxt('t-stat-protocols', t.stat_protocols);
+  setTxt('t-stat-season',    t.stat_season);
+  setTxt('t-stat-verified',  t.stat_verified);
+
+  // Fixed bottom-right powered-by label
+  setTxt('t-powered-fixed-lbl', t.powered_lbl);
+
+  // Language hint labels
+  ['t-lang-hint','t-lang-hint-2','t-lang-hint-3'].forEach(id => setTxt(id, t.lang_hint));
+
+  // Nav bar
+  setTxt('t-nav-version', t.nav_version || 'Trader Card · Community Activation');
+  setTxt('t-nav-live',    t.nav_live    || 'Community Activation Live');
+
+  // Prize bar (in view-app)
+  setTxt('t-prize-title',    t.prize_title    || 'Season 2 Raffle — Community Prize Pool');
+  setTxt('t-prize-sub',      t.prize_sub      || 'Enter below');
+  setTxt('t-countdown-label',t.countdown_label|| 'Draw closes in');
+
+  // Steps bar
+  setTxt('t-step-n1', t.step_n1 || 'Step 01'); setTxt('t-step-t1', t.step_t1 || 'Connect Wallet');   setTxt('t-step-b1', t.step_b1 || 'Connect your SVM wallet (Phantom, Solflare, or Backpack)');
+  setTxt('t-step-n2', t.step_n2 || 'Step 02'); setTxt('t-step-t2', t.step_t2 || 'Verify Identity');  setTxt('t-step-b2', t.step_b2 || 'Sign a message to prove wallet ownership. No transaction, no fees.');
+  setTxt('t-step-n3', t.step_n3 || 'Step 03'); setTxt('t-step-t3', t.step_t3 || 'View Your Card');   setTxt('t-step-b3', t.step_b3 || 'Your on-chain trading history generates a unique Trader Card.');
+  setTxt('t-step-n4', t.step_n4 || 'Step 04'); setTxt('t-step-t4', t.step_t4 || 'Enter Raffle');     setTxt('t-step-b4', t.step_b4 || 'Eligible wallets can enter the Season 2 community raffle.');
+
+  // ── APP VIEW ─────────────────────────────────────────────────────
+  // Info chips
+  ['chip_1','chip_2','chip_3','chip_4'].forEach((key, i) => {
+    const el = document.getElementById('t-chip-' + (i + 1));
+    if (el) el.innerHTML = t[key].replace('\n', '<br>');
+  });
+  setTxt('t-notice',       t.notice);
+  setTxt('t-connect-head', t.connect_head);
+  setTxt('t-sol-label',    t.sol_label);
+  // Handle label + placeholder — re-apply based on current platform
+  if (STATE.handle_platform === 'tg') {
+    setTxt('t-x-label', t.tg_label);
+    const inp = document.getElementById('x-handle'); if (inp) inp.placeholder = lang === 'ko' ? '@텔레그램아이디' : '@telegramhandle';
+  } else {
+    setTxt('t-x-label', t.x_label);
+    const inp = document.getElementById('x-handle'); if (inp) inp.placeholder = lang === 'ko' ? '@핸들명' : '@yourhandle';
+  }
+  setHtml('t-no-wallet',   t.no_wallet);
+  setTxt('t-disconnect',   t.disconnect);
+  setTxt('t-gen-btn',      t.gen_btn);
+  setTxt('t-load-txt',     t.load_txt);
+  // placeholder handled above in handle label block
+
+  // ── CARD ─────────────────────────────────────────────────────────
+  setTxt('t-vol-lbl',        t.vol_lbl);
+  setTxt('t-s-age',          t.s_age);
+  setTxt('t-s-txns',         t.s_txns);
+  setTxt('t-s-vol',          t.s_vol);
+  setTxt('t-s-proto',        t.s_proto);
+  setTxt('t-s-tier',         t.s_tier);
+  setTxt('t-s-power',        t.s_power);
+  setTxt('t-chain-activity', t.chain_activity);
+  setTxt('t-card-hh-lbl',   t.card_hh_lbl);
+  setTxt('t-share-x-btn',   t.share_x_btn);
+  setTxt('t-save-card',      t.save_card);
+  setTxt('t-new-btn',        t.new_btn);
+
+  // ── RAFFLE UI ────────────────────────────────────────────────────
+  setTxt('t-raffle-eyebrow',      t.raffle_eyebrow);
+  setTxt('t-raffle-confirm-strong', t.raffle_confirm_strong);
+  setTxt('t-raffle-confirm-note',   t.raffle_confirm_note);
+  setTxt('t-raffle-confirm-warn',   t.raffle_confirm_warn);
+  setTxt('t-enter-raffle-btn',    t.enter_raffle_btn);
+  setTxt('t-entry-recorded',   t.entry_recorded);
+  setTxt('t-bonus-head',       t.bonus_head);
+  setTxt('t-bonus-sub',        t.bonus_sub);
+  setTxt('t-raffle-share-x',   t.raffle_share_x);
+  setTxt('t-raffle-share-tg',  t.raffle_share_tg);
+  setTxt('t-submit-link',      t.submit_link);
+  setTxt('t-skip-btn',         t.skip_btn);
+  setTxt('t-raffle-done-title',t.raffle_done_title);
+  setTxt('t-raffle-done-sub',  t.raffle_done_sub);
+  // Re-apply tier note with current entry count if card is loaded
+  if (STATE.raffleEntryCount) {
+    const n = STATE.raffleEntryCount;
+    const plural = n === 1 ? (lang === 'ko' ? '회' : 'entry') : (lang === 'ko' ? '회' : 'entries');
+    const noteEl = document.getElementById('t-raffle-tier-note');
+    if (noteEl) noteEl.textContent = (t.raffle_tier_note || '').replace('{n}', n).replace('{plural}', plural);
+    const securedEl = document.getElementById('raffle-entry-count-msg');
+    if (securedEl) securedEl.textContent = (t.raffle_entries_secured || '').replace('{n}', n).replace('{plural}', plural);
+  }
+
+  // If a card is already rendered, re-apply Korean tier name/desc/traits
+  if (STATE.cardData) {
+    const vol   = STATE.cardData.vol;
+    const tier  = getTier(vol);
+    const tIdx  = tier.index || 0;
+
+    if (lang === 'ko' && TIER_KO[tIdx]) {
+      const ko = TIER_KO[tIdx];
+      setTxt('r-name', ko.name);
+      setTxt('r-desc', ko.desc);
+      const tr = document.getElementById('traits-row');
+      if (tr) tr.innerHTML = ko.traits.map(t => `<span class="trait">${t}</span>`).join('');
+    } else if (lang === 'en' && STATE.cardData.tier) {
+      const en = STATE.cardData.tier;
+      setTxt('r-name', en.name);
+      setTxt('r-desc', en.desc);
+      const tr = document.getElementById('traits-row');
+      if (tr) tr.innerHTML = en.traits.map(t => `<span class="trait">${t}</span>`).join('');
+    }
+  }
+}
+</script>
+
+<!-- Fixed bottom-right Powered by Holo Hive badge -->
+<a class="powered-by-fixed" href="https://holohive.io" target="_blank">
+  <div style="width:44px;height:44px;border-radius:50%;background:#EEF9F9;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1.5px rgba(58,173,173,0.3);flex-shrink:0;overflow:hidden;">
+    <img src="data:image/png;base64,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" width="34" height="34" style="object-fit:contain;" alt="Holo Hive"/>
+  </div>
+  <div class="powered-by-fixed-text">
+    <span class="powered-by-fixed-lbl" id="t-powered-fixed-lbl">Powered by</span>
+    <span class="powered-by-fixed-name">Holo Hive</span>
+  </div>
+</a>
+</body>
+</html>
