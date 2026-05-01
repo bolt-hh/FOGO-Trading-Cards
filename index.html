@@ -1243,33 +1243,45 @@ body::before{
 </style>
 
 <!-- ═══ REOWN APPKIT — Solana Wallet Connect ═══════════════════════════════
-     Project: fogo-trading-cards.vercel.app
-     Dashboard: https://cloud.reown.com — add your domain to allowed origins
+     Project ID: 0ebdc1b350b890b0042e03a793980776
+     Dashboard:  https://cloud.reown.com — ensure fogo-trading-cards.vercel.app is an allowed domain
      ════════════════════════════════════════════════════════════════════════ -->
 <script type="module">
-  try {
-    const { createAppKit } = await import('https://esm.sh/@reown/appkit@1.6.8');
-    const { SolanaAdapter } = await import('https://esm.sh/@reown/appkit-adapter-solana@1.6.8');
-    const { solana } = await import('https://esm.sh/@reown/appkit/networks@1.6.8');
+  const REOWN_PID = '0ebdc1b350b890b0042e03a793980776';
 
-    const solanaAdapter = new SolanaAdapter();
+  function setConnectBtnError(msg) {
+    const btn = document.getElementById('reown-connect-btn');
+    if (!btn) return;
+    btn.innerHTML = '⚠ ' + msg;
+    btn.style.cssText += ';background:rgba(255,77,77,0.12);color:#ff6b6b;border:1px solid rgba(255,77,77,0.3);font-size:11px;';
+  }
+
+  try {
+    console.log('[FOGO] Loading Reown AppKit from esm.sh...');
+
+    // Use esm.sh bundle mode to resolve all deps in one request
+    const [{ createAppKit }, { SolanaAdapter }, { solana }] = await Promise.all([
+      import('https://esm.sh/@reown/appkit@1.6.8?bundle'),
+      import('https://esm.sh/@reown/appkit-adapter-solana@1.6.8?bundle'),
+      import('https://esm.sh/@reown/appkit@1.6.8/networks?bundle'),
+    ]);
 
     const modal = createAppKit({
-      adapters:  [solanaAdapter],
-      projectId: '0ebdc1b350b890b0042e03a793980776',
-      networks:  [solana],
+      adapters: [new SolanaAdapter()],
+      projectId: REOWN_PID,
+      networks: [solana],
       defaultNetwork: solana,
       metadata: {
-        name:        'FOGO Trader Card',
+        name: 'FOGO Trader Card',
         description: 'Prove your chain presence on FOGO mainnet.',
-        url:         window.location.origin,
-        icons:       [window.location.origin + '/icon1.svg'],
+        url: window.location.origin,
+        icons: [window.location.origin + '/icon1.svg'],
       },
       themeMode: 'dark',
       themeVariables: {
-        '--w3m-accent':               '#C3FBA5',
+        '--w3m-accent': '#C3FBA5',
         '--w3m-border-radius-master': '4px',
-        '--w3m-background-color':     '#110D32',
+        '--w3m-background-color': '#110D32',
       },
       features: { analytics: false, email: false, socials: false },
     });
@@ -1290,15 +1302,10 @@ body::before{
     });
 
   } catch (err) {
-    console.error('[FOGO] Reown AppKit failed to load:', err);
-    // Show a fallback message on the connect button
-    const btn = document.getElementById('reown-connect-btn');
-    if (btn) {
-      btn.textContent = 'Wallet connect unavailable — please refresh';
-      btn.style.background = 'rgba(255,77,77,0.15)';
-      btn.style.color = '#ff4d4d';
-      btn.style.border = '1px solid rgba(255,77,77,0.3)';
-    }
+    // Show the REAL error so we can diagnose it
+    const msg = err?.message || String(err);
+    console.error('[FOGO] Reown load error:', msg);
+    setConnectBtnError('Load error: ' + msg.slice(0, 80));
   }
 </script>
 </head>
