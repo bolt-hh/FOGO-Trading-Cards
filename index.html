@@ -1707,6 +1707,7 @@ body::before{
           <button class="raffle-enter-btn" id="raffle-enter-btn" onclick="enterRaffle()" disabled>
             <span id="t-enter-raffle-btn">ENTER RAFFLE</span>
           </button>
+          <div id="raffle-err" class="err-box" style="margin-top:10px;display:none;"></div>
         </div>
 
         <!-- Step 2: Entry recorded + bonus share prompt -->
@@ -2667,16 +2668,26 @@ function toggleRaffleConfirm() {
   btn.disabled = !isChecked;
 }
 
+function showRaffleErr(msg) {
+  const box = document.getElementById('raffle-err');
+  if (box) { box.textContent = '> ' + msg; box.style.display = 'block'; box.classList.add('on'); }
+  console.error('[FOGO] Raffle error:', msg);
+}
+
 async function enterRaffle() {
   if (STATE.raffleEntered) return;
+
+  const btn = document.getElementById('raffle-enter-btn');
+
   if (!STATE.wallet || !STATE.signature) {
-    showAppErr('Wallet not verified. Please reconnect your wallet and try again.');
+    showRaffleErr('Wallet not verified — please reconnect and sign again.');
     return;
   }
 
-  const btn = document.getElementById('raffle-enter-btn');
   btn.disabled = true;
-  btn.textContent = 'Entering...';
+  const origLabel = btn.querySelector('#t-enter-raffle-btn');
+  if (origLabel) origLabel.textContent = 'Entering...';
+  else btn.textContent = 'Entering...';
 
   const tier       = STATE.cardData?.tier;
   const entryCount = (tier && tier.index !== undefined) ? tier.index : 1;
@@ -2719,9 +2730,9 @@ async function enterRaffle() {
         return;
       }
       // Other errors (expired sig, invalid sig, etc.) — show message and re-enable button
-      btn.disabled    = false;
-      btn.textContent = 'Enter Raffle';
-      showAppErr(json.error || 'Entry failed. Please try again.');
+      btn.disabled = false;
+      if (origLabel) origLabel.textContent = 'ENTER RAFFLE'; else btn.textContent = 'ENTER RAFFLE';
+      showRaffleErr(json.error || `Entry failed (${res.status}). Please try again.`);
       return;
     }
 
@@ -2729,8 +2740,11 @@ async function enterRaffle() {
     STATE._lastInsertedWallet = json.wallet || STATE.wallet;
 
   } catch(e) {
-    // Network error — still allow UI to proceed (entry may or may not have recorded)
-    STATE._lastInsertedWallet = STATE.wallet;
+    // Network error — show error and re-enable
+    btn.disabled = false;
+    if (origLabel) origLabel.textContent = 'ENTER RAFFLE'; else btn.textContent = 'ENTER RAFFLE';
+    showRaffleErr('Network error: ' + (e.message || 'Could not reach server. Try again.'));
+    return;
   }
 
   STATE.raffleEntered    = true;
