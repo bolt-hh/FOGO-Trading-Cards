@@ -1243,52 +1243,63 @@ body::before{
 </style>
 
 <!-- ═══ REOWN APPKIT — Solana Wallet Connect ═══════════════════════════════
-     Get your free Project ID at https://cloud.reown.com
-     Then replace YOUR_REOWN_PROJECT_ID below.
+     Project: fogo-trading-cards.vercel.app
+     Dashboard: https://cloud.reown.com — add your domain to allowed origins
      ════════════════════════════════════════════════════════════════════════ -->
 <script type="module">
-  import { createAppKit } from 'https://esm.sh/@reown/appkit@1.7.3';
-  import { SolanaAdapter }  from 'https://esm.sh/@reown/appkit-adapter-solana@1.7.3';
-  import { solana }         from 'https://esm.sh/@reown/appkit/networks';
+  try {
+    const { createAppKit } = await import('https://esm.sh/@reown/appkit@1.6.8');
+    const { SolanaAdapter } = await import('https://esm.sh/@reown/appkit-adapter-solana@1.6.8');
+    const { solana } = await import('https://esm.sh/@reown/appkit/networks@1.6.8');
 
-  const solanaAdapter = new SolanaAdapter();
+    const solanaAdapter = new SolanaAdapter();
 
-  const modal = createAppKit({
-    adapters:  [solanaAdapter],
-    projectId: '0ebdc1b350b890b0042e03a793980776',
-    networks:  [solana],
-    defaultNetwork: solana,
-    metadata: {
-      name:        'FOGO Trader Card',
-      description: 'Prove your chain presence on FOGO mainnet.',
-      url:         'https://fogo-trading-cards.vercel.app',
-      icons:       ['https://fogo-trading-cards.vercel.app/icon1.svg'],
-    },
-    themeMode: 'dark',
-    themeVariables: {
-      '--w3m-accent':               '#C3FBA5',
-      '--w3m-border-radius-master': '2px',
-      '--w3m-background-color':     '#110D32',
-    },
-    features: { analytics: false, email: false, socials: false },
-  });
+    const modal = createAppKit({
+      adapters:  [solanaAdapter],
+      projectId: '0ebdc1b350b890b0042e03a793980776',
+      networks:  [solana],
+      defaultNetwork: solana,
+      metadata: {
+        name:        'FOGO Trader Card',
+        description: 'Prove your chain presence on FOGO mainnet.',
+        url:         window.location.origin,
+        icons:       [window.location.origin + '/icon1.svg'],
+      },
+      themeMode: 'dark',
+      themeVariables: {
+        '--w3m-accent':               '#C3FBA5',
+        '--w3m-border-radius-master': '4px',
+        '--w3m-background-color':     '#110D32',
+      },
+      features: { analytics: false, email: false, socials: false },
+    });
 
-  // Expose globally so the rest of the app (non-module scripts) can call it
-  window.reownModal = modal;
+    window.reownModal = modal;
+    console.log('[FOGO] Reown AppKit loaded ✓');
 
-  // Subscribe to account state — fires on connect AND disconnect
-  modal.subscribeAccount(async (state) => {
-    if (state.isConnected && state.address) {
-      // Delegate to the main app
-      if (typeof window.handleReownConnection === 'function') {
-        await window.handleReownConnection(state.address);
+    modal.subscribeAccount(async (state) => {
+      if (state.isConnected && state.address) {
+        if (typeof window.handleReownConnection === 'function') {
+          await window.handleReownConnection(state.address);
+        }
+      } else if (!state.isConnected) {
+        if (typeof window.handleReownDisconnection === 'function') {
+          window.handleReownDisconnection();
+        }
       }
-    } else if (!state.isConnected) {
-      if (typeof window.handleReownDisconnection === 'function') {
-        window.handleReownDisconnection();
-      }
+    });
+
+  } catch (err) {
+    console.error('[FOGO] Reown AppKit failed to load:', err);
+    // Show a fallback message on the connect button
+    const btn = document.getElementById('reown-connect-btn');
+    if (btn) {
+      btn.textContent = 'Wallet connect unavailable — please refresh';
+      btn.style.background = 'rgba(255,77,77,0.15)';
+      btn.style.color = '#ff4d4d';
+      btn.style.border = '1px solid rgba(255,77,77,0.3)';
     }
-  });
+  }
 </script>
 </head>
 <body>
@@ -1480,7 +1491,7 @@ body::before{
 
         <!-- Not connected -->
         <div id="wallet-not-connected">
-          <button class="reown-connect-btn" id="reown-connect-btn" onclick="window.reownModal?.open()">
+          <button class="reown-connect-btn" id="reown-connect-btn" onclick="if(window.reownModal){window.reownModal.open()}else{alert('Wallet connect is still loading — please wait a moment and try again.')}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="5" width="20" height="14" rx="3"/>
               <path d="M16 12h2"/>
