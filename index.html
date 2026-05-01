@@ -2555,8 +2555,15 @@ function showAppErr(msg) {
 
 function setEligibilityUI(vol) {
   const eligible = vol >= CONFIG.min_volume;
-  document.getElementById('ineligible-cta').style.display  = eligible ? 'none' : 'block';
-  document.getElementById('eligible-entry').style.display  = eligible ? 'block' : 'none';
+  document.getElementById('ineligible-cta').style.display = eligible ? 'none' : 'block';
+  // Show KOL selector first; it will reveal eligible-entry after KOL is chosen
+  if (eligible) {
+    showKolSelectorIfNeeded();
+  } else {
+    document.getElementById('eligible-entry').style.display = 'none';
+    const panel = document.getElementById('kol-selector-panel');
+    if (panel) panel.style.display = 'none';
+  }
   if (!eligible) {
     const gap = CONFIG.min_volume - vol;
     document.getElementById('ineligible-vol-txt').textContent = fmtUsd(gap) + ' more needed';
@@ -2662,7 +2669,10 @@ function toggleRaffleConfirm() {
 
 async function enterRaffle() {
   if (STATE.raffleEntered) return;
-  if (!STATE.wallet || !STATE.signature) return;
+  if (!STATE.wallet || !STATE.signature) {
+    showAppErr('Wallet not verified. Please reconnect your wallet and try again.');
+    return;
+  }
 
   const btn = document.getElementById('raffle-enter-btn');
   btn.disabled = true;
