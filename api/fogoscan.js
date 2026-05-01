@@ -6,23 +6,18 @@ export default async function handler(req, res) {
   // This blocks external scripts from abusing the proxy and burning Vercel quota.
   const origin  = req.headers['origin']  || '';
   const referer = req.headers['referer'] || '';
-  const allowed = [
-    'https://project-3y7kh.vercel.app',
-    'http://localhost',           // local dev
-    'http://127.0.0.1',          // local dev
-  ];
-  // Add custom domain here if you ever point one at Vercel
+  // Allow any *.vercel.app subdomain, localhost, or custom domains
   const isAllowed = !origin
-    // origin is empty on same-origin GET requests (browser quirk) — check referer too
-    ? allowed.some(o => referer.startsWith(o)) || referer === ''
-    : allowed.some(o => origin.startsWith(o));
+    ? referer === '' || /https?:\/\/(localhost|127\.0\.0\.1|fogo-trading-cards\.vercel\.app|card\.fogo\.io)/.test(referer)
+    : /https?:\/\/(localhost|127\.0\.0\.1|fogo-trading-cards\.vercel\.app|card\.fogo\.io)/.test(origin);
 
   if (!isAllowed) {
     return res.status(403).json({ success: false, error: 'Forbidden' });
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  res.setHeader('Access-Control-Allow-Origin', 'https://project-3y7kh.vercel.app');
+  const allowedOrigins = ['https://fogo-trading-cards.vercel.app', 'https://card.fogo.io'];
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
