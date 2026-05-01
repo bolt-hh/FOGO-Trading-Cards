@@ -7,9 +7,10 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath fill='%23ff3d00' d='M512 0A512 512 0 0 0 0 512a512 512 0 0 0 512 512 512 512 0 0 0 512-512A512 512 0 0 0 512 0Z'/%3E%3Cpath fill='%23fff' d='M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z'/%3E%3C%2Fsvg%3E">
 <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
 /* ================================================================
-   PARTICLE SYSTEM
+   PARTICLE SYSTEM (fixed — was accidentally inside a src= script tag)
 ================================================================ */
 function initParticles() {
   const canvas = document.getElementById('particle-canvas');
@@ -18,83 +19,40 @@ function initParticles() {
   let W, H;
   const PARTICLE_COUNT = 50;
   const particles = [];
-
-  function resize() {
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
   resize();
   window.addEventListener('resize', resize);
-
   class Particle {
-    constructor(fire) {
-      this.fire = fire;
-      this.reset();
-    }
+    constructor(fire) { this.fire = fire; this.reset(); }
     reset() {
       if (this.fire) {
-        this.x = Math.random() * W;
-        this.y = H + Math.random() * 60;
-        this.vx = (Math.random() - 0.5) * 0.4;
-        this.vy = -(0.4 + Math.random() * 0.9);
-        this.life = 0;
-        this.maxLife = 80 + Math.random() * 80;
-        this.r = 2 + Math.random() * 3;
-        // fire color: orange to red
-        const hue = 10 + Math.random() * 30;
-        this.color = `hsl(${hue},100%,55%)`;
+        this.x = Math.random()*W; this.y = H+Math.random()*60;
+        this.vx = (Math.random()-0.5)*0.4; this.vy = -(0.4+Math.random()*0.9);
+        this.life = 0; this.maxLife = 80+Math.random()*80; this.r = 2+Math.random()*3;
+        this.color = `hsl(${10+Math.random()*30},100%,55%)`;
       } else {
-        this.x = Math.random() * W;
-        this.y = Math.random() * H;
-        this.vx = (Math.random() - 0.5) * 0.18;
-        this.vy = (Math.random() - 0.5) * 0.18;
-        this.life = Math.random() * 200;
-        this.maxLife = 200 + Math.random() * 200;
-        this.r = 1 + Math.random() * 2;
-        const g = Math.floor(200 + Math.random() * 55);
+        this.x = Math.random()*W; this.y = Math.random()*H;
+        this.vx = (Math.random()-0.5)*0.18; this.vy = (Math.random()-0.5)*0.18;
+        this.life = Math.random()*200; this.maxLife = 200+Math.random()*200; this.r = 1+Math.random()*2;
+        const g = Math.floor(200+Math.random()*55);
         this.color = `rgb(${Math.floor(g*0.75)},${g},${Math.floor(g*0.65)})`;
       }
     }
     update() {
-      this.x  += this.vx;
-      this.y  += this.vy;
-      this.life++;
-      if (this.fire) {
-        this.vx += (Math.random() - 0.5) * 0.06;
-        if (this.life > this.maxLife || this.y < H * 0.6) this.reset();
-      } else {
-        if (this.x < 0) this.x = W;
-        if (this.x > W) this.x = 0;
-        if (this.y < 0) this.y = H;
-        if (this.y > H) this.y = 0;
-      }
+      this.x += this.vx; this.y += this.vy; this.life++;
+      if (this.fire) { this.vx += (Math.random()-0.5)*0.06; if (this.life>this.maxLife||this.y<H*0.6) this.reset(); }
+      else { if(this.x<0)this.x=W; if(this.x>W)this.x=0; if(this.y<0)this.y=H; if(this.y>H)this.y=0; }
     }
     draw() {
-      const alpha = this.fire
-        ? Math.min(1, (this.life / 20)) * (1 - this.life / this.maxLife) * 0.65
-        : (0.15 + 0.15 * Math.sin(this.life * 0.04));
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-      ctx.fillStyle = this.color;
-      ctx.globalAlpha = alpha;
-      ctx.fill();
+      const alpha = this.fire ? Math.min(1,(this.life/20))*(1-this.life/this.maxLife)*0.65 : (0.15+0.15*Math.sin(this.life*0.04));
+      ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+      ctx.fillStyle = this.color; ctx.globalAlpha = alpha; ctx.fill();
     }
   }
-
-  // Create mix of ambient + fire particles
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
-    particles.push(new Particle(i < 18)); // 18 fire, rest ambient
-  }
-
-  function loop() {
-    ctx.clearRect(0, 0, W, H);
-    ctx.globalAlpha = 1;
-    particles.forEach(p => { p.update(); p.draw(); });
-    requestAnimationFrame(loop);
-  }
+  for (let i=0;i<PARTICLE_COUNT;i++) particles.push(new Particle(i<18));
+  function loop() { ctx.clearRect(0,0,W,H); ctx.globalAlpha=1; particles.forEach(p=>{p.update();p.draw();}); requestAnimationFrame(loop); }
   loop();
 }
-
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image-more/3.4.1/dom-to-image-more.min.js"></script>
 <style>
@@ -1268,7 +1226,70 @@ body::before{
 .bar-chart-outer{display:flex;flex-direction:column;}
 @media(max-width:640px){.dash-stats-grid{grid-template-columns:1fr 1fr;}}
 
+/* ── Reown connect button ─────────────────────────────── */
+.reown-connect-btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--lime);border:none;color:#070520;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:800;
+  letter-spacing:0.14em;text-transform:uppercase;padding:16px 20px;
+  cursor:pointer;border-radius:8px;transition:all 0.2s;
+  box-shadow:0 4px 0 #9EDC80,0 8px 24px rgba(195,251,165,0.2);
+}
+.reown-connect-btn:hover{transform:translateY(-2px);background:#D4FDB8;box-shadow:0 6px 0 #9EDC80,0 12px 36px rgba(195,251,165,0.28);}
+.reown-connect-btn:active{transform:translateY(1px);box-shadow:0 2px 0 #9EDC80;}
+.reown-connect-btn:disabled{opacity:0.45;cursor:not-allowed;pointer-events:none;}
+.reown-connect-btn svg{width:18px;height:18px;flex-shrink:0;}
+.reown-supported{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);text-align:center;margin-top:10px;}
 </style>
+
+<!-- ═══ REOWN APPKIT — Solana Wallet Connect ═══════════════════════════════
+     Get your free Project ID at https://cloud.reown.com
+     Then replace YOUR_REOWN_PROJECT_ID below.
+     ════════════════════════════════════════════════════════════════════════ -->
+<script type="module">
+  import { createAppKit } from 'https://esm.sh/@reown/appkit@1.7.3';
+  import { SolanaAdapter }  from 'https://esm.sh/@reown/appkit-adapter-solana@1.7.3';
+  import { solana }         from 'https://esm.sh/@reown/appkit/networks';
+
+  const solanaAdapter = new SolanaAdapter();
+
+  const modal = createAppKit({
+    adapters:  [solanaAdapter],
+    projectId: '0ebdc1b350b890b0042e03a793980776',
+    networks:  [solana],
+    defaultNetwork: solana,
+    metadata: {
+      name:        'FOGO Trader Card',
+      description: 'Prove your chain presence on FOGO mainnet.',
+      url:         'https://fogo-trading-cards.vercel.app',
+      icons:       ['https://fogo-trading-cards.vercel.app/icon1.svg'],
+    },
+    themeMode: 'dark',
+    themeVariables: {
+      '--w3m-accent':               '#C3FBA5',
+      '--w3m-border-radius-master': '2px',
+      '--w3m-background-color':     '#110D32',
+    },
+    features: { analytics: false, email: false, socials: false },
+  });
+
+  // Expose globally so the rest of the app (non-module scripts) can call it
+  window.reownModal = modal;
+
+  // Subscribe to account state — fires on connect AND disconnect
+  modal.subscribeAccount(async (state) => {
+    if (state.isConnected && state.address) {
+      // Delegate to the main app
+      if (typeof window.handleReownConnection === 'function') {
+        await window.handleReownConnection(state.address);
+      }
+    } else if (!state.isConnected) {
+      if (typeof window.handleReownDisconnection === 'function') {
+        window.handleReownDisconnection();
+      }
+    }
+  });
+</script>
 </head>
 <body>
 <canvas id="particle-canvas"></canvas>
@@ -1459,17 +1480,14 @@ body::before{
 
         <!-- Not connected -->
         <div id="wallet-not-connected">
-          <div class="wallet-options">
-            <button class="wallet-opt" id="opt-phantom"  onclick="connectWallet('phantom')">
-              <span class="wo-logo">👻</span> Phantom
-            </button>
-            <button class="wallet-opt" id="opt-solflare" onclick="connectWallet('solflare')">
-              <span class="wo-logo">☀️</span> Solflare
-            </button>
-            <button class="wallet-opt" id="opt-backpack" onclick="connectWallet('backpack')">
-              <span class="wo-logo">🎒</span> Backpack
-            </button>
-          </div>
+          <button class="reown-connect-btn" id="reown-connect-btn" onclick="window.reownModal?.open()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="3"/>
+              <path d="M16 12h2"/>
+            </svg>
+            Connect Wallet
+          </button>
+          <div class="reown-supported">Phantom · Solflare · Backpack · WalletConnect · 300+ wallets</div>
           <div class="no-wallet-link" id="t-no-wallet">
             No wallet? Get <a href="https://phantom.app" target="_blank">Phantom</a>,
             <a href="https://solflare.com" target="_blank">Solflare</a>, or
@@ -2115,101 +2133,83 @@ function setPlatform(p) {
 ================================================================ */
 
 /* ================================================================
-   WALLET CONNECT + OWNERSHIP SIGNATURE
+   WALLET CONNECT — powered by Reown AppKit
+   The modal is initialised in the <script type="module"> in <head>.
+   window.reownModal is set there; these functions are called by it.
 ================================================================ */
-const WALLET_PROVIDERS = {
-  phantom:  () => window?.phantom?.solana || (window?.solana?.isPhantom  ? window.solana  : null),
-  solflare: () => window?.solflare?.isSolflare ? window.solflare : null,
-  backpack: () => window?.backpack?.isBackpack  ? window.backpack  : null,
+
+const setHint = (msg, cls) => {
+  const el = document.getElementById('wallet-sign-hint');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'wallet-sign-hint' + (cls ? ' ' + cls : '');
 };
 
-async function connectWallet(providerName) {
-  const getProvider = WALLET_PROVIDERS[providerName];
-  const provider    = getProvider?.();
-  const installUrls = { phantom:'https://phantom.app', solflare:'https://solflare.com', backpack:'https://backpack.app' };
+// Called by the AppKit account subscription when a wallet connects
+window.handleReownConnection = async function(pubkey) {
+  // Disable connect button to prevent double-fire
+  const btn = document.getElementById('reown-connect-btn');
+  if (btn) btn.disabled = true;
 
-  if (!provider) {
-    const name = providerName.charAt(0).toUpperCase() + providerName.slice(1);
-    showAppErr(`${name} not detected. Install it at ${installUrls[providerName]} then refresh.`);
+  // Show connected UI
+  document.getElementById('wallet-not-connected').style.display = 'none';
+  document.getElementById('wallet-is-connected').style.display  = 'block';
+  const short = pubkey.slice(0,5) + '...' + pubkey.slice(-4);
+  document.getElementById('wallet-connected-addr').textContent  = short;
+  document.getElementById('wallet-verified-badge').textContent  = '';
+  setHint('Waiting for signature in your wallet…');
+
+  // Build nonce message
+  const nonce   = Date.now();
+  const message = `FOGO Trader Card\nVerify ownership of: ${pubkey}\nNonce: ${nonce}\n\nThis request will not trigger a blockchain transaction or cost any fees.`;
+  const encoded = new TextEncoder().encode(message);
+
+  let signature;
+  try {
+    // Get the Solana wallet provider from AppKit for signing
+    const provider = window.reownModal?.getWalletProvider?.();
+    if (!provider) throw new Error('Wallet provider not available. Please try reconnecting.');
+
+    const signed   = await provider.signMessage(encoded);
+    // AppKit Solana adapter returns { signature: Uint8Array } or just Uint8Array
+    const sigBytes = signed?.signature ?? signed;
+    signature = btoa(String.fromCharCode(...sigBytes));
+  } catch (signErr) {
+    window.handleReownDisconnection();
+    showAppErr('Signature declined. You must sign to prove wallet ownership — no fees, no transaction.');
     return;
   }
 
-  // Disable all wallet buttons during attempt
-  ['phantom','solflare','backpack'].forEach(p => {
-    const b = document.getElementById('opt-' + p);
-    if (b) b.disabled = true;
-  });
+  // Save to state
+  STATE.wallet          = pubkey;
+  STATE.wallet_provider = 'reown';
+  STATE.wallet_obj      = null; // AppKit manages the provider
+  STATE.signature       = signature;
+  STATE.sig_nonce       = nonce;
 
-  const setHint = (msg, cls) => {
-    const el = document.getElementById('wallet-sign-hint');
-    if (!el) return;
-    el.textContent = msg;
-    el.className = 'wallet-sign-hint' + (cls ? ' ' + cls : '');
-  };
+  document.getElementById('wallet-verified-badge').textContent = '✓ VERIFIED';
+  setHint('Wallet ownership verified.', 'verified');
 
-  try {
-    // 1. Connect
-    const resp   = await provider.connect();
-    const pubkey = resp.publicKey.toString();
+  // Check for existing submission then enable generate
+  await checkExistingSubmission(pubkey);
+  document.getElementById('gen-btn').disabled = false;
+};
 
-    // Show connected UI first
-    document.getElementById('wallet-not-connected').style.display = 'none';
-    document.getElementById('wallet-is-connected').style.display  = 'block';
-    const short = pubkey.slice(0,5) + '...' + pubkey.slice(-4);
-    document.getElementById('wallet-connected-addr').textContent  = short;
-    document.getElementById('wallet-verified-badge').textContent  = '';
-    setHint('Waiting for signature in your wallet…');
-
-    // 2. Sign a nonce message to prove ownership
-    const nonce   = Date.now();
-    const message = `FOGO Trader Card\nVerify ownership of: ${pubkey}\nNonce: ${nonce}\n\nThis request will not trigger a blockchain transaction or cost any fees.`;
-    const encoded = new TextEncoder().encode(message);
-
-    let sigBytes;
-    try {
-      const signed = await provider.signMessage(encoded, 'utf8');
-      sigBytes     = signed.signature;
-    } catch(signErr) {
-      // User rejected signature — disconnect cleanly
-      disconnectWallet();
-      showAppErr('Signature declined. You must sign to prove wallet ownership — no fees, no transaction.');
-      return;
-    }
-
-    const signature = btoa(String.fromCharCode(...sigBytes));
-
-    // 3. Save to state
-    STATE.wallet          = pubkey;
-    STATE.wallet_provider = providerName;
-    STATE.wallet_obj      = provider;
-    STATE.signature       = signature;
-    STATE.sig_nonce       = nonce;
-
-    document.getElementById('wallet-verified-badge').textContent = '✓ VERIFIED';
-    setHint('Wallet ownership verified.', 'verified');
-
-    // 4. Check for existing submission
-    await checkExistingSubmission(pubkey);
-
-    // 5. Enable generate button
-    document.getElementById('gen-btn').disabled = false;
-
-  } catch(e) {
-    // Re-enable wallet buttons on failure
-    ['phantom','solflare','backpack'].forEach(p => {
-      const b = document.getElementById('opt-' + p);
-      if (b) b.disabled = false;
-    });
-    const msg = e.code === 4001 ? 'Connection rejected.' : ('Connection failed: ' + (e.message || 'Unknown error'));
-    showAppErr(msg);
-    document.getElementById('wallet-not-connected').style.display = 'block';
-    document.getElementById('wallet-is-connected').style.display  = 'none';
-  }
-}
+// Called by AppKit when wallet disconnects, or manually
+window.handleReownDisconnection = function() {
+  document.getElementById('wallet-not-connected').style.display = 'block';
+  document.getElementById('wallet-is-connected').style.display  = 'none';
+  document.getElementById('wallet-connected-addr').textContent  = '—';
+  document.getElementById('wallet-verified-badge').textContent  = '';
+  setHint('');
+  const btn = document.getElementById('reown-connect-btn');
+  if (btn) btn.disabled = false;
+};
 
 function disconnectWallet() {
-  if (STATE.wallet_obj?.disconnect) {
-    try { STATE.wallet_obj.disconnect(); } catch {}
+  // Disconnect via AppKit (it handles the wallet provider)
+  if (window.reownModal) {
+    window.reownModal.disconnect().catch(() => {});
   }
   STATE.wallet          = null;
   STATE.wallet_provider = null;
