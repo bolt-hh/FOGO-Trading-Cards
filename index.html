@@ -1226,6 +1226,145 @@ body::before{
 .bar-chart-outer{display:flex;flex-direction:column;}
 @media(max-width:640px){.dash-stats-grid{grid-template-columns:1fr 1fr;}}
 
+/* ================================================================
+   TASKS SECTION (view-card)
+================================================================ */
+.tasks-section{margin-top:20px;margin-bottom:20px;}
+.tasks-section-head{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.24em;
+  text-transform:uppercase;color:var(--dim);
+  padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.tasks-section-title{font-family:'Clash Display',sans-serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.tasks-section-sub{font-size:11px;color:var(--dim);margin-bottom:14px;line-height:1.5;}
+.task-grid{display:flex;flex-direction:column;gap:8px;}
+.task-card{
+  background:var(--panel2);border:1px solid var(--border);border-radius:6px;
+  padding:14px 16px;display:flex;align-items:center;gap:14px;
+  border-left:3px solid var(--border);transition:border-color 0.15s;
+}
+.task-card.done{border-left-color:var(--lime);}
+.task-card.link-type{border-left-color:var(--fire);}
+.task-card.manual-type{border-left-color:var(--ember);}
+.task-card:hover{border-color:var(--border-hi);}
+.task-card-info{flex:1;min-width:0;}
+.task-card-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.task-card-desc{font-size:11px;color:var(--dim);line-height:1.5;}
+.task-points-badge{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  color:var(--lime);background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);
+  padding:4px 10px;border-radius:3px;white-space:nowrap;flex-shrink:0;
+}
+.task-points-badge.fire{color:var(--ember);background:rgba(255,107,0,0.08);border-color:rgba(255,107,0,0.25);}
+.task-status-badge{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.12em;
+  text-transform:uppercase;padding:3px 8px;border-radius:3px;
+  flex-shrink:0;white-space:nowrap;
+}
+.task-status-badge.done{background:rgba(195,251,165,0.1);color:var(--lime);border:1px solid rgba(195,251,165,0.25);}
+.task-status-badge.pending{background:rgba(213,235,213,0.05);color:var(--dimmer);border:1px solid var(--border);}
+.task-status-badge.verified{background:rgba(74,222,128,0.08);color:var(--green);border:1px solid rgba(74,222,128,0.25);}
+.task-go-btn{
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.08em;
+  background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.3);color:var(--ember);
+  padding:5px 10px;cursor:pointer;border-radius:3px;white-space:nowrap;transition:all 0.15s;flex-shrink:0;
+}
+.task-go-btn:hover{background:rgba(255,61,0,0.16);}
+.rescan-btn{
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;
+  text-transform:uppercase;background:rgba(213,235,213,0.06);border:1px solid var(--border);
+  color:var(--dim);padding:7px 14px;cursor:pointer;border-radius:4px;transition:all 0.15s;
+}
+.rescan-btn:hover{border-color:var(--border-hi);color:var(--text);}
+
+/* ================================================================
+   POINTS BREAKDOWN PANEL
+================================================================ */
+.points-breakdown-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 0;border-bottom:1px solid rgba(213,235,213,0.06);
+}
+.points-breakdown-row:last-of-type{border-bottom:none;}
+.pbr-name{font-size:12px;color:var(--sub);}
+.pbr-pts{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--lime);}
+.pbr-pts.dim{color:var(--dimmer);}
+.points-total-badge{
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);
+  border-radius:6px;padding:12px 16px;margin-top:12px;
+  font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;
+  color:var(--lime);text-align:center;letter-spacing:0.06em;
+}
+
+/* ================================================================
+   LEADERBOARD VIEW
+================================================================ */
+#view-leaderboard{min-height:100vh;padding:40px 20px 80px;align-items:flex-start;}
+.lb-inner{width:100%;max-width:960px;margin:0 auto;}
+.lb-eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--lime);padding:7px 14px;border:1px solid rgba(195,251,165,0.30);border-radius:100px;
+  background:rgba(195,251,165,0.05);margin-bottom:16px;
+}
+.lb-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px var(--lime);}
+.lb-headline{font-family:'Clash Display',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:700;color:var(--text);margin-bottom:8px;}
+.lb-sub{font-size:14px;color:var(--sub);margin-bottom:24px;line-height:1.6;}
+.leaderboard-prize-strip{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+  background:var(--panel);border:1px solid rgba(195,251,165,0.2);border-radius:10px;
+  overflow:hidden;margin-bottom:24px;
+}
+.lb-prize-cell{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:16px 12px;border-right:1px solid var(--border);text-align:center;
+}
+.lb-prize-cell:last-child{border-right:none;}
+.lb-prize-amt{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;color:var(--lime);}
+.lb-prize-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim);margin-top:3px;}
+.lb-actions{display:flex;gap:8px;margin-bottom:16px;align-items:center;}
+.lb-refresh-btn{
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;
+  text-transform:uppercase;background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);
+  color:var(--lime);padding:9px 16px;cursor:pointer;border-radius:4px;transition:all 0.15s;
+}
+.lb-refresh-btn:hover{background:rgba(195,251,165,0.16);}
+.lb-back-btn{
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.08em;
+  background:transparent;border:1px solid var(--border);color:var(--dim);
+  padding:9px 16px;cursor:pointer;border-radius:4px;transition:all 0.15s;
+}
+.lb-back-btn:hover{border-color:var(--border-hi);color:var(--text);}
+.leaderboard-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px;}
+.leaderboard-table thead tr{background:rgba(195,251,165,0.06);}
+.leaderboard-table th{
+  font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim);
+  padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;
+}
+.leaderboard-table td{
+  padding:10px 12px;color:var(--sub);border-bottom:1px solid rgba(213,235,213,0.04);
+}
+.leaderboard-table tr:hover td{background:rgba(255,255,255,0.015);}
+.leaderboard-table td.hi{color:var(--lime);font-weight:600;}
+.leaderboard-table td.rank-1{color:var(--lime);font-size:14px;font-weight:700;}
+.leaderboard-table td.rank-2{color:#C0C0C0;font-size:13px;font-weight:700;}
+.leaderboard-table td.rank-3{color:#CD7F32;font-size:13px;font-weight:700;}
+.lb-wrap{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+@media(max-width:640px){.leaderboard-prize-strip{grid-template-columns:1fr;}.lb-prize-cell{border-right:none;border-bottom:1px solid var(--border);}}
+
+/* ================================================================
+   ADMIN — TASKS MANAGEMENT TAB
+================================================================ */
+.admin-task-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.admin-task-form .field{margin-bottom:0;}
+.task-mgmt-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px;}
+.task-mgmt-table th{font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim);padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;}
+.task-mgmt-table td{padding:9px 10px;color:var(--sub);border-bottom:1px solid rgba(213,235,213,0.04);white-space:nowrap;}
+.task-mgmt-table tr:hover td{background:rgba(255,255,255,0.015);}
+.task-mgmt-table td.hi{color:var(--lime);font-weight:600;}
+.ugc-award-form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:14px;}
+
 /* ── Reown connect button ─────────────────────────────── */
 .reown-connect-btn{
   width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
@@ -1332,6 +1471,7 @@ body::before{
       </div>
     </div>
     <div class="nav-right">
+      <button class="lb-back-btn" style="font-size:10px;padding:7px 14px;" onclick="showLeaderboard()" id="t-nav-leaderboard">Leaderboard</button>
       <div class="live-status"><span class="live-dot"></span><span id="t-nav-live">Community Activation Live</span></div>
       <div class="lang-toggle" role="group" aria-label="Language">
         <button class="lang-btn active" id="nav-lang-en" type="button" onclick="setLanguage('en')">EN</button>
@@ -1668,6 +1808,20 @@ body::before{
       </div>
 
 
+      <!-- Tasks section — shown for eligible wallets -->
+      <div class="tasks-section" id="tasks-section" style="display:none;">
+        <div class="tasks-section-head">
+          <span>
+            <div class="tasks-section-title" id="t-tasks-heading">Your Tasks</div>
+          </span>
+          <button class="rescan-btn" id="rescan-btn" onclick="rescanWallet()" id="t-rescan-btn">↻ Rescan Wallet</button>
+        </div>
+        <p class="tasks-section-sub" id="t-tasks-sub">Complete tasks to earn more raffle entries. Every point = 1 entry.</p>
+        <div class="task-grid" id="task-grid">
+          <div class="empty-state" style="padding:20px;">Loading tasks...</div>
+        </div>
+      </div>
+
       <!-- KOL Selector — mandatory before raffle -->
       <div id="kol-selector-panel" class="kol-selector-panel" style="display:none;">
         <div class="kol-selector-head" id="t-kol-selector-head">Who referred you?</div>
@@ -1691,15 +1845,22 @@ body::before{
         <!-- Step 1: Enter Raffle -->
         <div id="raffle-step-1" class="raffle-card">
           <div class="raffle-eyebrow" id="t-raffle-eyebrow">Raffle Entry</div>
-          <div class="raffle-entries-badge" id="raffle-entries-badge">1 ENTRY</div>
-          <div class="raffle-tier-note" id="t-raffle-tier-note">Your tier qualifies you for 1 raffle draw entry.</div>
+
+          <!-- Points breakdown — populated by updatePointsDisplay() -->
+          <div id="points-breakdown" style="margin-bottom:16px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:14px;"></div>
+
+          <!-- X post link — required, adds 50 points -->
+          <div style="margin-bottom:14px;">
+            <label style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:6px;" id="t-x-share-label">Share your card on X and paste the link here to earn +50 points</label>
+            <input class="field-input" id="raffle-x-link" type="url" placeholder="https://x.com/yourpost..." oninput="onRaffleXLinkInput()" style="width:100%;">
+          </div>
 
           <!-- Mandatory sharing confirmation -->
           <div class="raffle-confirm" onclick="toggleRaffleConfirm()" id="raffle-confirm-box">
             <div class="raffle-confirm-check" id="raffle-confirm-check"></div>
             <div class="raffle-confirm-body">
-              <strong id="t-raffle-confirm-strong">I have downloaded my Trader Card and shared it in the KOL channel comments.</strong>
-              <span id="t-raffle-confirm-note">Raffle entries will be void if your card is not visible in the channel before the draw.</span>
+              <strong id="t-raffle-confirm-strong">I have shared my Trader Card on X and in the KOL channel comments.</strong>
+              <span id="t-raffle-confirm-note">Entries without a visible shared card will be disqualified from the draw.</span>
               <div class="raffle-confirm-warn">⚠ <span id="t-raffle-confirm-warn">Entries without proof of sharing are ineligible.</span></div>
             </div>
           </div>
@@ -1744,6 +1905,42 @@ body::before{
   </div>
 </section>
 
+<!-- ================================================================ LEADERBOARD VIEW ================================================================ -->
+<section id="view-leaderboard" class="view">
+  <div class="lb-inner">
+    <div class="lb-eyebrow" id="t-lb-eyebrow">FOGO Community Activation</div>
+    <h2 class="lb-headline" id="t-lb-heading">Leaderboard</h2>
+    <p class="lb-sub" id="t-lb-sub">Ranked by total campaign points</p>
+
+    <!-- Prize breakdown strip -->
+    <div class="leaderboard-prize-strip">
+      <div class="lb-prize-cell">
+        <div class="lb-prize-amt">225,000 $FOGO</div>
+        <div class="lb-prize-lbl">Top 10 Traders</div>
+      </div>
+      <div class="lb-prize-cell">
+        <div class="lb-prize-amt">200,000 $FOGO</div>
+        <div class="lb-prize-lbl">Raffle Draw</div>
+      </div>
+      <div class="lb-prize-cell">
+        <div class="lb-prize-amt">50,000 $FOGO</div>
+        <div class="lb-prize-lbl">UGC Rewards</div>
+      </div>
+    </div>
+
+    <div class="lb-actions">
+      <button class="lb-refresh-btn" onclick="loadLeaderboard()" id="t-lb-refresh">↻ Refresh</button>
+      <button class="lb-back-btn" onclick="leaderboardGoBack()" id="t-lb-back">← Back</button>
+    </div>
+
+    <div class="lb-wrap">
+      <div id="leaderboard-content">
+        <div class="empty-state" style="padding:40px;">Loading leaderboard...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ================================================================ ADMIN VIEW ================================================================ -->
 <section id="view-admin" class="view">
   <div class="admin-inner">
@@ -1777,6 +1974,7 @@ body::before{
         <button class="admin-tab active" id="tab-dashboard" onclick="switchAdminTab('dashboard')">Dashboard</button>
         <button class="admin-tab" id="tab-entries" onclick="switchAdminTab('entries')">All Entries</button>
         <button class="admin-tab" id="tab-kols" onclick="switchAdminTab('kols')">KOLs</button>
+        <button class="admin-tab" id="tab-tasks" onclick="switchAdminTab('tasks')">Tasks</button>
         <button class="admin-tab" id="tab-tester" onclick="switchAdminTab('tester')">Card Tester</button>
         <button class="admin-tab" id="tab-config" onclick="switchAdminTab('config')">Config</button>
       </div>
@@ -1796,6 +1994,13 @@ body::before{
         <div class="admin-section-full">
           <div class="admin-section-head">Entries by Day — Last 14 Days</div>
           <div id="dash-day-chart"><div class="empty-state">Loading...</div></div>
+        </div>
+        <div class="admin-section-full">
+          <div class="admin-section-head">
+            Top 10 Leaderboard
+            <button class="btn-small" onclick="loadAdminLeaderboard()" style="font-size:9px;padding:5px 10px;">↻ Refresh</button>
+          </div>
+          <div id="dash-leaderboard"><div class="empty-state">Loading...</div></div>
         </div>
       </div>
 
@@ -1904,6 +2109,72 @@ body::before{
           <div id="kol-mgmt-table-wrap"><div class="empty-state">Loading...</div></div>
         </div>
       </div><!-- /#admin-panel-kols -->
+
+      <!-- ── TASKS TAB ──────────────────────────────────────────── -->
+      <div id="admin-panel-tasks" class="admin-panel-section" style="display:none;">
+        <!-- Add Task Form -->
+        <div class="admin-section-full">
+          <div class="admin-section-head">Add Task</div>
+          <div class="admin-task-form">
+            <div class="field"><label class="field-label">Task Name (EN)</label><input class="field-input" id="task-add-name" type="text" placeholder="e.g. Trade on Valiant"></div>
+            <div class="field"><label class="field-label">Task Name (KO)</label><input class="field-input" id="task-add-name-ko" type="text" placeholder="예: Valiant에서 거래하기"></div>
+            <div class="field"><label class="field-label">Description (EN)</label><input class="field-input" id="task-add-desc" type="text" placeholder="Short description"></div>
+            <div class="field"><label class="field-label">Description (KO)</label><input class="field-input" id="task-add-desc-ko" type="text" placeholder="짧은 설명"></div>
+            <div class="field"><label class="field-label">Points</label><input class="field-input" id="task-add-points" type="number" value="200" min="0"></div>
+            <div class="field"><label class="field-label">Task Type</label>
+              <select class="field-input" id="task-add-type">
+                <option value="auto">auto (onchain detection)</option>
+                <option value="link">link (visit dApp)</option>
+                <option value="manual">manual (UGC/review)</option>
+                <option value="entry">entry (card generated)</option>
+              </select>
+            </div>
+            <div class="field"><label class="field-label">Detection Key</label><input class="field-input" id="task-add-key" type="text" placeholder="e.g. valiant, brasa, ugc"></div>
+            <div class="field"><label class="field-label">Link URL</label><input class="field-input" id="task-add-link" type="url" placeholder="https://valiant.trade"></div>
+            <div class="field"><label class="field-label">Max Completions (-1 = unlimited)</label><input class="field-input" id="task-add-max" type="number" value="1"></div>
+            <div class="field"><label class="field-label">Sort Order</label><input class="field-input" id="task-add-sort" type="number" value="10"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+            <label style="font-size:11px;color:var(--sub);display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="task-add-active" checked style="accent-color:var(--lime);">
+              Active
+            </label>
+          </div>
+          <button class="btn-small" onclick="adminAddTask()">+ Add Task</button>
+          <div id="task-add-success" style="display:none;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lime);"></div>
+        </div>
+
+        <!-- UGC Settings -->
+        <div class="admin-section-full">
+          <div class="admin-section-head">UGC Settings</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+            <span style="font-size:11px;color:var(--sub);">Max UGC Submissions:</span>
+            <input class="field-input" id="ugc-max-input" type="number" value="1" style="width:80px;padding:6px 10px;">
+            <button class="btn-small" onclick="updateUgcMax()" style="font-size:9px;padding:6px 10px;">Save</button>
+            <span id="ugc-max-msg" style="font-size:10px;color:var(--lime);display:none;">Saved!</span>
+          </div>
+        </div>
+
+        <!-- Award UGC Points -->
+        <div class="admin-section-full">
+          <div class="admin-section-head">Award UGC Points</div>
+          <div class="ugc-award-form">
+            <div class="field" style="margin-bottom:0;"><label class="field-label">Wallet Address</label><input class="field-input" id="ugc-wallet" type="text" placeholder="Full wallet address"></div>
+            <div class="field" style="margin-bottom:0;"><label class="field-label">Post Link</label><input class="field-input" id="ugc-post-link" type="url" placeholder="https://x.com/post..."></div>
+            <button class="btn-small" onclick="awardUgcPoints()" style="align-self:flex-end;">Award 100 pts</button>
+          </div>
+          <div id="ugc-award-msg" style="display:none;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lime);"></div>
+        </div>
+
+        <!-- All Tasks Table -->
+        <div class="admin-section-full">
+          <div class="admin-section-head">
+            All Tasks
+            <button class="btn-small" onclick="refreshAdminTasks()" style="font-size:9px;padding:5px 10px;">↻ Refresh</button>
+          </div>
+          <div id="task-mgmt-table-wrap"><div class="empty-state">Loading...</div></div>
+        </div>
+      </div><!-- /#admin-panel-tasks -->
 
       <!-- ── CARD TESTER ─────────────────────────────────────────── -->
       <div id="admin-panel-tester" class="admin-panel-section" style="display:none;">
@@ -2058,6 +2329,12 @@ let STATE = {
   allSubmissions: [],
   allPasscodes: [],
   allKols: [],
+  // New points system fields
+  tasks: [],
+  ugcPoints: 0,
+  currentPoints: 0,
+  _prevView: 'view-gate',
+  allTasks: [],
 };
 
 /* ================================================================
@@ -2115,6 +2392,8 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function showView(id) {
+  const active = document.querySelector('.view.active');
+  if (active && active.id !== id) STATE._prevView = active.id;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
@@ -2315,6 +2594,9 @@ function resetAndGoHome() {
   STATE.kol_id          = null;
   STATE.kol_name        = null;
   STATE.passcode        = null;
+  STATE.tasks           = [];
+  STATE.ugcPoints       = 0;
+  STATE.currentPoints   = 0;
   _kolsLoaded = false;
   // Reset KOL selector UI
   const kolPanel = document.getElementById('kol-selector-panel');
@@ -2593,9 +2875,19 @@ function setEligibilityUI(vol) {
       // Reset confirmation checkbox
       const confirmCheck = document.getElementById('raffle-confirm-check');
       if (confirmCheck) confirmCheck.classList.remove('checked');
+      // Initialize points display
+      updatePointsDisplay();
     }
     // Show KOL selector if not yet selected
     showKolSelectorIfNeeded();
+    // Show tasks section
+    const tsec = document.getElementById('tasks-section');
+    if (tsec) tsec.style.display = 'block';
+    loadTasks();
+  }
+  if (!eligible) {
+    const tsec = document.getElementById('tasks-section');
+    if (tsec) tsec.style.display = 'none';
   }
 }
 
@@ -2661,11 +2953,25 @@ function shareX() {
 ================================================================ */
 
 function toggleRaffleConfirm() {
-  const check = document.getElementById('raffle-confirm-check');
-  const btn   = document.getElementById('raffle-enter-btn');
+  const check   = document.getElementById('raffle-confirm-check');
+  const btn     = document.getElementById('raffle-enter-btn');
+  const xLink   = document.getElementById('raffle-x-link');
   if (!check || !btn) return;
   const isChecked = check.classList.toggle('checked');
-  btn.disabled = !isChecked;
+  const hasLink = xLink && xLink.value.trim().length > 0;
+  btn.disabled = !(isChecked && hasLink);
+}
+
+function onRaffleXLinkInput() {
+  const xLink = document.getElementById('raffle-x-link');
+  const check = document.getElementById('raffle-confirm-check');
+  const btn   = document.getElementById('raffle-enter-btn');
+  if (!btn) return;
+  const hasLink   = xLink && xLink.value.trim().length > 0;
+  const isChecked = check && check.classList.contains('checked');
+  btn.disabled = !(isChecked && hasLink);
+  // Live update the points breakdown panel
+  updatePointsDisplay();
 }
 
 function showRaffleErr(msg) {
@@ -2689,6 +2995,9 @@ async function enterRaffle() {
   if (origLabel) origLabel.textContent = 'Entering...';
   else btn.textContent = 'Entering...';
 
+  const xLinkEl = document.getElementById('raffle-x-link');
+  const xLink = xLinkEl?.value?.trim() || '';
+
   const tier       = STATE.cardData?.tier;
   const entryCount = (tier && tier.index !== undefined) ? tier.index : 1;
 
@@ -2699,6 +3008,10 @@ async function enterRaffle() {
   const EDGE_FN = `https://${CONFIG.sb_project_ref}.supabase.co/functions/v1/verify-raffle-entry`;
 
   try {
+    // Calculate points for entry
+    const { total: totalPoints, breakdown: pointsBreakdown } = calculatePoints(STATE.cardData, !!xLink);
+    STATE.currentPoints = totalPoints;
+
     const payload = {
       wallet_address:   STATE.wallet,
       wallet_signature: STATE.signature,
@@ -2711,7 +3024,11 @@ async function enterRaffle() {
       power_score:      STATE.cardData?.power || 0,
       tx_count:         STATE.cardData?.txCount || STATE.cardData?.data?.txCount || 0,
       protocols:        STATE.cardData?.data?.protocols || {},
-      entry_count:      entryCount,
+      entry_count:      totalPoints,
+      total_points:     totalPoints,
+      points_breakdown: pointsBreakdown,
+      x_share_link:     xLink || null,
+      social_link:      xLink || null,
     };
 
     const res  = await fetch(EDGE_FN, {
@@ -2747,9 +3064,21 @@ async function enterRaffle() {
     return;
   }
 
+  // Also update via direct Supabase (for re-scan case / ensure points fields are set)
+  if (db) {
+    const walletKey = STATE._lastInsertedWallet || STATE.wallet;
+    await db.from('card_submissions').update({
+      total_points:     totalPoints,
+      points_breakdown: pointsBreakdown,
+      x_share_link:     xLink || null,
+      social_link:      xLink || null,
+      entry_count:      totalPoints,
+    }).eq('wallet_address', walletKey).then(() => {}).catch(() => {});
+  }
+
   STATE.raffleEntered    = true;
-  STATE.raffleEntryCount = entryCount;
-  showRaffleStep2(entryCount);
+  STATE.raffleEntryCount = totalPoints;
+  showRaffleStep2(totalPoints);
 }
 
 function showRaffleStep2(entryCount) {
@@ -2896,6 +3225,7 @@ function showAdminDashboard() {
   renderTierConfig();
   renderTierTestGrid();
   switchAdminTab('dashboard');
+  loadAdminLeaderboard();
   // Wire live-update on tester inputs
   ['test-volume','test-txns','test-wallet','test-handle'].forEach(id => {
     const el = document.getElementById(id);
@@ -2904,13 +3234,15 @@ function showAdminDashboard() {
 }
 
 function switchAdminTab(tab) {
-  const tabs = ['dashboard','entries','kols','tester','config'];
+  const tabs = ['dashboard','entries','kols','tasks','tester','config'];
   tabs.forEach(t => {
     const panel = document.getElementById('admin-panel-' + t);
     const btn   = document.getElementById('tab-' + t);
     if (panel) panel.style.display = t === tab ? 'block' : 'none';
     if (btn)   btn.classList.toggle('active', t === tab);
   });
+  if (tab === 'tasks') refreshAdminTasks();
+  if (tab === 'dashboard') loadAdminLeaderboard();
 }
 
 async function refreshAdmin() {
@@ -3633,6 +3965,31 @@ const TRANSLATIONS = {
     kol_continue_btn:   'Continue →',
     // Gate CTA
     gate_btn:           'Connect Your Wallet →',
+    // Tasks
+    tasks_heading:      'Your Tasks',
+    tasks_sub:          'Complete tasks to earn more raffle entries. Every point = 1 entry.',
+    tasks_completed:    'Completed',
+    tasks_pending:      'Pending',
+    tasks_go_dapp:      'Visit →',
+    tasks_verified:     'Verified onchain',
+    tasks_rescan:       '↻ Rescan Wallet',
+    tasks_rescanning:   'Rescanning...',
+    raffle_points_total:'Total Points = Raffle Entries',
+    x_share_label:      'Share your card on X and paste the link here to earn +50 points',
+    x_share_placeholder:'https://x.com/yourpost...',
+    // Leaderboard
+    leaderboard_heading:'Leaderboard',
+    leaderboard_sub:    'Ranked by total campaign points',
+    leaderboard_rank:   'Rank',
+    leaderboard_wallet: 'Wallet',
+    leaderboard_handle: 'Handle',
+    leaderboard_points: 'Points',
+    leaderboard_tier:   'Tier',
+    leaderboard_kol:    'KOL',
+    leaderboard_refresh:'↻ Refresh',
+    leaderboard_back:   '← Back',
+    leaderboard_empty:  'No entries yet. Be the first!',
+    nav_leaderboard:    'Leaderboard',
   },
   ko: {
     gate_eyebrow:       'FOGO 커뮤니티 활성화',
@@ -3705,6 +4062,31 @@ const TRANSLATIONS = {
     kol_continue_btn:   '계속하기 →',
     // Gate CTA
     gate_btn:           '지갑 연결하기 →',
+    // Tasks
+    tasks_heading:      '내 태스크',
+    tasks_sub:          '태스크를 완료하여 더 많은 래플 참가권을 얻으세요. 1포인트 = 1참가권.',
+    tasks_completed:    '완료',
+    tasks_pending:      '대기 중',
+    tasks_go_dapp:      '방문하기 →',
+    tasks_verified:     '온체인 검증됨',
+    tasks_rescan:       '↻ 지갑 재스캔',
+    tasks_rescanning:   '재스캔 중...',
+    raffle_points_total:'총 포인트 = 래플 참가권',
+    x_share_label:      'X에 카드를 공유하고 링크를 붙여넣어 +50포인트 획득',
+    x_share_placeholder:'https://x.com/게시물...',
+    // Leaderboard
+    leaderboard_heading:'리더보드',
+    leaderboard_sub:    '총 캠페인 포인트 기준 순위',
+    leaderboard_rank:   '순위',
+    leaderboard_wallet: '지갑',
+    leaderboard_handle: '핸들',
+    leaderboard_points: '포인트',
+    leaderboard_tier:   '등급',
+    leaderboard_kol:    'KOL',
+    leaderboard_refresh:'↻ 새로고침',
+    leaderboard_back:   '← 뒤로',
+    leaderboard_empty:  '아직 참가자가 없습니다. 첫 번째가 되세요!',
+    nav_leaderboard:    '리더보드',
   }
 };
 
@@ -3868,6 +4250,471 @@ function setLanguage(lang) {
       const tr = document.getElementById('traits-row');
       if (tr) tr.innerHTML = en.traits.map(t => `<span class="trait">${t}</span>`).join('');
     }
+  }
+
+  // New translation keys
+  setTxt('t-tasks-heading',   t.tasks_heading      || 'Your Tasks');
+  setTxt('t-tasks-sub',       t.tasks_sub          || 'Complete tasks to earn more raffle entries. Every point = 1 entry.');
+  setTxt('t-lb-heading',      t.leaderboard_heading || 'Leaderboard');
+  setTxt('t-lb-sub',          t.leaderboard_sub     || 'Ranked by total campaign points');
+  setTxt('t-lb-refresh',      t.leaderboard_refresh || '↻ Refresh');
+  setTxt('t-lb-back',         t.leaderboard_back    || '← Back');
+  setTxt('t-nav-leaderboard', t.nav_leaderboard     || 'Leaderboard');
+  setTxt('t-x-share-label',   t.x_share_label       || 'Share your card on X and paste the link here to earn +50 points');
+  const xPlaceholderEl = document.getElementById('raffle-x-link');
+  if (xPlaceholderEl) xPlaceholderEl.placeholder = t.x_share_placeholder || 'https://x.com/yourpost...';
+  // Re-render tasks if loaded
+  if (STATE.tasks && STATE.tasks.length) renderTasksUI(STATE.tasks);
+  // Re-render points display
+  updatePointsDisplay();
+}
+
+/* ================================================================
+   POINTS CALCULATION
+================================================================ */
+function calculatePoints(cardData, hasXShare) {
+  const breakdown = {};
+  let total = 0;
+
+  // Card generation: 50 pts (always)
+  breakdown.card_generated = 50; total += 50;
+
+  // X share: 50 pts if link submitted
+  if (hasXShare) { breakdown.x_share = 50; total += 50; }
+
+  // Volume: 25 pts per $50
+  const vol = cardData?.vol || 0;
+  const volPts = Math.floor(vol / 50) * 25;
+  if (volPts > 0) { breakdown.volume = volPts; total += volPts; }
+
+  // DApp interactions (from protoCounts)
+  const proto = cardData?.data?.protocols || cardData?.protocols || {};
+  if ((proto.valiant   || 0) > 0) { breakdown.valiant   = 200; total += 200; }
+  if ((proto.pyron     || 0) > 0) { breakdown.pyron     = 200; total += 200; }
+  if ((proto.brasa     || 0) > 0) { breakdown.brasa     = 200; total += 200; }
+  if ((proto.ignition  || 0) > 0) { breakdown.ignition  = 200; total += 200; }
+
+  // UGC points stored in STATE.ugcPoints (manually awarded)
+  const ugcPts = STATE.ugcPoints || 0;
+  if (ugcPts > 0) { breakdown.ugc = ugcPts; total += ugcPts; }
+
+  return { total, breakdown };
+}
+
+/* ================================================================
+   POINTS BREAKDOWN DISPLAY
+================================================================ */
+function updatePointsDisplay() {
+  const el = document.getElementById('points-breakdown');
+  if (!el || !STATE.cardData) return;
+
+  const xLink = document.getElementById('raffle-x-link')?.value?.trim() || '';
+  const { total, breakdown } = calculatePoints(STATE.cardData, !!xLink);
+  STATE.currentPoints = total;
+
+  const t = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.en;
+  const taskNames = {
+    card_generated: 'Card Generated',
+    x_share:        'X Post Share (+50)',
+    volume:         'Trading Volume',
+    valiant:        'Valiant Trade',
+    pyron:          'Pyron Trade',
+    brasa:          'Brasa Trade',
+    ignition:       'Ignition Trade',
+    ugc:            'UGC Content',
+  };
+  const taskNamesKo = {
+    card_generated: '카드 생성',
+    x_share:        'X 포스트 공유 (+50)',
+    volume:         '거래량',
+    valiant:        'Valiant 거래',
+    pyron:          'Pyron 거래',
+    brasa:          'Brasa 거래',
+    ignition:       'Ignition 거래',
+    ugc:            'UGC 콘텐츠',
+  };
+  const names = CURRENT_LANG === 'ko' ? taskNamesKo : taskNames;
+
+  // All possible tasks
+  const allKeys = ['card_generated','x_share','volume','valiant','pyron','brasa','ignition','ugc'];
+  let html = '';
+  allKeys.forEach(key => {
+    const pts = breakdown[key] || 0;
+    const done = pts > 0;
+    const displayPts = key === 'volume' && !done ? '' : (done ? `+${pts}` : '+0');
+    html += `<div class="points-breakdown-row">
+      <span class="pbr-name">${names[key] || key}</span>
+      <span class="pbr-pts${done ? '' : ' dim'}">${displayPts || '—'}</span>
+    </div>`;
+  });
+
+  html += `<div class="points-total-badge">${total} ${t.raffle_points_total || 'POINTS = RAFFLE ENTRIES'}</div>`;
+  el.innerHTML = html;
+}
+
+/* ================================================================
+   TASKS LOADER
+================================================================ */
+async function loadTasks() {
+  if (!db) return;
+  try {
+    const { data, error } = await db.from('tasks').select('*').eq('active', true).order('sort_order');
+    if (error || !data) return;
+    STATE.tasks = data;
+    renderTasksUI(data);
+  } catch(e) {
+    console.warn('[FOGO] loadTasks error:', e);
+  }
+  // Also init points display
+  updatePointsDisplay();
+}
+
+function renderTasksUI(tasks) {
+  const grid = document.getElementById('task-grid');
+  if (!grid || !STATE.cardData) return;
+
+  const proto     = STATE.cardData?.data?.protocols || {};
+  const breakdown = calculatePoints(STATE.cardData, !!(document.getElementById('raffle-x-link')?.value?.trim())).breakdown;
+  const lang      = CURRENT_LANG;
+  const t         = TRANSLATIONS[lang] || TRANSLATIONS.en;
+
+  if (!tasks.length) {
+    grid.innerHTML = '<div class="empty-state" style="padding:20px;">No tasks available.</div>';
+    return;
+  }
+
+  grid.innerHTML = tasks.map(task => {
+    const name  = (lang === 'ko' && task.name_ko) ? task.name_ko : task.name;
+    const desc  = (lang === 'ko' && task.description_ko) ? task.description_ko : (task.description || '');
+    const key   = task.detection_key || '';
+    const pts   = task.points || 0;
+
+    // Determine completion
+    let done = false;
+    if (task.task_type === 'entry') done = true;
+    else if (task.task_type === 'auto' && key && proto[key] && proto[key] > 0) done = true;
+    else if (task.task_type === 'auto' && key && breakdown[key]) done = true;
+    else if (task.task_type === 'link' && key && proto[key] && proto[key] > 0) done = true;
+    else if (task.task_type === 'manual' && key === 'ugc' && (STATE.ugcPoints || 0) > 0) done = true;
+
+    let typeClass = '';
+    if (task.task_type === 'link') typeClass = 'link-type';
+    else if (task.task_type === 'manual') typeClass = 'manual-type';
+
+    const statusLabel = done
+      ? (task.task_type === 'auto' ? (t.tasks_verified || 'Verified onchain') : (t.tasks_completed || 'Completed'))
+      : (task.task_type === 'manual' ? 'Submit UGC' : (t.tasks_pending || 'Pending'));
+    const statusClass = done ? (task.task_type === 'auto' ? 'verified' : 'done') : 'pending';
+
+    const linkBtn = (task.task_type === 'link' && task.link && !done)
+      ? `<button class="task-go-btn" onclick="window.open('${task.link}','_blank')">${t.tasks_go_dapp || 'Visit →'}</button>`
+      : '';
+
+    return `<div class="task-card ${done ? 'done' : ''} ${typeClass}">
+      <div class="task-card-info">
+        <div class="task-card-name">${name}</div>
+        ${desc ? `<div class="task-card-desc">${desc}</div>` : ''}
+      </div>
+      <span class="task-points-badge${task.task_type === 'link' ? ' fire' : ''}">+${pts} pts</span>
+      <span class="task-status-badge ${statusClass}">${statusLabel}</span>
+      ${linkBtn}
+    </div>`;
+  }).join('');
+}
+
+/* ================================================================
+   RESCAN WALLET
+================================================================ */
+async function rescanWallet() {
+  const btn = document.getElementById('rescan-btn');
+  if (!btn || !STATE.wallet) return;
+  const t = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.en;
+  btn.textContent = t.tasks_rescanning || 'Rescanning...';
+  btn.disabled = true;
+
+  try {
+    const data = await fetchFogoData(STATE.wallet);
+    if (!data.ok) { btn.textContent = t.tasks_rescan || '↻ Rescan Wallet'; btn.disabled = false; return; }
+
+    const vol   = data.volumeUsd || 0;
+    const tier  = getTier(vol);
+    const power = computePower(vol);
+    STATE.cardData = { data, vol, tier, power };
+
+    // Update DB record
+    if (db) {
+      const { total: totalPts, breakdown: ptsBrk } = calculatePoints(STATE.cardData, false);
+      await db.from('card_submissions').update({
+        total_volume_usd: vol,
+        tier_name:        tier.name,
+        power_score:      power,
+        tx_count:         data.txCount,
+        protocols:        data.protocols,
+        total_points:     totalPts,
+        points_breakdown: ptsBrk,
+      }).eq('wallet_address', STATE.wallet).then(() => {}).catch(() => {});
+    }
+
+    renderCard(STATE.wallet, STATE.handle, data, tier, power);
+    setEligibilityUI(vol);
+    updatePointsDisplay();
+    renderTasksUI(STATE.tasks);
+  } catch(e) {
+    console.error('[FOGO] rescanWallet error:', e);
+  }
+
+  btn.textContent = t.tasks_rescan || '↻ Rescan Wallet';
+  btn.disabled = false;
+}
+
+/* ================================================================
+   LEADERBOARD
+================================================================ */
+let _lbPrevView = 'view-gate';
+
+function showLeaderboard() {
+  _lbPrevView = document.querySelector('.view.active')?.id || 'view-gate';
+  showView('view-leaderboard');
+  loadLeaderboard();
+}
+
+function leaderboardGoBack() {
+  showView(_lbPrevView || 'view-gate');
+}
+
+async function loadLeaderboard() {
+  const wrap = document.getElementById('leaderboard-content');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="empty-state" style="padding:40px;">Loading...</div>';
+
+  if (!db) { wrap.innerHTML = '<div class="empty-state" style="padding:40px;">Database not connected.</div>'; return; }
+
+  try {
+    const { data, error } = await db.from('leaderboard').select('*').limit(100);
+    if (error || !data) {
+      // Fallback: query card_submissions ordered by total_points
+      const { data: subs } = await db.from('card_submissions').select('wallet_address,twitter_handle,total_points,total_volume_usd,tier_name').order('total_points', { ascending: false }).limit(100);
+      renderLeaderboardTable(subs || [], wrap);
+      return;
+    }
+    renderLeaderboardTable(data, wrap);
+  } catch(e) {
+    wrap.innerHTML = '<div class="empty-state" style="padding:40px;">Error loading leaderboard.</div>';
+  }
+}
+
+function renderLeaderboardTable(data, wrap) {
+  const t = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.en;
+  if (!data || !data.length) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:40px;">${t.leaderboard_empty || 'No entries yet. Be the first!'}</div>`;
+    return;
+  }
+
+  const truncWallet = w => w ? w.slice(0,5) + '...' + w.slice(-4) : '—';
+  const rankClass = r => r === 1 ? 'rank-1' : r === 2 ? 'rank-2' : r === 3 ? 'rank-3' : '';
+  const rankEmoji = r => r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '🥉' : r;
+
+  let html = `<div style="overflow-x:auto;"><table class="leaderboard-table">
+    <thead><tr>
+      <th>${t.leaderboard_rank || 'Rank'}</th>
+      <th>${t.leaderboard_wallet || 'Wallet'}</th>
+      <th>${t.leaderboard_handle || 'Handle'}</th>
+      <th>${t.leaderboard_points || 'Points'}</th>
+      <th>Volume</th>
+      <th>${t.leaderboard_tier || 'Tier'}</th>
+    </tr></thead><tbody>`;
+
+  data.forEach((row, i) => {
+    const rank     = row.rank || (i + 1);
+    const rc       = rankClass(rank);
+    const wallet   = truncWallet(row.wallet_address);
+    const handle   = row.twitter_handle || '—';
+    const points   = (row.total_points || 0).toLocaleString();
+    const vol      = fmtUsd(row.total_volume_usd || 0);
+    const tier     = row.tier_name || '—';
+    html += `<tr>
+      <td class="${rc}">${rankEmoji(rank)}</td>
+      <td class="addr">${wallet}</td>
+      <td>${handle}</td>
+      <td class="hi">${points}</td>
+      <td>${vol}</td>
+      <td>${tier}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
+}
+
+/* ================================================================
+   ADMIN — TASKS MANAGEMENT
+================================================================ */
+async function refreshAdminTasks() {
+  if (!db) return;
+  try {
+    const { data } = await db.from('tasks').select('*').order('sort_order');
+    STATE.allTasks = data || [];
+    renderAdminTasksTable(STATE.allTasks);
+    // Pre-fill UGC max completions
+    const ugcTask = STATE.allTasks.find(t => t.detection_key === 'ugc');
+    if (ugcTask) {
+      const inp = document.getElementById('ugc-max-input');
+      if (inp) inp.value = ugcTask.max_completions ?? 1;
+    }
+  } catch(e) { console.error('[FOGO] refreshAdminTasks:', e); }
+}
+
+function renderAdminTasksTable(tasks) {
+  const wrap = document.getElementById('task-mgmt-table-wrap');
+  if (!wrap) return;
+  if (!tasks.length) { wrap.innerHTML = '<div class="empty-state">No tasks yet.</div>'; return; }
+
+  let html = `<table class="task-mgmt-table"><thead><tr>
+    <th>Name</th><th>Points</th><th>Type</th><th>Detection Key</th><th>Max</th><th>Status</th><th>Actions</th>
+  </tr></thead><tbody>`;
+  tasks.forEach(task => {
+    const dot = task.active ? '<span class="active-dot"></span>' : '<span class="inactive-dot"></span>';
+    html += `<tr>
+      <td class="hi">${task.name}</td>
+      <td>${task.points}</td>
+      <td>${task.task_type}</td>
+      <td>${task.detection_key || '—'}</td>
+      <td>${task.max_completions === -1 ? '∞' : (task.max_completions ?? 1)}</td>
+      <td>${dot}${task.active ? 'Active' : 'Inactive'}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn-toggle-kol" onclick="adminToggleTask('${task.id}',${task.active})">${task.active ? 'Deactivate' : 'Activate'}</button>
+        <button class="btn-danger" onclick="adminDeleteTask('${task.id}')">Del</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+async function adminAddTask() {
+  if (!db) { alert('Database not connected.'); return; }
+  const name    = document.getElementById('task-add-name').value.trim();
+  const nameKo  = document.getElementById('task-add-name-ko').value.trim();
+  const desc    = document.getElementById('task-add-desc').value.trim();
+  const descKo  = document.getElementById('task-add-desc-ko').value.trim();
+  const points  = parseInt(document.getElementById('task-add-points').value) || 0;
+  const type    = document.getElementById('task-add-type').value;
+  const key     = document.getElementById('task-add-key').value.trim() || null;
+  const link    = document.getElementById('task-add-link').value.trim() || null;
+  const maxC    = parseInt(document.getElementById('task-add-max').value) ?? 1;
+  const sort    = parseInt(document.getElementById('task-add-sort').value) || 10;
+  const active  = document.getElementById('task-add-active').checked;
+
+  if (!name) { alert('Enter task name.'); return; }
+
+  const { error } = await db.from('tasks').insert({
+    name, name_ko: nameKo || null, description: desc || null, description_ko: descKo || null,
+    points, task_type: type, detection_key: key, link, max_completions: maxC, sort_order: sort, active,
+  });
+  if (error) { alert('Error: ' + error.message); return; }
+
+  const succ = document.getElementById('task-add-success');
+  if (succ) { succ.style.display = 'block'; succ.textContent = 'Task added: ' + name; setTimeout(() => succ.style.display = 'none', 3000); }
+  await refreshAdminTasks();
+}
+
+async function adminToggleTask(id, currentActive) {
+  if (!db) return;
+  await db.from('tasks').update({ active: !currentActive }).eq('id', id);
+  await refreshAdminTasks();
+}
+
+async function adminDeleteTask(id) {
+  if (!id) return;
+  if (!confirm('Delete this task?')) return;
+  if (!db) return;
+  await db.from('tasks').delete().eq('id', id);
+  await refreshAdminTasks();
+}
+
+async function updateUgcMax() {
+  if (!db) return;
+  const val = parseInt(document.getElementById('ugc-max-input').value) ?? 1;
+  const ugcTask = STATE.allTasks.find(t => t.detection_key === 'ugc');
+  if (!ugcTask) { alert('No UGC task found. Create one with detection_key = ugc first.'); return; }
+  const { error } = await db.from('tasks').update({ max_completions: val }).eq('id', ugcTask.id);
+  const msg = document.getElementById('ugc-max-msg');
+  if (!error && msg) { msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 2000); }
+  await refreshAdminTasks();
+}
+
+async function awardUgcPoints() {
+  if (!db) { alert('Database not connected.'); return; }
+  const wallet  = document.getElementById('ugc-wallet').value.trim();
+  const postLink = document.getElementById('ugc-post-link').value.trim();
+  if (!wallet) { alert('Enter wallet address.'); return; }
+
+  // Fetch current ugc_points and total_points
+  const { data: row } = await db.from('card_submissions').select('ugc_points,total_points,points_breakdown').eq('wallet_address', wallet).maybeSingle();
+  if (!row) { alert('Wallet not found in submissions.'); return; }
+
+  const newUgc   = (row.ugc_points || 0) + 100;
+  const newTotal = (row.total_points || 0) + 100;
+  const newBreak = Object.assign({}, row.points_breakdown || {}, { ugc: newUgc });
+
+  const { error } = await db.from('card_submissions').update({
+    ugc_points:       newUgc,
+    total_points:     newTotal,
+    points_breakdown: newBreak,
+    x_share_link:     postLink || null,
+  }).eq('wallet_address', wallet);
+
+  const msg = document.getElementById('ugc-award-msg');
+  if (!error && msg) {
+    msg.style.display = 'block';
+    msg.textContent = `Awarded 100 UGC pts to ${wallet.slice(0,8)}... Total: ${newTotal} pts`;
+    setTimeout(() => msg.style.display = 'none', 5000);
+    document.getElementById('ugc-wallet').value = '';
+    document.getElementById('ugc-post-link').value = '';
+  } else if (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+/* ================================================================
+   ADMIN LEADERBOARD PREVIEW (Dashboard tab)
+================================================================ */
+async function loadAdminLeaderboard() {
+  const wrap = document.getElementById('dash-leaderboard');
+  if (!wrap || !db) return;
+
+  try {
+    let data;
+    const { data: lbData, error } = await db.from('leaderboard').select('*').limit(10);
+    if (error || !lbData) {
+      const { data: subs } = await db.from('card_submissions').select('wallet_address,twitter_handle,total_points,total_volume_usd,tier_name').order('total_points', { ascending: false }).limit(10);
+      data = subs || [];
+    } else {
+      data = lbData.slice(0,10);
+    }
+
+    if (!data.length) { wrap.innerHTML = '<div class="empty-state">No entries yet.</div>'; return; }
+
+    const truncWallet = w => w ? w.slice(0,5) + '...' + w.slice(-4) : '—';
+    let html = `<table class="dash-kol-table"><thead><tr>
+      <th>Rank</th><th>Wallet</th><th>Handle</th><th>Points</th><th>Volume</th><th>Tier</th>
+    </tr></thead><tbody>`;
+    data.forEach((row, i) => {
+      const rank  = row.rank || (i+1);
+      const emoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank;
+      html += `<tr>
+        <td class="hi">${emoji}</td>
+        <td class="addr">${truncWallet(row.wallet_address)}</td>
+        <td>${row.twitter_handle || '—'}</td>
+        <td class="hi">${(row.total_points || 0).toLocaleString()}</td>
+        <td>${fmtUsd(row.total_volume_usd || 0)}</td>
+        <td>${row.tier_name || '—'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  } catch(e) {
+    wrap.innerHTML = '<div class="empty-state">Error loading leaderboard.</div>';
   }
 }
 </script>
