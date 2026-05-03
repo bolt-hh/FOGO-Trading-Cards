@@ -2837,20 +2837,14 @@ function showAppErr(msg) {
 }
 
 function setEligibilityUI(vol) {
-  const eligible = vol >= CONFIG.min_volume;
-  document.getElementById('ineligible-cta').style.display = eligible ? 'none' : 'block';
+  // All wallets are eligible — just need to generate card + share on X
+  const inelig = document.getElementById('ineligible-cta');
+  if (inelig) inelig.style.display = 'none';
+
   // Show KOL selector first; it will reveal eligible-entry after KOL is chosen
-  if (eligible) {
-    showKolSelectorIfNeeded();
-  } else {
-    document.getElementById('eligible-entry').style.display = 'none';
-    const panel = document.getElementById('kol-selector-panel');
-    if (panel) panel.style.display = 'none';
-  }
-  if (!eligible) {
-    const gap = CONFIG.min_volume - vol;
-    document.getElementById('ineligible-vol-txt').textContent = fmtUsd(gap) + ' more needed';
-  } else {
+  showKolSelectorIfNeeded();
+
+  {
     // Set entry count based on tier index
     const tier       = STATE.cardData?.tier;
     const entryCount = (tier && tier.index !== undefined) ? tier.index : 1;
