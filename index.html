@@ -1513,20 +1513,67 @@ body::before{
   </div>
 
   <div class="gate-inner">
-    <!-- Left: hero text column -->
+    <!-- Left: hero text + campaign rules -->
     <div class="gate-hero-text">
-      <div class="gate-eyebrow" id="t-gate-eyebrow">FOGO Community Activation</div>
-      <h1 class="gate-headline" id="t-gate-headline">Prove Your<br><span id="t-gate-headline-span">Chain Presence</span></h1>
-      <p class="gate-sub" id="t-gate-sub">Connect your SVM wallet to reveal your FOGO Trader Card. Exclusive to traders who've deployed capital on the FOGO ecosystem.</p>
-      <div style="margin-top:36px;">
-        <button class="btn-gate-cta" onclick="showView('view-app')">
-          <span class="btn-sheen"></span>
-          <span id="t-gate-btn">Connect Your Wallet →</span>
-        </button>
+      <div class="gate-eyebrow" id="t-gate-eyebrow">500,000 $FOGO · Season 2 Activation</div>
+      <h1 class="gate-headline" id="t-gate-headline">Stack Points.<br><span id="t-gate-headline-span">Win $FOGO.</span></h1>
+      <p class="gate-sub" id="t-gate-sub">Generate your Trader Card, share it on X, use FOGO ecosystem dApps, and climb the leaderboard for a share of 500,000 $FOGO. Every point you earn is one raffle entry.</p>
+
+      <!-- Prize overview strip -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:28px 0;">
+        <div style="background:var(--panel);border:1px solid rgba(195,251,165,0.2);border-radius:8px;padding:14px 12px;text-align:center;">
+          <div style="font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;color:var(--lime);line-height:1.1;">225,000<br><span style="font-size:10px;letter-spacing:0.06em;">$FOGO</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;">Leaderboard</div>
+        </div>
+        <div style="background:var(--panel);border:1px solid rgba(255,61,0,0.25);border-radius:8px;padding:14px 12px;text-align:center;">
+          <div style="font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;color:var(--fire);line-height:1.1;">200,000<br><span style="font-size:10px;letter-spacing:0.06em;">$FOGO</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;">Lucky Draw</div>
+        </div>
+        <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 12px;text-align:center;">
+          <div style="font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;color:var(--sub);line-height:1.1;">50,000<br><span style="font-size:10px;letter-spacing:0.06em;">$FOGO</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;">Top UGC</div>
+        </div>
       </div>
+
+      <!-- How to maximise points -->
+      <div style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:32px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:var(--lime);margin-bottom:12px;">How to Maximise Your Entries</div>
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--sub);">🎴 Generate your Trader Card</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+50 pts</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--sub);">𝕏 Share card on X</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+50 pts</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--sub);">📊 Onchain volume (per $50)</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+25 pts</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--sub);">⚡ Use Valiant / Pyron / Brasa / Ignition</span><span style="color:var(--fire);font-family:'JetBrains Mono',monospace;font-size:11px;">+200 each</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--sub);">🎬 Share UGC on X (max 3 posts)</span><span style="color:var(--sub);font-family:'JetBrains Mono',monospace;font-size:11px;">+100 each</span></div>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);letter-spacing:0.08em;">🏆 225 Winners · Volume points uncapped · More activity = more entries</div>
+      </div>
+
+      <button class="btn-gate-cta" onclick="showView('view-app')">
+        <span class="btn-sheen"></span>
+        <span id="t-gate-btn">Get Your Trader Card →</span>
+      </button>
     </div>
-    <!-- Right: tier grid -->
+
+    <!-- Right: prize breakdown + tier grid -->
     <div class="gate-card">
+      <!-- Leaderboard prize breakdown -->
+      <div style="margin-bottom:16px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Leaderboard Prizes</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(195,251,165,0.05);border-radius:4px;border:1px solid rgba(195,251,165,0.15);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);">#1</span>
+            <span style="font-family:'Clash Display',sans-serif;font-size:13px;font-weight:700;color:var(--lime);">50,000 $FOGO</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">#2</span><span style="font-size:12px;color:var(--sub);">35,000 $FOGO</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">#3</span><span style="font-size:12px;color:var(--sub);">25,000 $FOGO</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">#4–5</span><span style="font-size:12px;color:var(--sub);">20,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">#6–10</span><span style="font-size:12px;color:var(--sub);">15,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">#11–15</span><span style="font-size:12px;color:var(--sub);">5,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 10px;border-top:1px solid var(--border);margin-top:4px;"><span style="font-size:11px;color:var(--dim);">200× Lucky Draw</span><span style="font-size:12px;color:var(--sub);">1,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">10× Top UGC</span><span style="font-size:12px;color:var(--sub);">5,000 $FOGO each</span></div>
+        </div>
+      </div>
+
       <div class="gate-divider"><span class="gate-divider-txt" id="t-gate-divider">Trader Tiers</span></div>
       <div class="gate-tiers" id="gate-tiers-grid">
         <div class="gate-tier"><span class="gate-tier-icon">⚡</span><div class="gate-tier-name" id="t-tier-1">Spot Accumulator</div><div class="gate-tier-range">$100+</div></div>
@@ -1539,7 +1586,7 @@ body::before{
 
       <!-- Ecosystem stats strip -->
       <div class="eco-stats-strip">
-        <div class="eco-stat"><div class="eco-stat-val">7</div><div class="eco-stat-lbl" id="t-stat-protocols">Protocols</div></div>
+        <div class="eco-stat"><div class="eco-stat-val">225</div><div class="eco-stat-lbl" id="t-stat-protocols">Winners</div></div>
         <div class="eco-stat"><div class="eco-stat-val">S2</div><div class="eco-stat-lbl" id="t-stat-season">Season</div></div>
         <div class="eco-stat"><div class="eco-stat-val">On-Chain</div><div class="eco-stat-lbl" id="t-stat-verified">Verified</div></div>
       </div>
@@ -1874,21 +1921,32 @@ body::before{
         <!-- Step 2: Entry recorded + bonus share prompt -->
         <div id="raffle-step-2" class="raffle-card" style="display:none;">
           <div class="raffle-success-icon">🎟️</div>
-          <div class="raffle-success-title" id="t-entry-recorded">Entry Recorded</div>
-          <div class="raffle-success-sub" id="raffle-entry-count-msg">1 entry secured in the draw.</div>
+          <div class="raffle-success-title" id="t-entry-recorded">You're in the Draw</div>
+          <div class="raffle-success-sub" id="raffle-entry-count-msg">Your raffle entry is confirmed.</div>
+
+          <!-- UGC submission — up to 3 posts, 100 pts each -->
           <div class="raffle-bonus-panel">
-            <div class="raffle-bonus-head" id="t-bonus-head">Earn a Bonus Entry</div>
-            <div class="raffle-bonus-sub" id="t-bonus-sub">Share your card on socials and drop the post link below for an extra entry.</div>
-            <div class="raffle-share-btns">
-              <button class="raffle-share-btn" onclick="shareX()"><span id="t-raffle-share-x">𝕏 Share on X</span></button>
-              <button class="raffle-share-btn tg" onclick="shareTg()"><span id="t-raffle-share-tg">✈ Share on Telegram</span></button>
+            <div class="raffle-bonus-head" id="t-bonus-head">📸 Earn +100 Points per UGC Post</div>
+            <div class="raffle-bonus-sub" id="t-bonus-sub">Share original FOGO content on X (not just your card — any FOGO-related post). Submit up to 3 post links. Each approved post earns +100 points and counts toward the Top UGC prize pool.</div>
+
+            <!-- Existing UGC submissions for this wallet -->
+            <div id="ugc-existing" style="margin-bottom:12px;"></div>
+
+            <!-- New submission form (hidden when 3 reached) -->
+            <div id="ugc-submit-wrap">
+              <div class="raffle-link-wrap" style="margin-bottom:6px;">
+                <input class="raffle-link-input" id="ugc-link-input" type="url" placeholder="https://x.com/yourpost..." />
+                <button class="raffle-link-btn" id="ugc-submit-btn" onclick="submitUgcLink()">
+                  <span id="t-ugc-submit">Submit</span>
+                </button>
+              </div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.1em;" id="ugc-slots-left">0 / 3 submitted</div>
             </div>
-            <div class="raffle-link-wrap">
-              <input class="raffle-link-input" id="social-link-input" type="url" placeholder="Paste your post link here..." />
-              <button class="raffle-link-btn" id="raffle-link-btn" onclick="submitSocialLink()"><span id="t-submit-link">Submit</span></button>
-            </div>
-            <button class="raffle-skip-btn" onclick="skipBonusEntry()" id="t-skip-btn">Skip — I'm done</button>
+
+            <div id="ugc-err" class="err-box" style="margin-top:8px;display:none;"></div>
           </div>
+
+          <button class="raffle-skip-btn" onclick="skipBonusEntry()" id="t-skip-btn" style="margin-top:16px;">Done →</button>
         </div>
 
         <!-- Final confirmation -->
@@ -1973,6 +2031,7 @@ body::before{
       <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;">
         <button class="admin-tab active" id="tab-dashboard" onclick="switchAdminTab('dashboard')">Dashboard</button>
         <button class="admin-tab" id="tab-entries" onclick="switchAdminTab('entries')">All Entries</button>
+        <button class="admin-tab" id="tab-ugc" onclick="switchAdminTab('ugc')">UGC Posts</button>
         <button class="admin-tab" id="tab-kols" onclick="switchAdminTab('kols')">KOLs</button>
         <button class="admin-tab" id="tab-tasks" onclick="switchAdminTab('tasks')">Tasks</button>
         <button class="admin-tab" id="tab-tester" onclick="switchAdminTab('tester')">Card Tester</button>
@@ -2001,6 +2060,32 @@ body::before{
             <button class="btn-small" onclick="loadAdminLeaderboard()" style="font-size:9px;padding:5px 10px;">↻ Refresh</button>
           </div>
           <div id="dash-leaderboard"><div class="empty-state">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- ── UGC TAB ───────────────────────────────────────────── -->
+      <div id="admin-panel-ugc" class="admin-panel-section" style="display:none;">
+        <div class="admin-section-full">
+          <div class="admin-section-head">
+            UGC Posts
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="ugc-filter" onchange="refreshAdminUgc()" style="background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 10px;border-radius:4px;">
+                <option value="all">All</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <button class="btn-small" onclick="refreshAdminUgc()" style="font-size:9px;padding:5px 12px;">↻ Refresh</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="admin-entry-table" id="ugc-table">
+              <thead><tr>
+                <th>#</th><th>Wallet</th><th>Handle</th><th>Post Link</th><th>Status</th><th>Points</th><th>Submitted</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="ugc-tbody"><tr><td colspan="8"><div class="empty-state">Loading...</div></td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -3079,14 +3164,15 @@ async function enterRaffle() {
 function showRaffleStep2(entryCount) {
   document.getElementById('raffle-step-1').style.display = 'none';
   document.getElementById('raffle-step-2').style.display = 'block';
-  const plural = entryCount === 1 ? 'entry' : 'entries';
-  const msg    = document.getElementById('raffle-entry-count-msg');
+  const msg = document.getElementById('raffle-entry-count-msg');
   if (msg) {
     const t = TRANSLATIONS[CURRENT_LANG];
     msg.textContent = t?.raffle_entries_secured
       ? t.raffle_entries_secured.replace('{n}', entryCount)
-      : entryCount + ' ' + plural + ' secured in the draw.';
+      : entryCount + ' points = ' + entryCount + ' raffle entries.';
   }
+  // Load existing UGC submissions for this wallet
+  loadUgcSubmissions();
 }
 
 async function submitSocialLink() {
@@ -3124,6 +3210,95 @@ async function submitSocialLink() {
   }
 
   showRaffleDone(true);
+}
+
+/* ================================================================
+   UGC SUBMISSION FLOW (up to 3 posts, 100 pts each, admin-verified)
+================================================================ */
+
+async function loadUgcSubmissions() {
+  if (!db || !STATE.wallet) return;
+  try {
+    const { data } = await db.from('ugc_submissions')
+      .select('id,post_link,status,points_awarded,created_at')
+      .eq('wallet_address', STATE.wallet)
+      .order('created_at', { ascending: true });
+    renderUgcExisting(data || []);
+  } catch(e) { console.warn('[FOGO] loadUgcSubmissions:', e); }
+}
+
+function renderUgcExisting(submissions) {
+  const el = document.getElementById('ugc-existing');
+  const slotEl = document.getElementById('ugc-slots-left');
+  const wrap = document.getElementById('ugc-submit-wrap');
+  const t = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.en;
+  const count = submissions.length;
+
+  if (el) {
+    if (!count) { el.innerHTML = ''; }
+    else {
+      el.innerHTML = submissions.map((s, i) => {
+        const statusColor = s.status === 'approved' ? 'var(--lime)' : s.status === 'rejected' ? 'var(--red)' : 'var(--dim)';
+        const statusIcon  = s.status === 'approved' ? '✓' : s.status === 'rejected' ? '✗' : '⏳';
+        const pts = s.points_awarded > 0 ? `+${s.points_awarded} pts` : '';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);">#${i+1}</span>
+          <a href="${s.post_link}" target="_blank" style="flex:1;color:var(--sub);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.post_link}</a>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:${statusColor};flex-shrink:0;">${statusIcon} ${s.status}${pts ? ' · ' + pts : ''}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  const maxUgc = (STATE.tasks?.find(t => t.detection_key === 'ugc')?.max_completions) || 3;
+  if (slotEl) slotEl.textContent = `${count} / ${maxUgc} submitted`;
+  if (wrap) wrap.style.display = count >= maxUgc ? 'none' : 'block';
+}
+
+async function submitUgcLink() {
+  const input = document.getElementById('ugc-link-input');
+  const btn   = document.getElementById('ugc-submit-btn');
+  const errEl = document.getElementById('ugc-err');
+  const link  = input?.value?.trim();
+
+  if (!link) return;
+  if (!link.startsWith('http')) {
+    if (errEl) { errEl.textContent = '> Please enter a valid URL'; errEl.style.display = 'block'; }
+    return;
+  }
+  if (!db || !STATE.wallet) return;
+
+  btn.disabled = true;
+  if (errEl) errEl.style.display = 'none';
+
+  try {
+    // Check existing count
+    const { data: existing } = await db.from('ugc_submissions')
+      .select('id').eq('wallet_address', STATE.wallet);
+    const maxUgc = (STATE.tasks?.find(t => t.detection_key === 'ugc')?.max_completions) || 3;
+    if ((existing || []).length >= maxUgc) {
+      if (errEl) { errEl.textContent = `> Maximum ${maxUgc} UGC posts already submitted`; errEl.style.display = 'block'; }
+      btn.disabled = false; return;
+    }
+
+    const { error } = await db.from('ugc_submissions').insert({
+      wallet_address: STATE.wallet,
+      twitter_handle: STATE.handle_stored || STATE.handle || null,
+      post_link: link,
+      status: 'pending',
+    });
+
+    if (error) {
+      if (errEl) { errEl.textContent = '> ' + error.message; errEl.style.display = 'block'; }
+      btn.disabled = false; return;
+    }
+
+    input.value = '';
+    await loadUgcSubmissions(); // refresh the list
+  } catch(e) {
+    if (errEl) { errEl.textContent = '> Error: ' + e.message; errEl.style.display = 'block'; }
+  }
+  btn.disabled = false;
 }
 
 function skipBonusEntry() {
@@ -3229,15 +3404,84 @@ function showAdminDashboard() {
 }
 
 function switchAdminTab(tab) {
-  const tabs = ['dashboard','entries','kols','tasks','tester','config'];
+  const tabs = ['dashboard','entries','ugc','kols','tasks','tester','config'];
   tabs.forEach(t => {
     const panel = document.getElementById('admin-panel-' + t);
     const btn   = document.getElementById('tab-' + t);
     if (panel) panel.style.display = t === tab ? 'block' : 'none';
     if (btn)   btn.classList.toggle('active', t === tab);
   });
-  if (tab === 'tasks') refreshAdminTasks();
+  if (tab === 'tasks')     refreshAdminTasks();
   if (tab === 'dashboard') loadAdminLeaderboard();
+  if (tab === 'ugc')       refreshAdminUgc();
+}
+
+/* ================================================================
+   ADMIN — UGC MANAGEMENT
+================================================================ */
+async function refreshAdminUgc() {
+  const tbody = document.getElementById('ugc-tbody');
+  if (!tbody || !db) return;
+  tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Loading...</div></td></tr>';
+
+  const filter = document.getElementById('ugc-filter')?.value || 'all';
+  try {
+    let q = db.from('ugc_submissions').select('*').order('created_at', { ascending: false });
+    if (filter !== 'all') q = q.eq('status', filter);
+    const { data, error } = await q;
+    if (error || !data) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Error loading UGC.</div></td></tr>'; return; }
+    if (!data.length)   { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No UGC submissions yet.</div></td></tr>'; return; }
+
+    tbody.innerHTML = data.map((s, i) => {
+      const wallet = s.wallet_address ? s.wallet_address.slice(0,6) + '...' + s.wallet_address.slice(-4) : '—';
+      const d = new Date(s.created_at);
+      const date = d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+      const statusColor = s.status === 'approved' ? 'var(--lime)' : s.status === 'rejected' ? 'var(--red)' : 'var(--dim)';
+      const approveBtn = s.status !== 'approved'
+        ? `<button class="btn-small" style="font-size:8px;padding:3px 8px;background:rgba(195,251,165,0.1);border-color:rgba(195,251,165,0.3);color:var(--lime);" onclick="adminUgcApprove('${s.id}','${s.wallet_address}')">Approve +100pts</button>`
+        : '<span style="color:var(--lime);font-size:9px;">✓ Approved</span>';
+      const rejectBtn = s.status !== 'rejected'
+        ? `<button class="btn-small admin-del-btn" style="font-size:8px;padding:3px 8px;margin-left:4px;" onclick="adminUgcReject('${s.id}')">Reject</button>`
+        : '';
+      return `<tr>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;">${i+1}</td>
+        <td class="addr" title="${s.wallet_address}">${wallet}</td>
+        <td>${s.twitter_handle || '—'}</td>
+        <td><a href="${s.post_link}" target="_blank" style="color:var(--lime);font-size:10px;" title="${s.post_link}">View ↗</a></td>
+        <td style="color:${statusColor};font-family:'JetBrains Mono',monospace;font-size:10px;">${s.status}</td>
+        <td class="hi">${s.points_awarded || 0}</td>
+        <td style="font-size:10px;">${date}</td>
+        <td>${approveBtn}${rejectBtn}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">Error: ${e.message}</div></td></tr>`;
+  }
+}
+
+async function adminUgcApprove(ugcId, walletAddress) {
+  if (!db) return;
+  try {
+    // Mark submission approved with 100 points
+    await db.from('ugc_submissions').update({ status: 'approved', points_awarded: 100 }).eq('id', ugcId);
+
+    // Add 100 to ugc_points and total_points in card_submissions
+    const { data: sub } = await db.from('card_submissions')
+      .select('ugc_points,total_points').eq('wallet_address', walletAddress).maybeSingle();
+    if (sub) {
+      const newUgc   = (sub.ugc_points   || 0) + 100;
+      const newTotal = (sub.total_points || 0) + 100;
+      await db.from('card_submissions').update({ ugc_points: newUgc, total_points: newTotal, entry_count: newTotal })
+        .eq('wallet_address', walletAddress);
+    }
+    refreshAdminUgc();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function adminUgcReject(ugcId) {
+  if (!db) return;
+  await db.from('ugc_submissions').update({ status: 'rejected', points_awarded: 0 }).eq('id', ugcId);
+  refreshAdminUgc();
 }
 
 async function refreshAdmin() {
@@ -3890,10 +4134,10 @@ let CURRENT_LANG = 'en';
 
 const TRANSLATIONS = {
   en: {
-    gate_eyebrow:       'FOGO Community Activation',
-    gate_headline_line1:'Prove Your',
-    gate_headline_span: 'Chain Presence',
-    gate_sub:           "Connect your SVM wallet to reveal your FOGO Trader Card. Exclusive to traders who've deployed capital on the FOGO ecosystem.",
+    gate_eyebrow:       '500,000 $FOGO · Season 2 Activation',
+    gate_headline_line1:'Stack Points.',
+    gate_headline_span: 'Win $FOGO.',
+    gate_sub:           'Generate your Trader Card, share it on X, use FOGO ecosystem dApps, and climb the leaderboard for a share of 500,000 $FOGO. Every point earned is one raffle entry.',
     gate_label:         'KOL Passcode',
     gate_placeholder:   'Enter passcode from your KOL...',
     gate_divider:       'Trader Tiers',
@@ -3959,7 +4203,7 @@ const TRANSLATIONS = {
     kol_placeholder:    '— Select a KOL —',
     kol_continue_btn:   'Continue →',
     // Gate CTA
-    gate_btn:           'Connect Your Wallet →',
+    gate_btn:           'Get Your Trader Card →',
     // Tasks
     tasks_heading:      'Your Tasks',
     tasks_sub:          'Complete tasks to earn more raffle entries. Every point = 1 entry.',
@@ -3987,10 +4231,10 @@ const TRANSLATIONS = {
     nav_leaderboard:    'Leaderboard',
   },
   ko: {
-    gate_eyebrow:       'FOGO 커뮤니티 활성화',
-    gate_headline_line1:'당신의',
-    gate_headline_span: '체인 존재감을 증명하세요',
-    gate_sub:           'FOGO 트레이더 카드를 확인하려면 SVM 지갑을 연결하세요. FOGO 생태계에 자본을 배치한 트레이더에게만 제공됩니다.',
+    gate_eyebrow:       '500,000 $FOGO · 시즌 2 활성화',
+    gate_headline_line1:'포인트를 쌓으세요.',
+    gate_headline_span: '$FOGO를 획득하세요.',
+    gate_sub:           '트레이더 카드를 생성하고, X에 공유하고, FOGO 생태계 dApp을 사용하여 500,000 $FOGO 중 일부를 받기 위한 리더보드에 오르세요. 획득한 포인트 1개 = 래플 참가권 1장.',
     gate_label:         'KOL 패스코드',
     gate_placeholder:   'KOL에서 패스코드를 입력하세요...',
     gate_divider:       '트레이더 등급',
@@ -4056,7 +4300,7 @@ const TRANSLATIONS = {
     kol_placeholder:    '— KOL 선택 —',
     kol_continue_btn:   '계속하기 →',
     // Gate CTA
-    gate_btn:           '지갑 연결하기 →',
+    gate_btn:           '트레이더 카드 받기 →',
     // Tasks
     tasks_heading:      '내 태스크',
     tasks_sub:          '태스크를 완료하여 더 많은 래플 참가권을 얻으세요. 1포인트 = 1참가권.',
