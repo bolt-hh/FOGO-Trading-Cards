@@ -2075,7 +2075,7 @@ body::before{
                 <th>KOL</th>
                 <th>Volume</th>
                 <th>Tier</th>
-                <th>Entries</th>
+                <th>Points</th>
                 <th>Social Link</th>
                 <th>Date</th>
                 <th></th>
@@ -3005,6 +3005,7 @@ async function enterRaffle() {
     // Calculate points for entry
     const { total: totalPoints, breakdown: pointsBreakdown } = calculatePoints(STATE.cardData, !!xLink);
     STATE.currentPoints = totalPoints;
+    if (xLink) STATE._savedXLink = xLink; // preserve for rescan
 
     const payload = {
       wallet_address:   STATE.wallet,
@@ -3403,7 +3404,7 @@ function renderSubmissionsTable(data) {
       <td class="hi">${r.kol_passcode || '—'}</td>
       <td class="hi">${fmtUsd(r.total_volume_usd || 0)}</td>
       <td>${r.tier_name || '—'}</td>
-      <td class="hi">${r.entry_count ?? '—'}</td>
+      <td class="hi">${r.total_points ?? r.entry_count ?? '—'}</td>
       <td>${socialCell}</td>
       <td class="addr">${dateStr}</td>
       <td><button class="admin-del-btn" onclick="deleteEntry('${r.id}')">Del</button></td>
@@ -4435,17 +4436,23 @@ async function rescanWallet() {
     const power = computePower(vol);
     STATE.cardData = { data, vol, tier, power };
 
-    // Update DB record
+    // Update DB record — preserve x_share_link if already submitted
     if (db) {
-      const { total: totalPts, breakdown: ptsBrk } = calculatePoints(STATE.cardData, false);
+      const existingLink = document.getElementById('raffle-x-link')?.value?.trim()
+        || STATE._savedXLink || '';
+      const { total: totalPts, breakdown: ptsBrk } = calculatePoints(STATE.cardData, !!existingLink);
+      // Also fold in any UGC points already awarded
+      const ugcPts = STATE.ugcPoints || 0;
+      const finalPts = totalPts + ugcPts;
       await db.from('card_submissions').update({
         total_volume_usd: vol,
         tier_name:        tier.name,
         power_score:      power,
         tx_count:         data.txCount,
         protocols:        data.protocols,
-        total_points:     totalPts,
+        total_points:     finalPts,
         points_breakdown: ptsBrk,
+        entry_count:      finalPts,
       }).eq('wallet_address', STATE.wallet).then(() => {}).catch(() => {});
     }
 
@@ -4484,10 +4491,10 @@ async function loadLeaderboard() {
   if (!db) { wrap.innerHTML = '<div class="empty-state" style="padding:40px;">Database not connected.</div>'; return; }
 
   try {
-    const { data, error } = await db.from('leaderboard').select('*').limit(100);
+    const { data, error } = await db.from('leaderboard').select('*').limit(25);
     if (error || !data) {
       // Fallback: query card_submissions ordered by total_points
-      const { data: subs } = await db.from('card_submissions').select('wallet_address,twitter_handle,total_points,total_volume_usd,tier_name').order('total_points', { ascending: false }).limit(100);
+      const { data: subs } = await db.from('card_submissions').select('wallet_address,twitter_handle,total_points,total_volume_usd,tier_name').order('total_points', { ascending: false }).limit(25);
       renderLeaderboardTable(subs || [], wrap);
       return;
     }
@@ -4678,34 +4685,39 @@ async function loadAdminLeaderboard() {
   if (!wrap || !db) return;
 
   try {
-    let data;
-    const { data: lbData, error } = await db.from('leaderboard').select('*').limit(10);
-    if (error || !lbData) {
-      const { data: subs } = await db.from('card_submissions').select('wallet_address,twitter_handle,total_points,total_volume_usd,tier_name').order('total_points', { ascending: false }).limit(10);
-      data = subs || [];
-    } else {
-      data = lbData.slice(0,10);
-    }
+    // Admin sees ALL entries — no limit, full wallet + X post link
+    const { data: subs, error } = await db
+      .from('card_submissions')
+      .select('wallet_address,twitter_handle,total_points,total_volume_usd,tier_name,x_share_link,social_link,kol_id,created_at')
+      .order('total_points', { ascending: false });
 
+    const data = subs || [];
     if (!data.length) { wrap.innerHTML = '<div class="empty-state">No entries yet.</div>'; return; }
 
     const truncWallet = w => w ? w.slice(0,5) + '...' + w.slice(-4) : '—';
-    let html = `<table class="dash-kol-table"><thead><tr>
-      <th>Rank</th><th>Wallet</th><th>Handle</th><th>Points</th><th>Volume</th><th>Tier</th>
+    let html = `<div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.1em;margin-bottom:8px;">${data.length} TOTAL PARTICIPANTS</div>`;
+    html += `<div style="overflow-x:auto;"><table class="admin-entry-table"><thead><tr>
+      <th>#</th><th>Wallet</th><th>Handle</th><th>Points</th><th>Volume</th><th>Tier</th><th>X Post</th>
     </tr></thead><tbody>`;
+
     data.forEach((row, i) => {
-      const rank  = row.rank || (i+1);
-      const emoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank;
+      const rank  = i + 1;
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+      const xLink = row.x_share_link || row.social_link;
+      const xCell = xLink
+        ? `<a href="${xLink}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>`
+        : '<span style="color:rgba(255,77,77,0.7);font-size:9px;">Not shared</span>';
       html += `<tr>
-        <td class="hi">${emoji}</td>
-        <td class="addr">${truncWallet(row.wallet_address)}</td>
+        <td class="hi">${medal}</td>
+        <td class="addr" title="${row.wallet_address || ''}">${truncWallet(row.wallet_address)}</td>
         <td>${row.twitter_handle || '—'}</td>
         <td class="hi">${(row.total_points || 0).toLocaleString()}</td>
         <td>${fmtUsd(row.total_volume_usd || 0)}</td>
         <td>${row.tier_name || '—'}</td>
+        <td>${xCell}</td>
       </tr>`;
     });
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
     wrap.innerHTML = html;
   } catch(e) {
     wrap.innerHTML = '<div class="empty-state">Error loading leaderboard.</div>';
