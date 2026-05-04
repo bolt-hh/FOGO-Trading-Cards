@@ -655,20 +655,21 @@
     });
   }
 
-  // "Boost your entries" — collapse success card, re-open the UGC bonus panel
-  // (raffle-step-2) so user can submit additional UGC posts for +100 pts each.
-  // Also scrolls to tasks-section if present.
+  // "Boost your entries" — scroll to the UGC task card in the tasks section
+  // (the task card already has inline submission slots — no need to reopen step-2)
   function onBoostEntries(){
-    const card = document.getElementById('fogo-raffle-success');
-    const step2 = document.getElementById('raffle-step-2');
-    if (card) card.style.display = 'none';
-    if (step2) {
-      step2.style.display = 'block';
-      step2.scrollIntoView({ behavior:'smooth', block:'start' });
-    } else {
-      // No step-2 (e.g. raffle-done already past) — at least scroll to tasks-section
-      const tasks = document.getElementById('tasks-section');
-      if (tasks) tasks.scrollIntoView({ behavior:'smooth', block:'start' });
+    // Scroll to UGC task card inside tasks-section
+    const ugcCard = document.getElementById('ugc-task-card');
+    const tasksSection = document.getElementById('tasks-section');
+    const target = ugcCard || tasksSection;
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Briefly highlight the UGC card so user knows where to look
+      if (ugcCard) {
+        ugcCard.style.transition = 'border-color 0.3s';
+        ugcCard.style.borderColor = 'rgba(195,251,165,0.6)';
+        setTimeout(() => { ugcCard.style.borderColor = ''; }, 2000);
+      }
     }
     // Add a small "back to confirmation" hook above step-2 so user can return to success state
     if (step2 && !document.getElementById('fogo-back-to-success')) {
