@@ -2903,8 +2903,10 @@ async function generateCard() {
     const { total: dbPts } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
     STATE.currentPoints = (d.total_points && d.total_points > 0) ? d.total_points : dbPts;
     STATE.raffleEntryCount = STATE.currentPoints;
-    // Patch the enhance.js success card after it renders (200ms delay covers the 600ms bootstrap delay)
-    setTimeout(() => { if (typeof window.fogoUpdateSuccessPts === 'function') window.fogoUpdateSuccessPts(STATE.currentPoints); }, 800);
+    // Retry loop: populate fogo-pts-strip as soon as enhance.js creates it
+    const _existingPts = STATE.currentPoints;
+    const _ptsPoll = setInterval(() => { const el = document.getElementById('fogo-pts-strip'); if (el) { showRaffleSuccessPts(_existingPts); clearInterval(_ptsPoll); } }, 80);
+    setTimeout(() => clearInterval(_ptsPoll), 4000);
 
     renderCard(STATE.wallet, STATE.handle, synth, tier, power);
     showView('view-card');
@@ -3091,6 +3093,19 @@ function onRaffleXLinkInput() {
   updatePointsDisplay();
 }
 
+/* Populate the points strip inside the fogo-enhance success card.
+   Called from index.html — always has the real value. */
+function showRaffleSuccessPts(n) {
+  const strip = document.getElementById('fogo-pts-strip');
+  if (!strip) return;
+  strip.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;margin:14px 0;padding:16px 20px;background:rgba(195,251,165,.06);border:1px solid rgba(195,251,165,.15);border-radius:10px;';
+  strip.innerHTML = `
+    <span style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(195,251,165,.55);font-family:'JetBrains Mono',monospace;">Total Points</span>
+    <span style="font-size:32px;font-weight:700;color:#C3FBA5;letter-spacing:-.02em;font-family:'Clash Display',sans-serif;line-height:1;">${Number(n).toLocaleString()}</span>
+    <span style="font-size:10px;color:rgba(195,251,165,.45);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;">${Number(n).toLocaleString()} raffle entries</span>
+  `;
+}
+
 function showRaffleErr(msg) {
   const box = document.getElementById('raffle-err');
   if (box) { box.textContent = '> ' + msg; box.style.display = 'block'; box.classList.add('on'); }
@@ -3160,7 +3175,8 @@ async function enterRaffle() {
       // 409 = already entered — treat as success so user sees the done screen
       if (res.status === 409) {
         STATE.raffleEntered    = true;
-        STATE.raffleEntryCount = totalPoints; // use calculated points, not tier index
+        STATE.raffleEntryCount = totalPoints;
+        showRaffleSuccessPts(totalPoints);
         STATE.currentPoints    = totalPoints;
         showRaffleDone();
         return;
@@ -3198,8 +3214,7 @@ async function enterRaffle() {
   STATE.raffleEntered    = true;
   STATE.raffleEntryCount = totalPoints;
   showRaffleStep2(totalPoints);
-  // Patch enhance.js success card with correct points after it renders
-  setTimeout(() => { if (typeof window.fogoUpdateSuccessPts === 'function') window.fogoUpdateSuccessPts(totalPoints); }, 300);
+  showRaffleSuccessPts(totalPoints);
 }
 
 function showRaffleStep2(entryCount) {
