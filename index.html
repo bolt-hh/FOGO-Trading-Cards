@@ -1895,6 +1895,19 @@ body::before{
         </div>
       </div>
 
+      <!-- Points Summary — always visible between tasks and raffle entry -->
+      <div id="points-summary-box" style="display:none;background:var(--panel);border:1px solid rgba(195,251,165,0.2);border-radius:12px;padding:20px 24px;margin-bottom:14px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--fire),var(--ember),var(--lime));"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--dim);margin-bottom:4px;">Your Total Points</div>
+            <div id="pts-summary-number" style="font-family:'Clash Display',sans-serif;font-size:36px;font-weight:700;color:var(--lime);letter-spacing:-0.02em;line-height:1;">0</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:0.1em;">= <span id="pts-summary-entries">0</span> raffle entries</div>
+          </div>
+          <div id="pts-summary-breakdown" style="display:flex;flex-direction:column;gap:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--sub);min-width:160px;"></div>
+        </div>
+      </div>
+
       <!-- KOL Selector — mandatory before raffle -->
       <div id="kol-selector-panel" class="kol-selector-panel" style="display:none;">
         <div class="kol-selector-head" id="t-kol-selector-head">Who referred you?</div>
@@ -2900,9 +2913,10 @@ async function generateCard() {
     STATE.cardData = { data: synth, vol: d.total_volume_usd, tier, power };
 
     // Pre-load total_points from DB into STATE so the raffle success screen shows correct count
-    const { total: dbPts } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
+    const { total: dbPts, breakdown: dbBreakdown } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
     STATE.currentPoints = (d.total_points && d.total_points > 0) ? d.total_points : dbPts;
     STATE.raffleEntryCount = STATE.currentPoints;
+    updatePointsSummaryBox(STATE.currentPoints, dbBreakdown);
     // Retry loop: populate fogo-pts-strip as soon as enhance.js creates it
     const _existingPts = STATE.currentPoints;
     const _ptsPoll = setInterval(() => { const el = document.getElementById('fogo-pts-strip'); if (el) { showRaffleSuccessPts(_existingPts); clearInterval(_ptsPoll); } }, 80);
@@ -3091,6 +3105,28 @@ function onRaffleXLinkInput() {
   btn.disabled = !(isChecked && hasLink);
   // Live update the points breakdown panel
   updatePointsDisplay();
+}
+
+/* Update the persistent points summary box between tasks and raffle entry */
+function updatePointsSummaryBox(pts, breakdown) {
+  const box    = document.getElementById('points-summary-box');
+  const numEl  = document.getElementById('pts-summary-number');
+  const entEl  = document.getElementById('pts-summary-entries');
+  const brkEl  = document.getElementById('pts-summary-breakdown');
+  if (!box || !numEl) return;
+
+  box.style.display = 'block';
+  numEl.textContent = Number(pts).toLocaleString();
+  if (entEl) entEl.textContent = Number(pts).toLocaleString();
+
+  // Breakdown mini-list
+  if (brkEl && breakdown) {
+    const labels = { card_generated:'Card', x_share:'X Share', volume:'Volume', valiant:'Valiant', pyron:'Pyron', brasa:'Brasa', ignition:'Ignition', ugc:'UGC' };
+    brkEl.innerHTML = Object.entries(breakdown)
+      .filter(([,v]) => v > 0)
+      .map(([k,v]) => `<span>· ${labels[k]||k}: <span style="color:var(--lime);">+${Number(v).toLocaleString()}</span></span>`)
+      .join('');
+  }
 }
 
 /* Populate the points strip inside the fogo-enhance success card.
@@ -4606,6 +4642,7 @@ function updatePointsDisplay() {
   const xLink = STATE._savedXLink || document.getElementById('raffle-x-link')?.value?.trim() || '';
   const { total, breakdown } = calculatePoints(STATE.cardData, !!xLink);
   STATE.currentPoints = total;
+  updatePointsSummaryBox(total, breakdown);
 
   const t = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.en;
   const taskNames = {
