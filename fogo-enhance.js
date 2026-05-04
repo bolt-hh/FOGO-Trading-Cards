@@ -326,11 +326,6 @@
     sig.className = 'card-signal c-z';
     sig.innerHTML = `
       <div class="card-signal-spark" id="c-spark"></div>
-      <div class="card-signal-row">
-        <div class="card-signal-cell"><span class="l">Streak</span><span class="v lime" id="c-streak">— d</span></div>
-        <div class="card-signal-cell"><span class="l">Last Tx</span><span class="v" id="c-lasttx">—</span></div>
-        <div class="card-signal-cell"><span class="l">Rank</span><span class="v fire" id="c-rank">#—</span></div>
-      </div>
     `;
     card.insertBefore(sig, foot);
 
@@ -620,8 +615,8 @@
     const pts = getActualPoints();
     // Expose updater for index.html to call if needed
     window.fogoUpdateSuccessPts = function(n){
-      const badge = document.querySelector('#fogo-raffle-success .pts-badge');
-      if (badge && n > 1) badge.textContent = Number(n).toLocaleString() + ' pts';
+      const strip = document.getElementById('fogo-pts-strip');
+      if (strip && n > 1) strip.innerHTML = `<span style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(195,251,165,.6);font-family:'JetBrains Mono',monospace;">Total Points</span><span style="font-size:28px;font-weight:700;color:#C3FBA5;letter-spacing:-.01em;font-family:'Clash Display',sans-serif;">${Number(n).toLocaleString()}</span><span style="font-size:11px;color:rgba(195,251,165,.5);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;">= ${Number(n).toLocaleString()} RAFFLE ENTRIES</span>`;
     };
 
     // Build (or update) unified success card
@@ -637,9 +632,10 @@
       <div class="fogo-success-icon">${ICONS.flame}</div>
       <div class="fogo-success-eyebrow">ENTRY CONFIRMED</div>
       <div class="fogo-success-title">You're in the Draw</div>
-      <div class="fogo-success-sub">
-        <span class="pts-badge">${Number(pts).toLocaleString()} pts</span>
-        <span>secured \u2014 every point is one ticket.</span>
+      <div id="fogo-pts-strip" style="display:flex;flex-direction:column;align-items:center;gap:4px;margin:14px 0;padding:16px 20px;background:rgba(195,251,165,.06);border:1px solid rgba(195,251,165,.15);border-radius:10px;">
+        <span style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(195,251,165,.6);font-family:'JetBrains Mono',monospace;">Total Points</span>
+        <span style="font-size:28px;font-weight:700;color:#C3FBA5;letter-spacing:-.01em;font-family:'Clash Display',sans-serif;">${Number(pts).toLocaleString()}</span>
+        <span style="font-size:11px;color:rgba(195,251,165,.5);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;">= ${Number(pts).toLocaleString()} RAFFLE ENTRIES</span>
       </div>
       <div class="fogo-success-divider"></div>
       <div class="fogo-success-cta">
