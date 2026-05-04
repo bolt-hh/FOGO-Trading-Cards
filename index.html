@@ -1915,6 +1915,19 @@ body::before{
       <!-- Raffle entry flow (eligible wallets only) -->
       <div id="eligible-entry" style="display:none;">
 
+        <!-- Points confirmed box — shown only after successful raffle entry -->
+        <div id="points-success-box" style="display:none;background:var(--panel);border:1px solid rgba(195,251,165,0.25);border-radius:12px;padding:20px 24px;margin-bottom:16px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--fire),var(--ember),var(--lime));border-radius:12px 12px 0 0;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;">Your Raffle Entries</div>
+              <div id="pts-success-number" style="font-family:'Clash Display',sans-serif;font-size:40px;font-weight:700;color:var(--lime);letter-spacing:-0.025em;line-height:1;">—</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(195,251,165,0.5);margin-top:4px;letter-spacing:0.1em;">points = entries in the draw</div>
+            </div>
+            <div id="pts-success-breakdown" style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--sub);"></div>
+          </div>
+        </div>
+
         <!-- Step 1: Enter Raffle -->
         <div id="raffle-step-1" class="raffle-card">
           <div class="raffle-eyebrow" id="t-raffle-eyebrow">Raffle Entry</div>
@@ -2900,7 +2913,7 @@ async function generateCard() {
     STATE.cardData = { data: synth, vol: d.total_volume_usd, tier, power };
 
     // Pre-load total_points from DB into STATE so the raffle success screen shows correct count
-    const { total: dbPts } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
+    const { total: dbPts, breakdown: dbBreakdown } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
     STATE.currentPoints = (d.total_points && d.total_points > 0) ? d.total_points : dbPts;
     STATE.raffleEntryCount = STATE.currentPoints;
     // Retry loop: populate fogo-pts-strip as soon as enhance.js creates it
@@ -3093,17 +3106,25 @@ function onRaffleXLinkInput() {
   updatePointsDisplay();
 }
 
-/* Populate the points strip inside the fogo-enhance success card.
-   Called from index.html — always has the real value. */
+/* Show and populate the points confirmed box — called after successful raffle entry */
 function showRaffleSuccessPts(n) {
-  const strip = document.getElementById('fogo-pts-strip');
-  if (!strip) return;
-  strip.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;margin:14px 0;padding:16px 20px;background:rgba(195,251,165,.06);border:1px solid rgba(195,251,165,.15);border-radius:10px;';
-  strip.innerHTML = `
-    <span style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(195,251,165,.55);font-family:'JetBrains Mono',monospace;">Total Points</span>
-    <span style="font-size:32px;font-weight:700;color:#C3FBA5;letter-spacing:-.02em;font-family:'Clash Display',sans-serif;line-height:1;">${Number(n).toLocaleString()}</span>
-    <span style="font-size:10px;color:rgba(195,251,165,.45);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;">${Number(n).toLocaleString()} raffle entries</span>
-  `;
+  const box    = document.getElementById('points-success-box');
+  const numEl  = document.getElementById('pts-success-number');
+  const brkEl  = document.getElementById('pts-success-breakdown');
+  if (!box || !numEl) return;
+
+  numEl.textContent = Number(n).toLocaleString();
+  box.style.display = 'block';
+
+  // Breakdown from current STATE
+  if (brkEl && STATE.cardData) {
+    const { breakdown } = calculatePoints(STATE.cardData, !!STATE._savedXLink);
+    const labels = { card_generated:'Card generated', x_share:'X share', volume:'Trading volume', valiant:'Valiant', pyron:'Pyron', brasa:'Brasa', ignition:'Ignition', ugc:'UGC posts' };
+    brkEl.innerHTML = Object.entries(breakdown)
+      .filter(([,v]) => v > 0)
+      .map(([k,v]) => `<div style="display:flex;justify-content:space-between;gap:16px;"><span>${labels[k]||k}</span><span style="color:var(--lime);">+${Number(v).toLocaleString()}</span></div>`)
+      .join('');
+  }
 }
 
 function showRaffleErr(msg) {
