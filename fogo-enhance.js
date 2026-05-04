@@ -614,10 +614,8 @@
     // Always recalculate — never trust stale STATE timing
     const pts = getActualPoints();
     // Expose updater for index.html to call if needed
-    window.fogoUpdateSuccessPts = function(n){
-      const strip = document.getElementById('fogo-pts-strip');
-      if (strip && n > 1) strip.innerHTML = `<span style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(195,251,165,.6);font-family:'JetBrains Mono',monospace;">Total Points</span><span style="font-size:28px;font-weight:700;color:#C3FBA5;letter-spacing:-.01em;font-family:'Clash Display',sans-serif;">${Number(n).toLocaleString()}</span><span style="font-size:11px;color:rgba(195,251,165,.5);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;">= ${Number(n).toLocaleString()} RAFFLE ENTRIES</span>`;
-    };
+    // Points display handled entirely in index.html via #raffle-success-pts
+    window.fogoUpdateSuccessPts = function(n){ /* no-op — index.html owns this */ };
 
     // Build (or update) unified success card
     let card = document.getElementById('fogo-raffle-success');
@@ -632,11 +630,7 @@
       <div class="fogo-success-icon">${ICONS.flame}</div>
       <div class="fogo-success-eyebrow">ENTRY CONFIRMED</div>
       <div class="fogo-success-title">You're in the Draw</div>
-      <div id="fogo-pts-strip" style="display:flex;flex-direction:column;align-items:center;gap:4px;margin:14px 0;padding:16px 20px;background:rgba(195,251,165,.06);border:1px solid rgba(195,251,165,.15);border-radius:10px;">
-        <span style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(195,251,165,.6);font-family:'JetBrains Mono',monospace;">Total Points</span>
-        <span style="font-size:28px;font-weight:700;color:#C3FBA5;letter-spacing:-.01em;font-family:'Clash Display',sans-serif;">${Number(pts).toLocaleString()}</span>
-        <span style="font-size:11px;color:rgba(195,251,165,.5);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;">= ${Number(pts).toLocaleString()} RAFFLE ENTRIES</span>
-      </div>
+      <div id="fogo-pts-strip"></div>
       <div class="fogo-success-divider"></div>
       <div class="fogo-success-cta">
         <button class="fogo-cta primary" id="fogo-boost-btn">
