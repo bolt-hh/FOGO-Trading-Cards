@@ -2903,6 +2903,8 @@ async function generateCard() {
     const { total: dbPts } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
     STATE.currentPoints = (d.total_points && d.total_points > 0) ? d.total_points : dbPts;
     STATE.raffleEntryCount = STATE.currentPoints;
+    // Patch the enhance.js success card after it renders (200ms delay covers the 600ms bootstrap delay)
+    setTimeout(() => { if (typeof window.fogoUpdateSuccessPts === 'function') window.fogoUpdateSuccessPts(STATE.currentPoints); }, 800);
 
     renderCard(STATE.wallet, STATE.handle, synth, tier, power);
     showView('view-card');
@@ -3196,6 +3198,8 @@ async function enterRaffle() {
   STATE.raffleEntered    = true;
   STATE.raffleEntryCount = totalPoints;
   showRaffleStep2(totalPoints);
+  // Patch enhance.js success card with correct points after it renders
+  setTimeout(() => { if (typeof window.fogoUpdateSuccessPts === 'function') window.fogoUpdateSuccessPts(totalPoints); }, 300);
 }
 
 function showRaffleStep2(entryCount) {
@@ -4908,8 +4912,9 @@ async function fetchLeaderboardRank(walletAddress) {
       .maybeSingle();
 
     const rankEl = document.getElementById('c-rank');
-    if (rankEl) {
-      rankEl.textContent = data?.rank ? '#' + data.rank.toLocaleString() : '#—';
+    if (rankEl && data?.rank) {
+      rankEl.textContent = '#' + data.rank.toLocaleString();
+      rankEl.dataset.realRank = 'true'; // prevents enhance.js from overwriting
     }
   } catch(e) { /* rank stays as estimate */ }
 }
