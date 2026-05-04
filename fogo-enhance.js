@@ -366,9 +366,13 @@
     }
     const rank = document.getElementById('c-rank');
     if (rank && !rank.dataset.realRank) {
-      // Only set placeholder if real rank hasn't been fetched yet
-      const r = Math.max(1, Math.round(2400 - (power || 0) * 22 + (Math.abs(((volStr||'').length)*13) % 80)));
-      rank.textContent = '#~' + r.toLocaleString();
+      rank.textContent = '#—'; // placeholder until real fetch
+      // Trigger real rank fetch
+      setTimeout(() => {
+        if (typeof window.fetchLeaderboardRank === 'function' && window.STATE && window.STATE.wallet) {
+          window.fetchLeaderboardRank(window.STATE.wallet);
+        }
+      }, 300);
     }
   }
 
@@ -577,11 +581,31 @@
     else btn.textContent = 'ENTER RAFFLE';
   }
 
+  // Calculate correct points from scratch — never relies on STATE timing
+  function getActualPoints() {
+    const S = window.STATE;
+    // 1. currentPoints set by index.html after DB read
+    if (S && S.currentPoints > 1) return S.currentPoints;
+    // 2. raffleEntryCount set at entry time
+    if (S && S.raffleEntryCount > 1) return S.raffleEntryCount;
+    // 3. Recalculate from card data directly
+    try {
+      if (!S || !S.cardData) return 1;
+      const vol    = S.cardData.vol || 0;
+      const volPts = Math.floor(vol / 50) * 25;
+      const proto  = S.cardData.data?.protocols || S.cardData.protocols || {};
+      let total = 50 + volPts; // card_generated + volume
+      if ((proto.valiant  || 0) > 0) total += 200;
+      if ((proto.pyron    || 0) > 0) total += 200;
+      if ((proto.brasa    || 0) > 0) total += 200;
+      if ((proto.ignition || 0) > 0) total += 200;
+      if (S._savedXLink) total += 50;
+      total += (S.ugcPoints || 0);
+      return total > 0 ? total : 1;
+    } catch(e) { return 1; }
+  }
+
   // Collapse the entry flow into a single unified success panel.
-  // Hides step-1, step-2 (UGC bonus) and the original raffle-done card,
-  // and renders one clean "You're In" card with two CTAs:
-  //   • Boost entries (re-opens UGC bonus / scrolls to tasks)
-  //   • Start Over
   function showFogoRaffleSuccess(){
     const wrap = document.getElementById('eligible-entry');
     if (!wrap) return;
@@ -592,9 +616,9 @@
       if (el) el.style.display = 'none';
     });
 
-    // Pull entry count from STATE — prefer currentPoints (always calculated from card data)
-    const pts = (window.STATE && (window.STATE.currentPoints || window.STATE.raffleEntryCount)) || 1;
-    // Expose update function so index.html can correct this after async DB reads finish
+    // Always recalculate — never trust stale STATE timing
+    const pts = getActualPoints();
+    // Expose updater for index.html to call if needed
     window.fogoUpdateSuccessPts = function(n){
       const badge = document.querySelector('#fogo-raffle-success .pts-badge');
       if (badge && n > 1) badge.textContent = Number(n).toLocaleString() + ' pts';
@@ -699,11 +723,17 @@
     try { patchEnterRaffle(); } catch(e){ console.warn('[FOGO] patchEnterRaffle:', e); }
     try { patchShowRaffleDone(); } catch(e){ console.warn('[FOGO] patchShowRaffleDone:', e); }
 
-    // If user lands on view-card with raffleEntered already true, show our unified panel
-    // Delay to let index.html async paths (checkExistingSubmission, calculatePoints) finish first
+    // Watch eligible-entry becoming visible — that's the definitive trigger
+    // Works whether coming from existing submission path or fresh 409
     try {
-      if (window.STATE && window.STATE.raffleEntered) {
-        setTimeout(() => { try { showFogoRaffleSuccess(); } catch(e){} }, 600);
+      const eligEl = document.getElementById('eligible-entry');
+      if (eligEl) {
+        const emo = new MutationObserver(() => {
+          if (eligEl.style.display !== 'none' && window.STATE && window.STATE.raffleEntered) {
+            setTimeout(() => { try { showFogoRaffleSuccess(); } catch(e){} }, 80);
+          }
+        });
+        emo.observe(eligEl, { attributes: true, attributeFilter: ['style'] });
       }
     } catch(e){}
 
