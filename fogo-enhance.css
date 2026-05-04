@@ -310,6 +310,116 @@
   z-index:9999;
 }
 
+/* ---------------- Unified raffle-success card ---------------- */
+.fogo-success-card{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(195,251,165,.08), transparent 60%),
+    radial-gradient(120% 60% at 50% 100%, rgba(255,61,0,.07), transparent 60%),
+    linear-gradient(180deg, rgba(20,12,48,.55), rgba(8,4,32,.85));
+  border:1px solid rgba(195,251,165,.20);
+  border-radius:14px;
+  padding:32px 28px 26px;
+  text-align:center;
+  box-shadow:
+    0 20px 50px -16px rgba(0,0,0,.55),
+    0 0 0 1px rgba(195,251,165,.06) inset,
+    0 0 60px -10px rgba(195,251,165,.12);
+  animation: fogoSuccessIn .55s cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes fogoSuccessIn {
+  from { opacity:0; transform: translateY(8px) scale(.985); }
+  to   { opacity:1; transform: translateY(0)   scale(1); }
+}
+.fogo-success-glow{
+  position:absolute;top:-30%;left:50%;transform:translateX(-50%);
+  width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle, rgba(195,251,165,.18), transparent 65%);
+  pointer-events:none;
+  filter:blur(20px);
+}
+.fogo-success-icon{
+  position:relative;z-index:1;
+  width:54px;height:54px;margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(255,61,0,.18), rgba(255,61,0,.04));
+  border:1px solid rgba(255,61,0,.28);
+  color:var(--fire,#FF3D00);
+  box-shadow:0 0 30px -6px rgba(255,61,0,.4), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.fogo-success-icon svg{width:30px;height:30px;}
+.fogo-success-eyebrow{
+  position:relative;z-index:1;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:.24em;color:var(--lime,#C3FBA5);
+  font-weight:600;text-transform:uppercase;margin-bottom:8px;
+}
+.fogo-success-title{
+  position:relative;z-index:1;
+  font-family:'Clash Display',sans-serif;
+  font-size:30px;font-weight:600;color:#fff;letter-spacing:-.02em;line-height:1.05;
+  margin-bottom:12px;
+}
+.fogo-success-sub{
+  position:relative;z-index:1;
+  font-size:13.5px;color:#9aa0a8;line-height:1.5;
+  display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;
+  margin-bottom:6px;
+}
+.fogo-success-sub .pts-badge{
+  display:inline-flex;align-items:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;font-weight:600;color:var(--lime,#C3FBA5);
+  padding:4px 10px;border-radius:999px;
+  background:rgba(195,251,165,.10);
+  border:1px solid rgba(195,251,165,.22);
+  letter-spacing:.04em;
+}
+.fogo-success-divider{
+  position:relative;z-index:1;
+  height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  margin:22px 0 18px;
+}
+.fogo-success-cta{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;gap:9px;
+  max-width:300px;margin:0 auto;
+}
+.fogo-cta{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:'Clash Display',sans-serif;
+  font-size:14px;font-weight:600;letter-spacing:-.005em;
+  padding:13px 18px;border-radius:10px;
+  cursor:pointer;border:1px solid transparent;
+  transition:transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.fogo-cta.primary{
+  background:linear-gradient(180deg, var(--fire,#FF3D00), #cc3300);
+  color:#fff;
+  box-shadow:0 6px 20px -6px rgba(255,61,0,.55), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.fogo-cta.primary:hover{transform:translateY(-1px);box-shadow:0 10px 26px -6px rgba(255,61,0,.7), inset 0 1px 0 rgba(255,255,255,.24);}
+.fogo-cta.primary:active{transform:translateY(0);}
+.fogo-cta.ghost{
+  background:transparent;color:#cfd1d6;
+  border-color:rgba(255,255,255,.10);
+}
+.fogo-cta.ghost:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.18);color:#fff;}
+.fogo-success-foot{
+  position:relative;z-index:1;
+  margin-top:16px;font-size:11px;color:rgba(255,255,255,.4);
+  letter-spacing:.01em;
+}
+/* "Back to entry confirmation" link above step-2 when boosting */
+.fogo-back-link{
+  display:inline-flex;align-items:center;
+  background:transparent;border:none;color:var(--lime,#C3FBA5);
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.05em;
+  cursor:pointer;padding:8px 0;margin-bottom:10px;
+}
+.fogo-back-link:hover{color:#fff;}
+
 /* ---------------- Small refinements ---------------- */
 /* Ineligible badge: keep red text but icon needs a touch of breathing room */
 .ineligible-badge .ficon{margin-right:6px;}
