@@ -2886,18 +2886,30 @@ async function generateCard() {
     const d    = STATE.existingCardData;
     const tier = getTier(d.total_volume_usd);
     const power = d.power_score || computePower(d.total_volume_usd);
+    // Wallet age needs a live Fogoscan fetch — show placeholder, rescan updates it
+    const walletAgeStr = '↻ Rescan';
+
     const synth = {
       ok: true,
       volumeUsd:   d.total_volume_usd,
       txCount:     d.tx_count,
-      walletAge:   '—',
+      walletAge:   walletAgeStr,
       protocols:   d.protocols || {},
       topProtocol: 'FOGO',
     };
     STATE.cardData = { data: synth, vol: d.total_volume_usd, tier, power };
+
+    // Pre-load total_points from DB into STATE so the raffle success screen shows correct count
+    const { total: dbPts } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
+    STATE.currentPoints = (d.total_points && d.total_points > 0) ? d.total_points : dbPts;
+    STATE.raffleEntryCount = STATE.currentPoints;
+
     renderCard(STATE.wallet, STATE.handle, synth, tier, power);
     showView('view-card');
     setEligibilityUI(d.total_volume_usd);
+
+    // Fetch real leaderboard rank in background
+    fetchLeaderboardRank(STATE.wallet);
 
     // Already entered — show done state directly
     STATE.raffleEntered = true;
@@ -2930,6 +2942,7 @@ async function generateCard() {
     renderCard(STATE.wallet, STATE.handle, data, tier, power);
     showView('view-card');
     setEligibilityUI(vol);
+    fetchLeaderboardRank(STATE.wallet);
 
   } catch(e) {
     document.getElementById('loading').classList.remove('on');
@@ -3145,7 +3158,8 @@ async function enterRaffle() {
       // 409 = already entered — treat as success so user sees the done screen
       if (res.status === 409) {
         STATE.raffleEntered    = true;
-        STATE.raffleEntryCount = entryCount;
+        STATE.raffleEntryCount = totalPoints; // use calculated points, not tier index
+        STATE.currentPoints    = totalPoints;
         showRaffleDone();
         return;
       }
@@ -4879,6 +4893,25 @@ async function submitUgcInline(slotIdx) {
     btn.disabled = false;
     btn.textContent = 'Error — retry';
   }
+}
+
+/* ================================================================
+   LEADERBOARD RANK — fetch real rank after card renders
+================================================================ */
+async function fetchLeaderboardRank(walletAddress) {
+  if (!db || !walletAddress) return;
+  try {
+    // Query leaderboard view for this wallet's rank
+    const { data } = await db.from('leaderboard')
+      .select('rank')
+      .eq('wallet_address', walletAddress)
+      .maybeSingle();
+
+    const rankEl = document.getElementById('c-rank');
+    if (rankEl) {
+      rankEl.textContent = data?.rank ? '#' + data.rank.toLocaleString() : '#—';
+    }
+  } catch(e) { /* rank stays as estimate */ }
 }
 
 /* ================================================================
