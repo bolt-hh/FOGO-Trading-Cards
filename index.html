@@ -1922,11 +1922,8 @@ body::before{
           <!-- Points breakdown — populated by updatePointsDisplay() -->
           <div id="points-breakdown" style="margin-bottom:16px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:14px;"></div>
 
-          <!-- X post link — required, adds 50 points -->
-          <div style="margin-bottom:14px;">
-            <label style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:6px;" id="t-x-share-label">Share your card on X and paste the link here to earn +50 points</label>
-            <input class="field-input" id="raffle-x-link" type="url" placeholder="https://x.com/yourpost..." oninput="onRaffleXLinkInput()" style="width:100%;">
-          </div>
+          <!-- Hidden input keeps the x link value accessible by enterRaffle() -->
+          <input type="hidden" id="raffle-x-link">
 
           <!-- Mandatory sharing confirmation -->
           <div class="raffle-confirm" onclick="toggleRaffleConfirm()" id="raffle-confirm-box">
@@ -3100,8 +3097,8 @@ async function enterRaffle() {
   if (origLabel) origLabel.textContent = 'Entering...';
   else btn.textContent = 'Entering...';
 
-  const xLinkEl = document.getElementById('raffle-x-link');
-  const xLink = xLinkEl?.value?.trim() || '';
+  // X link: prefer STATE (submitted via task card), fallback to hidden input
+  const xLink = STATE._savedXLink || document.getElementById('raffle-x-link')?.value?.trim() || '';
 
   const tier       = STATE.cardData?.tier;
   const entryCount = (tier && tier.index !== undefined) ? tier.index : 1;
@@ -4573,7 +4570,7 @@ function updatePointsDisplay() {
   const el = document.getElementById('points-breakdown');
   if (!el || !STATE.cardData) return;
 
-  const xLink = document.getElementById('raffle-x-link')?.value?.trim() || '';
+  const xLink = STATE._savedXLink || document.getElementById('raffle-x-link')?.value?.trim() || '';
   const { total, breakdown } = calculatePoints(STATE.cardData, !!xLink);
   STATE.currentPoints = total;
 
@@ -4657,7 +4654,9 @@ function renderTasksUI(tasks) {
 
     // Determine completion
     let done = false;
-    if (task.task_type === 'entry') done = true;
+    if (task.task_type === 'entry' && key === 'card_generated') done = true;
+    else if (task.task_type === 'entry' && key === 'x_share') done = !!(STATE._savedXLink);
+    else if (task.task_type === 'entry') done = true;
     else if (task.task_type === 'auto' && key && proto[key] && proto[key] > 0) done = true;
     else if (task.task_type === 'auto' && key && breakdown[key]) done = true;
     else if (task.task_type === 'link' && key && proto[key] && proto[key] > 0) done = true;
@@ -4675,6 +4674,49 @@ function renderTasksUI(tasks) {
     const linkBtn = (task.task_type === 'link' && task.link && !done)
       ? `<button class="task-go-btn" onclick="window.open('${task.link}','_blank')">${t.tasks_go_dapp || 'Visit →'}</button>`
       : '';
+
+    // X share task gets its own inline input card
+    if (key === 'x_share') {
+      if (done) {
+        // Already submitted — show confirmed state
+        return `<div class="task-card done">
+          <div class="task-card-info">
+            <div class="task-card-name">${name}</div>
+            <div class="task-card-desc" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;">
+              <a href="${STATE._savedXLink}" target="_blank" style="color:var(--lime);text-decoration:none;">${STATE._savedXLink}</a>
+            </div>
+          </div>
+          <span class="task-points-badge">+${pts} pts</span>
+          <span class="task-status-badge done">${t.tasks_completed || 'Completed'}</span>
+        </div>`;
+      }
+      return `<div class="task-card ugc-expanded manual-type" id="x-share-task-card">
+        <div class="task-card-top">
+          <div class="task-card-info">
+            <div class="task-card-name">${name}</div>
+            ${desc ? `<div class="task-card-desc">${desc}</div>` : ''}
+          </div>
+          <span class="task-points-badge">+${pts} pts</span>
+        </div>
+        <div class="ugc-slots" style="margin-top:10px;">
+          <div class="ugc-slot">
+            <div class="ugc-slot-row" style="margin-bottom:7px;">
+              <button class="task-go-btn" style="flex:1;" onclick="shareX()">
+                𝕏 Share on X →
+              </button>
+            </div>
+            <div class="ugc-slot-label">Then paste your post link below</div>
+            <div class="ugc-slot-row">
+              <input class="ugc-slot-input" id="x-share-task-input" type="url"
+                placeholder="https://x.com/yourpost..."
+                oninput="document.getElementById('x-share-task-btn').disabled=!this.value.trim()">
+              <button class="ugc-slot-submit" id="x-share-task-btn"
+                disabled onclick="submitXShareInline()">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
 
     // UGC task gets its own expanded card with inline submission slots
     if (key === 'ugc') {
@@ -4708,6 +4750,38 @@ function renderTasksUI(tasks) {
 /* ================================================================
    UGC INLINE SLOTS — renders inside the UGC task card
 ================================================================ */
+/* ── X share inline submit (task card) ─────────────────────────── */
+async function submitXShareInline() {
+  const input = document.getElementById('x-share-task-input');
+  const btn   = document.getElementById('x-share-task-btn');
+  const link  = input?.value?.trim();
+  if (!link) return;
+
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  // Save to STATE
+  STATE._savedXLink = link;
+
+  // Sync to the hidden raffle input so enterRaffle() picks it up
+  const hiddenInput = document.getElementById('raffle-x-link');
+  if (hiddenInput) hiddenInput.value = link;
+
+  // Save to DB if they already have an entry (update x_share_link)
+  if (db && STATE.wallet) {
+    await db.from('card_submissions')
+      .update({ x_share_link: link, social_link: link })
+      .eq('wallet_address', STATE.wallet)
+      .then(() => {}).catch(() => {});
+  }
+
+  // Recalculate and refresh points display + task grid
+  updatePointsDisplay();
+  if (STATE.tasks) renderTasksUI(STATE.tasks);
+  // Also enable the raffle confirm checkbox if the user hasn't checked it yet
+  // (the checkbox is the last gate before entering)
+}
+
 async function renderUgcInlineSlots() {
   const slotsEl = document.getElementById('ugc-inline-slots');
   if (!slotsEl || !STATE.wallet) return;
