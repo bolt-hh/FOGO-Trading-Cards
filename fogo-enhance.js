@@ -366,8 +366,19 @@
     }
     const rank = document.getElementById('c-rank');
     if (rank) {
-      const r = Math.max(1, Math.round(2400 - (power || 0) * 22 + (Math.abs(((volStr||'').length)*13) % 80)));
-      rank.textContent = '#' + r.toLocaleString();
+      // Only set estimated rank if real leaderboard rank hasn't been fetched yet
+      const current = rank.textContent || '';
+      const hasRealRank = current.startsWith('#') && !current.includes('—') && current !== '#—';
+      if (!hasRealRank) {
+        const r = Math.max(1, Math.round(2400 - (power || 0) * 22 + (Math.abs(((volStr||'').length)*13) % 80)));
+        rank.textContent = '#' + r.toLocaleString();
+        // Fetch real rank shortly after
+        setTimeout(() => {
+          if (typeof window.fetchLeaderboardRank === 'function' && window.STATE && window.STATE.wallet) {
+            window.fetchLeaderboardRank(window.STATE.wallet);
+          }
+        }, 500);
+      }
     }
   }
 
@@ -591,8 +602,9 @@
       if (el) el.style.display = 'none';
     });
 
-    // Pull entry count from STATE
-    const pts = (window.STATE && (window.STATE.raffleEntryCount || window.STATE.currentPoints)) || 1;
+    // Pull entry count from STATE — prefer currentPoints (always calculated from card data)
+    // raffleEntryCount can be stale (tier index) if loaded from a cached DB entry
+    const pts = (window.STATE && (window.STATE.currentPoints || window.STATE.raffleEntryCount)) || 1;
 
     // Build (or update) unified success card
     let card = document.getElementById('fogo-raffle-success');
@@ -694,9 +706,10 @@
     try { patchShowRaffleDone(); } catch(e){ console.warn('[FOGO] patchShowRaffleDone:', e); }
 
     // If user lands on view-card with raffleEntered already true, show our unified panel
+    // Delay to let index.html async paths (checkExistingSubmission, calculatePoints) finish first
     try {
       if (window.STATE && window.STATE.raffleEntered) {
-        showFogoRaffleSuccess();
+        setTimeout(() => { try { showFogoRaffleSuccess(); } catch(e){} }, 600);
       }
     } catch(e){}
 
