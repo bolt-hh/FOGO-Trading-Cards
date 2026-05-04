@@ -536,20 +536,147 @@
     }
     step();
   }
-  // Hook enterRaffle
+  // Hook enterRaffle — collapse entry section + show unified success state + confetti
   function patchEnterRaffle(){
     if (typeof window.enterRaffle !== 'function') return;
+    if (window.enterRaffle.__fogoPatched) return;
     const orig = window.enterRaffle;
     window.enterRaffle = async function(){
-      const before = window.STATE && window.STATE.raffleEntered;
-      const result = await orig.apply(this, arguments);
+      const before = !!(window.STATE && window.STATE.raffleEntered);
+      let result;
+      try {
+        result = await orig.apply(this, arguments);
+      } catch(e){
+        // If the original throws, reset button so user isn't stuck on "Entering..."
+        try { resetEnterRaffleButton(); } catch(_){}
+        throw e;
+      }
+      // After original runs: if we're now entered, take over the UI
       try {
         if (window.STATE && window.STATE.raffleEntered && !before) {
+          showFogoRaffleSuccess();
           fireConfetti();
+        } else {
+          // Entry didn't succeed (validation/network/etc) — make sure button isn't stuck
+          resetEnterRaffleButton();
         }
-      } catch(e){}
+      } catch(e){ console.warn('[FOGO] post-enterRaffle ui:', e); }
       return result;
     };
+    window.enterRaffle.__fogoPatched = true;
+  }
+
+  function resetEnterRaffleButton(){
+    const btn = document.getElementById('raffle-enter-btn');
+    if (!btn) return;
+    if (window.STATE && window.STATE.raffleEntered) return; // do not reset if entered
+    btn.disabled = false;
+    const lbl = btn.querySelector('#t-enter-raffle-btn');
+    if (lbl) lbl.textContent = 'ENTER RAFFLE';
+    else btn.textContent = 'ENTER RAFFLE';
+  }
+
+  // Collapse the entry flow into a single unified success panel.
+  // Hides step-1, step-2 (UGC bonus) and the original raffle-done card,
+  // and renders one clean "You're In" card with two CTAs:
+  //   • Boost entries (re-opens UGC bonus / scrolls to tasks)
+  //   • Start Over
+  function showFogoRaffleSuccess(){
+    const wrap = document.getElementById('eligible-entry');
+    if (!wrap) return;
+
+    // Hide the three original sub-cards
+    ['raffle-step-1','raffle-step-2','raffle-done'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+
+    // Pull entry count from STATE
+    const pts = (window.STATE && (window.STATE.raffleEntryCount || window.STATE.currentPoints)) || 1;
+
+    // Build (or update) unified success card
+    let card = document.getElementById('fogo-raffle-success');
+    if (!card) {
+      card = document.createElement('div');
+      card.id = 'fogo-raffle-success';
+      card.className = 'fogo-success-card';
+      wrap.appendChild(card);
+    }
+    card.innerHTML = `
+      <div class="fogo-success-glow"></div>
+      <div class="fogo-success-icon">${ICONS.flame}</div>
+      <div class="fogo-success-eyebrow">ENTRY CONFIRMED</div>
+      <div class="fogo-success-title">You're in the Draw</div>
+      <div class="fogo-success-sub">
+        <span class="pts-badge">${Number(pts).toLocaleString()} pts</span>
+        <span>secured \u2014 every point is one ticket.</span>
+      </div>
+      <div class="fogo-success-divider"></div>
+      <div class="fogo-success-cta">
+        <button class="fogo-cta primary" id="fogo-boost-btn">
+          <span class="ficon" style="font-size:13px;margin-right:7px;">${ICONS.bolt}</span>Boost your entries
+        </button>
+        <button class="fogo-cta ghost" id="fogo-startover-btn">
+          <span class="ficon" style="font-size:11px;margin-right:6px;">${ICONS.arrowL}</span>Start over
+        </button>
+      </div>
+      <div class="fogo-success-foot">
+        Results announced by your KOL. More tasks = more tickets.
+      </div>
+    `;
+    card.style.display = 'block';
+
+    // Wire CTAs
+    const boost = document.getElementById('fogo-boost-btn');
+    if (boost) boost.addEventListener('click', onBoostEntries);
+    const startover = document.getElementById('fogo-startover-btn');
+    if (startover) startover.addEventListener('click', () => {
+      if (typeof window.resetAndGoHome === 'function') window.resetAndGoHome();
+    });
+  }
+
+  // "Boost your entries" — collapse success card, re-open the UGC bonus panel
+  // (raffle-step-2) so user can submit additional UGC posts for +100 pts each.
+  // Also scrolls to tasks-section if present.
+  function onBoostEntries(){
+    const card = document.getElementById('fogo-raffle-success');
+    const step2 = document.getElementById('raffle-step-2');
+    if (card) card.style.display = 'none';
+    if (step2) {
+      step2.style.display = 'block';
+      step2.scrollIntoView({ behavior:'smooth', block:'start' });
+    } else {
+      // No step-2 (e.g. raffle-done already past) — at least scroll to tasks-section
+      const tasks = document.getElementById('tasks-section');
+      if (tasks) tasks.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+    // Add a small "back to confirmation" hook above step-2 so user can return to success state
+    if (step2 && !document.getElementById('fogo-back-to-success')) {
+      const back = document.createElement('button');
+      back.id = 'fogo-back-to-success';
+      back.className = 'fogo-back-link';
+      back.innerHTML = `<span class="ficon" style="font-size:11px;margin-right:6px;">${ICONS.arrowL}</span>Back to entry confirmation`;
+      back.addEventListener('click', () => {
+        step2.style.display = 'none';
+        const c = document.getElementById('fogo-raffle-success');
+        if (c) { c.style.display = 'block'; c.scrollIntoView({ behavior:'smooth', block:'center' }); }
+        back.remove();
+      });
+      step2.parentNode.insertBefore(back, step2);
+    }
+  }
+
+  // Also intercept showRaffleDone — if the original code reaches done state
+  // (e.g. user submitted UGC bonus), show our unified card instead.
+  function patchShowRaffleDone(){
+    if (typeof window.showRaffleDone !== 'function') return;
+    if (window.showRaffleDone.__fogoPatched) return;
+    const orig = window.showRaffleDone;
+    window.showRaffleDone = function(hasBonus){
+      try { orig.apply(this, arguments); } catch(e){}
+      try { showFogoRaffleSuccess(); } catch(e){ console.warn(e); }
+    };
+    window.showRaffleDone.__fogoPatched = true;
   }
 
   // ============================================================
@@ -564,6 +691,14 @@
     try { wireButtonIcons(); } catch(e){ console.warn('[FOGO] wireButtonIcons:', e); }
     try { patchRoleIcon(); } catch(e){ console.warn('[FOGO] patchRoleIcon:', e); }
     try { patchEnterRaffle(); } catch(e){ console.warn('[FOGO] patchEnterRaffle:', e); }
+    try { patchShowRaffleDone(); } catch(e){ console.warn('[FOGO] patchShowRaffleDone:', e); }
+
+    // If user lands on view-card with raffleEntered already true, show our unified panel
+    try {
+      if (window.STATE && window.STATE.raffleEntered) {
+        showFogoRaffleSuccess();
+      }
+    } catch(e){}
 
     // Wait a tick for anything async, then wire tilt
     setTimeout(() => {
