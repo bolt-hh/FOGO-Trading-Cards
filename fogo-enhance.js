@@ -365,20 +365,10 @@
       lasttx.textContent = opts[Math.abs((power || 1) * 7) % opts.length];
     }
     const rank = document.getElementById('c-rank');
-    if (rank) {
-      // Only set estimated rank if real leaderboard rank hasn't been fetched yet
-      const current = rank.textContent || '';
-      const hasRealRank = current.startsWith('#') && !current.includes('—') && current !== '#—';
-      if (!hasRealRank) {
-        const r = Math.max(1, Math.round(2400 - (power || 0) * 22 + (Math.abs(((volStr||'').length)*13) % 80)));
-        rank.textContent = '#' + r.toLocaleString();
-        // Fetch real rank shortly after
-        setTimeout(() => {
-          if (typeof window.fetchLeaderboardRank === 'function' && window.STATE && window.STATE.wallet) {
-            window.fetchLeaderboardRank(window.STATE.wallet);
-          }
-        }, 500);
-      }
+    if (rank && !rank.dataset.realRank) {
+      // Only set placeholder if real rank hasn't been fetched yet
+      const r = Math.max(1, Math.round(2400 - (power || 0) * 22 + (Math.abs(((volStr||'').length)*13) % 80)));
+      rank.textContent = '#~' + r.toLocaleString();
     }
   }
 
@@ -603,8 +593,12 @@
     });
 
     // Pull entry count from STATE — prefer currentPoints (always calculated from card data)
-    // raffleEntryCount can be stale (tier index) if loaded from a cached DB entry
     const pts = (window.STATE && (window.STATE.currentPoints || window.STATE.raffleEntryCount)) || 1;
+    // Expose update function so index.html can correct this after async DB reads finish
+    window.fogoUpdateSuccessPts = function(n){
+      const badge = document.querySelector('#fogo-raffle-success .pts-badge');
+      if (badge && n > 1) badge.textContent = Number(n).toLocaleString() + ' pts';
+    };
 
     // Build (or update) unified success card
     let card = document.getElementById('fogo-raffle-success');
