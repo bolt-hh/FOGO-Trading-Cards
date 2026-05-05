@@ -214,19 +214,22 @@
     const eyebrow = block.querySelector('[id="gate-maxi-eyebrow"], [style*="letter-spacing"]');
     if (eyebrow && eyebrow.children.length === 0) eyebrow.textContent = t.heading;
 
-    // Replace or update the rows list
+    // Hide ALL original inline rows (they have justify-content:space-between inline)
+    // so they don't double with the styled list
+    block.querySelectorAll('div[style*="justify-content"]').forEach(r => {
+      r.style.display = 'none';
+      r.dataset.fogoHidden = '1';
+    });
+
+    // Replace or update the styled rows list
     let list = block.querySelector('.gate-maxi-list');
     if (!list) {
       list = document.createElement('div');
       list.className = 'gate-maxi-list';
-      // insert after eyebrow's next sibling (original rows container)
-      const firstRow = block.querySelector('div[style*="justify-content"]');
-      if (firstRow && firstRow.parentElement === block) {
-        firstRow.replaceWith(list);
-      } else {
-        const ey2 = block.querySelector(':scope > div');
-        if (ey2) ey2.insertAdjacentElement('afterend', list);
-      }
+      // Insert before the footer border-top div
+      const footDiv = Array.from(block.querySelectorAll('div')).find(d => (d.getAttribute('style')||'').includes('border-top'));
+      if (footDiv) footDiv.insertAdjacentElement('beforebegin', list);
+      else block.appendChild(list);
     }
     list.innerHTML = t.rows.map(d => `
       <div class="gate-maxi-row ${d.cls}">
@@ -246,6 +249,21 @@
   }
   // Expose so setLanguage() can re-run it
   window.rerunMaxiList = wireMaxiList;
+
+  // Tier name translations (mirrors index.html TRANSLATIONS.ko.tier_names)
+  const TIER_NAMES_KO = ['현물 누적자','전술적 트레이더','모멘텀 오퍼레이터','퍼프 아키텍트','알파 추출자','FOGO 에이펙스'];
+  const TIER_NAMES_EN = ['Spot Accumulator','Tactical Trader','Momentum Operator','Perp Architect','Alpha Extractor','FOGO Apex'];
+  function updateTierNames(){
+    const ko = (window.CURRENT_LANG === 'ko');
+    const names = ko ? TIER_NAMES_KO : TIER_NAMES_EN;
+    names.forEach((name, i) => {
+      const el = document.getElementById('t-tier-' + (i + 1));
+      if (el) el.textContent = name;
+    });
+    const divider = document.getElementById('t-gate-divider');
+    if (divider) divider.textContent = ko ? '트레이더 등급' : 'Trader Tiers';
+  }
+  window.rerunTierNames = updateTierNames;
 
   // ============================================================
   // CARD VIEW — restructure to split layout
@@ -277,14 +295,20 @@
     const right = document.createElement('div');
     right.className = 'card-split-right';
 
-    // Right header
+    // Right header — language-aware
     const railHead = document.createElement('div');
-    railHead.innerHTML = `
-      <div class="rail-eyebrow">Trader Card · Live Drop</div>
-      <div class="rail-title">Your card is ready.</div>
-      <div class="rail-sub">Share on X to claim your raffle entries. Each task you complete adds points — every point is one ticket in the draw.</div>
-    `;
+    railHead.id = 'fogo-rail-head';
     right.appendChild(railHead);
+    function updateRailHead(){
+      const ko = window.CURRENT_LANG === 'ko';
+      railHead.innerHTML = `
+        <div class="rail-eyebrow">${ko ? '트레이더 카드 · 라이브 드롭' : 'Trader Card · Live Drop'}</div>
+        <div class="rail-title">${ko ? '카드가 준비됐습니다.' : 'Your card is ready.'}</div>
+        <div class="rail-sub">${ko ? 'X에 공유하여 래플 참가권을 받으세요. 완료한 태스크마다 포인트가 쌓이며 — 1포인트 = 1장의 참가권입니다.' : 'Share on X to claim your raffle entries. Each task you complete adds points — every point is one ticket in the draw.'}</div>
+      `;
+    }
+    updateRailHead();
+    window.rerunRailHead = updateRailHead;
 
     // Insert split before cardWrap, then move cardWrap into left
     cardWrap.parentNode.insertBefore(split, cardWrap);
