@@ -4,6 +4,110 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FOGO | Trader Card</title>
+<!-- ══ KOREAN TRANSLATION — EARLIEST POSSIBLE SCRIPT ══════════════
+     Runs before any other JS. Retries at 250ms, 600ms, 1200ms, 2000ms
+     to beat any delayed overwrites from fogo-enhance.js.
+═══════════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  if (location.search.indexOf('lang=ko') === -1) return;
+  document.documentElement.lang = 'ko';
+
+  var KO = {
+    // Nav
+    't-nav-version': '트레이더 카드 · 커뮤니티 활성화',
+    't-nav-live':    '커뮤니티 활성화 진행 중',
+    // Info chips
+    't-chip-1': '온체인 검증됨',
+    't-chip-2': 'FOGO 메인넷',
+    't-chip-3': '수수료 없음 · 거래 없음',
+    't-chip-4': '7가지 등급',
+    // Prize bar
+    't-prize-title':      '시즌 2 래플 — 커뮤니티 상금 풀',
+    't-prize-sub':        '아래에서 참가',
+    't-countdown-label':  '캠페인 종료',
+    't-campaign-end-date':'2026년 Q2 말',
+    't-tasks-weekly':     '매주 새 태스크 추가',
+    // Steps
+    't-step-n1': '스텝 01', 't-step-t1': '연결 & 생성',
+    't-step-b1': 'SVM 지갑을 연결하세요. 온체인 활동에서 즉시 트레이더 카드가 생성됩니다.',
+    't-step-n2': '스텝 02', 't-step-t2': 'X에 공유',
+    't-step-b2': '캠페인 태그와 함께 X에 카드를 게시하여 래플 참가권을 얻고 +50 포인트를 적립하세요.',
+    't-step-n3': '스텝 03', 't-step-t3': '포인트 쌓기',
+    't-step-b3': 'FOGO dApp 사용 (+200pts), UGC 공유 (+100pts). 포인트 1개 = 래플 참가권 1장. 매주 새 태스크.',
+    't-step-n4': '스텝 04', 't-step-t4': '$FOGO 획득',
+    't-step-b4': '포인트 상위 15위가 리더보드 상금을 받습니다. 200명 럭키 드로우 당첨자 무작위 선정.',
+    // Notice & back
+    't-notice':   'FOGO 네트워크(mainnet.fogo.io)의 실시간 온체인 활동을 읽습니다. 볼륨은 Ambient, Valiant, Brasa, Pyron, Ignition 및 FogoLend에서 집계됩니다. 모든 지갑은 카드를 생성하고 래플에 참가할 수 있습니다.',
+    't-back-btn': '← 뒤로',
+    // Wallet section
+    't-connect-head': '지갑 연결',
+    't-sol-label':    '솔라나 / FOGO 지갑',
+    't-gen-btn':      '내 트레이더 카드 생성',
+    // Raffle section labels
+    't-raffle-eyebrow':      '래플 참가',
+    't-raffle-confirm-strong':'트레이더 카드를 X에 공유하고 KOL 채널 댓글에 공유했습니다.',
+    't-enter-raffle-btn':    '래플 참가하기',
+    // Tasks
+    't-tasks-heading': '내 태스크',
+    't-tasks-sub':     '태스크를 완료하여 래플 참가권을 늘리세요. 포인트 1개 = 참가권 1장.',
+    // KOL selector
+    't-kol-selector-head': '누가 추천했나요?',
+    't-kol-selector-sub':  '이 캠페인을 공유한 KOL을 선택하세요.',
+    't-kol-continue-btn':  '계속하기 →',
+    // Gate
+    't-gate-eyebrow':      '500,000 $FOGO · 시즌 2 활성화',
+    't-gate-headline-span':'$FOGO를 획득하세요.',
+    't-gate-btn':          '트레이더 카드 받기 →',
+    // Leaderboard
+    't-lb-prizes-head':    '리더보드 상금',
+    't-lb-lucky-draw':     '200× 럭키 드로우',
+    't-lb-top-ugc':        '10× 상위 UGC',
+    't-prize-lbl-lb':      '리더보드',
+    't-prize-lbl-draw':    '럭키 드로우',
+    't-prize-lbl-ugc':     '상위 UGC',
+    // Eco stats
+    't-stat-protocols': '당첨자',
+    't-stat-season':    '시즌',
+    't-stat-verified':  '온체인 검증',
+    't-gate-divider':   '트레이더 등급',
+    // Tier names
+    't-tier-1': '현물 누적자', 't-tier-2': '전술적 트레이더',
+    't-tier-3': '모멘텀 오퍼레이터', 't-tier-4': '퍼프 아키텍트',
+    't-tier-5': '알파 추출자', 't-tier-6': 'FOGO 에이펙스',
+    // Rescan
+    'rescan-btn-label': '↻ 지갑 재스캔',
+  };
+
+  function applyKo() {
+    Object.keys(KO).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = KO[id];
+    });
+    // Reown connect button
+    var cb = document.getElementById('reown-connect-btn');
+    if (cb) { var sp = cb.querySelector('span:last-child'); if (sp) sp.textContent = '지갑 연결하기'; }
+    // Rescan btn
+    var rb = document.getElementById('rescan-btn');
+    if (rb && !rb.disabled) rb.innerHTML = '<span style="font-size:11px;margin-right:6px;">↻</span> 지갑 재스캔';
+    // Supported wallets note
+    var sw = document.querySelector('.reown-supported');
+    if (sw) sw.textContent = 'Nightly (추천) · Phantom · Solflare · Backpack · WalletConnect · 300+ 지갑';
+    // No wallet link
+    var nw = document.getElementById('t-no-wallet');
+    if (nw) nw.innerHTML = '지갑이 없으신가요? <a href="https://www.nightly.app/" target="_blank" style="color:var(--lime);">Nightly</a>, <a href="https://phantom.app" target="_blank">Phantom</a>, <a href="https://solflare.com" target="_blank">Solflare</a>, 또는 <a href="https://backpack.app" target="_blank">Backpack</a> — 모두 무료.';
+  }
+
+  // Run at 4 different moments to beat all overwrites
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyKo);
+  } else {
+    applyKo();
+  }
+  [300, 700, 1300, 2100].forEach(function(ms){ setTimeout(applyKo, ms); });
+  window._applyKo = applyKo;
+})();
+</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath fill='%23ff3d00' d='M512 0A512 512 0 0 0 0 512a512 512 0 0 0 512 512 512 512 0 0 0 512-512A512 512 0 0 0 512 0Z'/%3E%3Cpath fill='%23fff' d='M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z'/%3E%3C%2Fsvg%3E">
 <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1752,9 +1856,10 @@ body::before{
             </svg>
             Connect Wallet
           </button>
-          <div class="reown-supported">Phantom · Solflare · Backpack · WalletConnect · 300+ wallets</div>
+          <div class="reown-supported">Nightly (recommended) · Phantom · Solflare · Backpack · WalletConnect · 300+ wallets</div>
           <div class="no-wallet-link" id="t-no-wallet">
-            No wallet? Get <a href="https://phantom.app" target="_blank">Phantom</a>,
+            No wallet? <a href="https://www.nightly.app/" target="_blank" style="color:var(--lime);font-weight:600;">Nightly</a> is recommended for FOGO. Also:
+            <a href="https://phantom.app" target="_blank">Phantom</a>,
             <a href="https://solflare.com" target="_blank">Solflare</a>, or
             <a href="https://backpack.app" target="_blank">Backpack</a> — all free.
           </div>
@@ -4300,7 +4405,7 @@ const TRANSLATIONS = {
     sol_label:          'Solana / FOGO Wallet',
     x_label:            'X / Twitter Handle',
     tg_label:           'Telegram Handle',
-    no_wallet:          'No wallet? Get <a href="https://phantom.app" target="_blank">Phantom</a>, <a href="https://solflare.com" target="_blank">Solflare</a>, or <a href="https://backpack.app" target="_blank">Backpack</a> — all free.',
+    no_wallet:          'No wallet? <a href="https://www.nightly.app/" target="_blank" style="color:var(--lime);font-weight:600;">Nightly</a> is recommended for FOGO. Also: <a href="https://phantom.app" target="_blank">Phantom</a>, <a href="https://solflare.com" target="_blank">Solflare</a>, or <a href="https://backpack.app" target="_blank">Backpack</a> — all free.',
     disconnect:         'Disconnect',
     gen_btn:            'Generate My Trader Card',
     load_txt:           'Reading FOGO chain data',
