@@ -1695,8 +1695,9 @@ body::before{
       </div>
       <div class="prize-bar-div"></div>
       <div class="countdown-box">
-        <div class="countdown-label" id="t-countdown-label">Draw closes in</div>
-        <div class="countdown-digits" id="countdownApp">--d --h --m --s</div>
+        <div class="countdown-label" id="t-countdown-label">Campaign ends</div>
+        <div style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;color:var(--fire);letter-spacing:0.04em;line-height:1.1;" id="t-campaign-end-date">End of Q2 2026</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,90,30,0.6);margin-top:4px;" id="t-tasks-weekly">New tasks added weekly</div>
       </div>
     </div>
 
@@ -1707,23 +1708,23 @@ body::before{
         <div class="steps-bar" id="steps-bar-app" aria-label="How to enter">
           <div class="step-card">
             <div class="step-num" id="t-step-n1">Step 01</div>
-            <div class="step-title" id="t-step-t1">Connect Wallet</div>
-            <div class="step-body" id="t-step-b1">Connect your SVM wallet (Phantom, Solflare, or Backpack)</div>
+            <div class="step-title" id="t-step-t1">Connect &amp; Generate</div>
+            <div class="step-body" id="t-step-b1">Connect your SVM wallet. Your Trader Card is instantly generated from your onchain activity — volume, tier, and dApp usage.</div>
           </div>
           <div class="step-card">
             <div class="step-num" id="t-step-n2">Step 02</div>
-            <div class="step-title" id="t-step-t2">Verify Identity</div>
-            <div class="step-body" id="t-step-b2">Sign a message to prove wallet ownership. No transaction, no fees.</div>
+            <div class="step-title" id="t-step-t2">Share on X</div>
+            <div class="step-body" id="t-step-b2">Post your card on X with the campaign tag to unlock your raffle entry and earn +50 points.</div>
           </div>
           <div class="step-card">
             <div class="step-num" id="t-step-n3">Step 03</div>
-            <div class="step-title" id="t-step-t3">View Your Card</div>
-            <div class="step-body" id="t-step-b3">Your on-chain trading history generates a unique Trader Card.</div>
+            <div class="step-title" id="t-step-t3">Stack Points</div>
+            <div class="step-body" id="t-step-b3">Use FOGO dApps (+200 pts each), share UGC (+100 pts), grow your volume. Every point = 1 raffle entry. New tasks drop weekly.</div>
           </div>
           <div class="step-card">
             <div class="step-num" id="t-step-n4">Step 04</div>
-            <div class="step-title" id="t-step-t4">Enter Raffle</div>
-            <div class="step-body" id="t-step-b4">Eligible wallets can enter the Season 2 community raffle.</div>
+            <div class="step-title" id="t-step-t4">Win $FOGO</div>
+            <div class="step-body" id="t-step-b4">Top 15 by points win the leaderboard prizes. 200 lucky draw winners selected randomly from all qualified entries.</div>
           </div>
         </div>
         <div class="notice" id="t-notice" style="margin-top:16px;">
@@ -2551,6 +2552,9 @@ window.addEventListener('DOMContentLoaded', () => {
   } else {
     showView('view-gate');
   }
+
+  // Re-apply language after views are initialised — ensures all views translate
+  if (urlLang === 'ko') setLanguage('ko');
   // Pre-fill admin gate if already logged in this session
   if (sessionStorage.getItem('fogo_admin')) {
     STATE.adminLoggedIn = true;
@@ -3877,8 +3881,9 @@ function updateCountdown() {
 
 // Start countdown once DOM is ready
 window.addEventListener('DOMContentLoaded', () => {
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
+  // Countdown replaced with static Q2 2026 end date — no live timer needed
+  // updateCountdown();
+  // setInterval(updateCountdown, 1000);
 });
 
 function renderTierConfig() {
@@ -4306,10 +4311,13 @@ const TRANSLATIONS = {
     prize_sub:             'Enter below',
     countdown_label:       'Draw closes in',
     // Steps bar
-    step_n1: 'Step 01', step_t1: 'Connect Wallet',    step_b1: 'Connect your SVM wallet (Phantom, Solflare, or Backpack)',
-    step_n2: 'Step 02', step_t2: 'Verify Identity',   step_b2: 'Sign a message to prove wallet ownership. No transaction, no fees.',
-    step_n3: 'Step 03', step_t3: 'View Your Card',    step_b3: 'Your on-chain trading history generates a unique Trader Card.',
-    step_n4: 'Step 04', step_t4: 'Enter Raffle',      step_b4: 'Eligible wallets can enter the Season 2 community raffle.',
+    step_n1: 'Step 01', step_t1: 'Connect & Generate', step_b1: 'Connect your SVM wallet. Your Trader Card is instantly generated from your onchain activity.',
+    step_n2: 'Step 02', step_t2: 'Share on X',        step_b2: 'Post your card on X with the campaign tag to unlock your raffle entry and earn +50 points.',
+    step_n3: 'Step 03', step_t3: 'Stack Points',      step_b3: 'Use FOGO dApps (+200 pts each), share UGC (+100 pts). Every point = 1 raffle entry. New tasks weekly.',
+    step_n4: 'Step 04', step_t4: 'Win $FOGO',         step_b4: 'Top 15 by points win leaderboard prizes. 200 lucky draw winners selected from all entries.',
+    countdown_label:    'Campaign ends',
+    campaign_end_date:  'End of Q2 2026',
+    tasks_weekly_note:  'New tasks added weekly',
     // Raffle entry
     raffle_eyebrow:        'Raffle Entry',
     raffle_tier_note:      'Your tier qualifies you for {n} raffle draw {plural}.',
@@ -4403,10 +4411,13 @@ const TRANSLATIONS = {
     prize_sub:             '아래에서 참가',
     countdown_label:       '추첨 마감까지',
     // Steps bar
-    step_n1: '스텝 01', step_t1: '지갑 연결',      step_b1: 'SVM 지갑을 연결하세요 (Phantom, Solflare, 또는 Backpack)',
-    step_n2: '스텝 02', step_t2: '신원 확인',      step_b2: '지갑 소유권을 증명하는 메시지에 서명하세요. 거래 없음, 수수료 없음.',
-    step_n3: '스텝 03', step_t3: '카드 확인',      step_b3: '온체인 거래 내역이 고유한 트레이더 카드를 생성합니다.',
-    step_n4: '스텝 04', step_t4: '래플 참가',      step_b4: '자격 있는 지갑은 시즌 2 커뮤니티 래플에 참가할 수 있습니다.',
+    step_n1: '스텝 01', step_t1: '연결 & 생성',      step_b1: 'SVM 지갑을 연결하세요. 트레이더 카드가 온체인 활동을 기반으로 즉시 생성됩니다.',
+    step_n2: '스텝 02', step_t2: 'X에 공유',         step_b2: '캠페인 태그와 함께 X에 카드를 게시하여 래플 참가권을 얻고 +50 포인트를 적립하세요.',
+    step_n3: '스텝 03', step_t3: '포인트 쌓기',      step_b3: 'FOGO dApp 사용 (+200pts), UGC 공유 (+100pts). 포인트 1개 = 래플 참가권 1장. 매주 새 태스크 추가.',
+    step_n4: '스텝 04', step_t4: '$FOGO 획득',       step_b4: '포인트 상위 15위가 리더보드 상금을 받습니다. 200명의 럭키 드로우 당첨자가 무작위로 선정됩니다.',
+    countdown_label:    '캠페인 종료',
+    campaign_end_date:  '2026년 2분기 말',
+    tasks_weekly_note:  '매주 새 태스크 추가',
     // Raffle entry
     raffle_eyebrow:        '추첨 참가',
     raffle_tier_note:      '귀하의 등급은 추첨 {n}회 참가 자격을 드립니다.',
@@ -4546,7 +4557,9 @@ function setLanguage(lang) {
   // Prize bar (in view-app)
   setTxt('t-prize-title',    t.prize_title    || 'Season 2 Raffle — Community Prize Pool');
   setTxt('t-prize-sub',      t.prize_sub      || 'Enter below');
-  setTxt('t-countdown-label',t.countdown_label|| 'Draw closes in');
+  setTxt('t-countdown-label',   t.countdown_label    || 'Campaign ends');
+  setTxt('t-campaign-end-date', t.campaign_end_date  || 'Q2 2026');
+  setTxt('t-tasks-weekly',      t.tasks_weekly_note  || 'New tasks added weekly');
 
   // Steps bar
   setTxt('t-step-n1', t.step_n1 || 'Step 01'); setTxt('t-step-t1', t.step_t1 || 'Connect Wallet');   setTxt('t-step-b1', t.step_b1 || 'Connect your SVM wallet (Phantom, Solflare, or Backpack)');
