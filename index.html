@@ -125,6 +125,8 @@ body::before{
 .live-status{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--dim);padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:rgba(195,251,165,0.04);}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime);animation:pulse-live 2s ease-in-out infinite;}
 @keyframes pulse-live{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.4);opacity:0.5;}}
+@keyframes gate-rank1-glow{0%,100%{box-shadow:0 0 20px rgba(255,61,0,0.12);}50%{box-shadow:0 0 32px rgba(255,61,0,0.28),0 0 60px rgba(195,251,165,0.08);}}
+@keyframes gate-lb-scan{0%{transform:translateX(-100%);}60%,100%{transform:translateX(100%);}}
 @media(max-width:760px){.live-status{display:none;}}
 @media(max-width:560px){.nav-inner{padding:12px 16px;}.nav-brand-version{display:none;}}
 
@@ -1358,6 +1360,31 @@ body::before{
   padding:9px 16px;cursor:pointer;border-radius:4px;transition:all 0.15s;
 }
 .lb-back-btn:hover{border-color:var(--border-hi);color:var(--text);}
+
+/* Nav leaderboard button — stands out from other nav items */
+#t-nav-leaderboard{
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
+  letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--lime);
+  background:rgba(195,251,165,0.07);
+  border:1px solid rgba(195,251,165,0.35);
+  border-radius:6px;
+  padding:8px 16px;
+  cursor:pointer;
+  box-shadow:0 0 14px rgba(195,251,165,0.15);
+  transition:all 0.2s ease;
+  animation:lb-btn-pulse 3s ease-in-out infinite;
+}
+#t-nav-leaderboard:hover{
+  background:rgba(195,251,165,0.14);
+  border-color:rgba(195,251,165,0.65);
+  box-shadow:0 0 24px rgba(195,251,165,0.3),0 0 48px rgba(195,251,165,0.12);
+  transform:translateY(-1px);
+}
+@keyframes lb-btn-pulse{
+  0%,100%{box-shadow:0 0 14px rgba(195,251,165,0.15);}
+  50%{box-shadow:0 0 22px rgba(195,251,165,0.28),0 0 40px rgba(195,251,165,0.08);}
+}
 .leaderboard-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px;}
 .leaderboard-table thead tr{background:rgba(195,251,165,0.06);}
 .leaderboard-table th{
@@ -1545,6 +1572,11 @@ body::before{
       <h1 class="gate-headline" id="t-gate-headline">Stack Points.<br><span id="t-gate-headline-span">Win $FOGO.</span></h1>
       <p class="gate-sub" id="t-gate-sub">Generate your Trader Card, share it on X, use FOGO ecosystem dApps, and climb the leaderboard for a share of 500,000 $FOGO. Every point you earn is one raffle entry.</p>
 
+      <button class="btn-gate-cta" onclick="showView('view-app')" style="margin:28px 0 0;">
+        <span class="btn-sheen"></span>
+        <span id="t-gate-btn">Get Your Trader Card →</span>
+      </button>
+
       <!-- Prize overview strip -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:28px 0;">
         <div style="background:var(--panel);border:1px solid rgba(195,251,165,0.2);border-radius:8px;padding:14px 12px;text-align:center;">
@@ -1573,30 +1605,31 @@ body::before{
         </div>
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);letter-spacing:0.08em;">🏆 225 Winners · Volume points uncapped · More activity = more entries</div>
       </div>
-
-      <button class="btn-gate-cta" onclick="showView('view-app')">
-        <span class="btn-sheen"></span>
-        <span id="t-gate-btn">Get Your Trader Card →</span>
-      </button>
     </div>
 
     <!-- Right: prize breakdown + tier grid -->
     <div class="gate-card">
-      <!-- Leaderboard prize breakdown -->
-      <div style="margin-bottom:16px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">Leaderboard Prizes</div>
-        <div style="display:flex;flex-direction:column;gap:5px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(195,251,165,0.05);border-radius:4px;border:1px solid rgba(195,251,165,0.15);">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);">#1</span>
-            <span style="font-family:'Clash Display',sans-serif;font-size:13px;font-weight:700;color:var(--lime);">50,000 $FOGO</span>
+      <!-- Leaderboard prize breakdown — glowing + animated -->
+      <div style="margin-bottom:16px;background:var(--panel2);border:1px solid rgba(255,61,0,0.2);border-radius:10px;padding:16px;position:relative;overflow:hidden;box-shadow:0 0 40px rgba(255,61,0,0.08),0 0 80px rgba(195,251,165,0.04);">
+        <!-- animated top accent -->
+        <div style="position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,var(--fire),var(--ember),var(--lime));animation:gate-lb-scan 3s ease-in-out infinite;"></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.26em;text-transform:uppercase;color:var(--fire);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+          <span style="width:5px;height:5px;border-radius:50%;background:var(--fire);box-shadow:0 0 8px var(--fire);display:inline-block;animation:pulse-live 1.5s ease-in-out infinite;"></span>
+          Leaderboard Prizes
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <!-- #1 — glowing highlight -->
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:linear-gradient(90deg,rgba(255,61,0,0.12),rgba(195,251,165,0.06));border-radius:6px;border:1px solid rgba(255,61,0,0.3);box-shadow:0 0 20px rgba(255,61,0,0.12);animation:gate-rank1-glow 2.5s ease-in-out infinite;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--fire);font-weight:700;">#1</span>
+            <span style="font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;background:linear-gradient(90deg,var(--fire),var(--lime));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">50,000 $FOGO</span>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">#2</span><span style="font-size:12px;color:var(--sub);">35,000 $FOGO</span></div>
-          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">#3</span><span style="font-size:12px;color:var(--sub);">25,000 $FOGO</span></div>
-          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">#4–5</span><span style="font-size:12px;color:var(--sub);">20,000 $FOGO each</span></div>
-          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">#6–10</span><span style="font-size:12px;color:var(--sub);">15,000 $FOGO each</span></div>
-          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">#11–15</span><span style="font-size:12px;color:var(--sub);">5,000 $FOGO each</span></div>
-          <div style="display:flex;justify-content:space-between;padding:6px 10px;border-top:1px solid var(--border);margin-top:4px;"><span style="font-size:11px;color:var(--dim);">200× Lucky Draw</span><span style="font-size:12px;color:var(--sub);">1,000 $FOGO each</span></div>
-          <div style="display:flex;justify-content:space-between;padding:6px 10px;"><span style="font-size:11px;color:var(--dim);">10× Top UGC</span><span style="font-size:12px;color:var(--sub);">5,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 12px;border-radius:4px;background:rgba(255,255,255,0.02);"><span style="font-size:11px;color:rgba(255,255,255,0.5);">#2</span><span style="font-size:12px;color:var(--sub);font-family:'JetBrains Mono',monospace;">35,000 $FOGO</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 12px;border-radius:4px;background:rgba(255,255,255,0.02);"><span style="font-size:11px;color:rgba(255,255,255,0.5);">#3</span><span style="font-size:12px;color:var(--sub);font-family:'JetBrains Mono',monospace;">25,000 $FOGO</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 12px;"><span style="font-size:11px;color:var(--dimmer);">#4–5</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">20,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 12px;"><span style="font-size:11px;color:var(--dimmer);">#6–10</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">15,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 12px;"><span style="font-size:11px;color:var(--dimmer);">#11–15</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">5,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 12px;border-top:1px solid rgba(255,255,255,0.05);margin-top:4px;"><span style="font-size:11px;color:var(--dim);">200× Lucky Draw</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">1,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 12px;"><span style="font-size:11px;color:var(--dim);">10× Top UGC</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">5,000 $FOGO each</span></div>
         </div>
       </div>
 
