@@ -1527,8 +1527,8 @@ body::before{
       <button class="lb-back-btn" style="font-size:10px;padding:7px 14px;" onclick="showLeaderboard()" id="t-nav-leaderboard">Leaderboard</button>
       <div class="live-status"><span class="live-dot"></span><span id="t-nav-live">Community Activation Live</span></div>
       <div class="lang-toggle" role="group" aria-label="Language">
-        <button class="lang-btn active" id="nav-lang-en" type="button" onclick="setLanguage('en')">EN</button>
-        <button class="lang-btn" id="nav-lang-ko" type="button" onclick="setLanguage('ko')">한국어</button>
+        <a class="lang-btn" id="nav-lang-en" href="?" style="text-decoration:none;">EN</a>
+        <a class="lang-btn" id="nav-lang-ko" href="?lang=ko" style="text-decoration:none;">한국어</a>
       </div>
     </div>
   </div>
@@ -1558,8 +1558,8 @@ body::before{
   <div class="gate-top-bar">
     <div class="lang-toggle-wrap">
       <div class="lang-toggle">
-        <button type="button" class="lang-btn active" id="lang-en" onclick="setLanguage('en')">EN</button>
-        <button type="button" class="lang-btn" id="lang-ko" onclick="setLanguage('ko')">한국어</button>
+        <a class="lang-btn" id="lang-en" href="?" style="text-decoration:none;">EN</a>
+        <a class="lang-btn" id="lang-ko" href="?lang=ko" style="text-decoration:none;">한국어</a>
       </div>
       <span class="lang-toggle-hint" id="t-lang-hint">Select Language</span>
     </div>
@@ -1594,16 +1594,16 @@ body::before{
       </div>
 
       <!-- How to maximise points -->
-      <div style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:32px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:var(--lime);margin-bottom:12px;">How to Maximise Your Entries</div>
+      <div id="gate-maxi-block" style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:32px;">
+        <div id="gate-maxi-eyebrow" style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:var(--lime);margin-bottom:12px;">How to Maximise Your Entries</div>
         <div style="display:flex;flex-direction:column;gap:7px;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--sub);">🎴 Generate your Trader Card</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+50 pts</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--sub);">𝕏 Share card on X</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+50 pts</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--sub);">📊 Onchain volume (per $50)</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+25 pts</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--sub);">⚡ Use Valiant / Pyron / Brasa / Ignition</span><span style="color:var(--fire);font-family:'JetBrains Mono',monospace;font-size:11px;">+200 each</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:var(--sub);">🎬 Share UGC on X (max 3 posts)</span><span style="color:var(--sub);font-family:'JetBrains Mono',monospace;font-size:11px;">+100 each</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-1" style="color:var(--sub);">🎴 Generate your Trader Card</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+50 pts</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-2" style="color:var(--sub);">𝕏 Share card on X</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+50 pts</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-3" style="color:var(--sub);">📊 Onchain volume (per $50)</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+25 pts</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-4" style="color:var(--sub);">⚡ Use Valiant / Pyron / Brasa / Ignition</span><span style="color:var(--fire);font-family:'JetBrains Mono',monospace;font-size:11px;">+200 each</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-5" style="color:var(--sub);">🎬 Share UGC on X (max 3 posts)</span><span style="color:var(--sub);font-family:'JetBrains Mono',monospace;font-size:11px;">+100 each</span></div>
         </div>
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);letter-spacing:0.08em;">🏆 225 Winners · Volume points uncapped · More activity = more entries</div>
+        <div id="t-maxi-footer" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);letter-spacing:0.08em;">🏆 225 Winners · Volume points uncapped · More activity = more entries</div>
       </div>
     </div>
 
@@ -1668,8 +1668,8 @@ body::before{
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="lang-toggle-wrap">
           <div class="lang-toggle">
-            <button type="button" class="lang-btn active" id="lang-en-2" onclick="setLanguage('en')">EN</button>
-            <button type="button" class="lang-btn" id="lang-ko-2" onclick="setLanguage('ko')">한국어</button>
+            <a class="lang-btn" id="lang-en-2" href="?" style="text-decoration:none;">EN</a>
+            <a class="lang-btn" id="lang-ko-2" href="?lang=ko" style="text-decoration:none;">한국어</a>
           </div>
           <span class="lang-toggle-hint" id="t-lang-hint-2">Select Language</span>
         </div>
@@ -1813,8 +1813,8 @@ body::before{
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="lang-toggle-wrap">
           <div class="lang-toggle">
-            <button type="button" class="lang-btn active" id="lang-en-3" onclick="setLanguage('en')">EN</button>
-            <button type="button" class="lang-btn" id="lang-ko-3" onclick="setLanguage('ko')">한국어</button>
+            <a class="lang-btn" id="lang-en-3" href="?" style="text-decoration:none;">EN</a>
+            <a class="lang-btn" id="lang-ko-3" href="?lang=ko" style="text-decoration:none;">한국어</a>
           </div>
           <span class="lang-toggle-hint" id="t-lang-hint-3">Select Language</span>
         </div>
@@ -2526,6 +2526,26 @@ async function dbUpdate(table, id, updates) {
 ================================================================ */
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
+
+  // ── Language detection from URL ──────────────────────────────
+  // Must run BEFORE enhance.js bootstrap so wireMaxiList/wireGateTiers
+  // see the correct language from the very first render.
+  const urlLang = params.get('lang');
+  if (urlLang === 'ko') {
+    CURRENT_LANG = 'ko';
+    window.CURRENT_LANG = 'ko';
+    setLanguage('ko');
+  }
+  // Mark active lang button
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    const isKo = urlLang === 'ko';
+    const btnKo = btn.id && btn.id.includes('ko');
+    const btnEn = btn.id && btn.id.includes('en');
+    if ((isKo && btnKo) || (!isKo && btnEn)) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+  // ─────────────────────────────────────────────────────────────
+
   if (params.get(CONFIG.admin_param)) {
     showView('view-admin');
   } else {
@@ -4241,6 +4261,7 @@ document.getElementById('admin-pass-input').addEventListener('keydown', e => {
    LANGUAGE / TRANSLATIONS
 ================================================================ */
 let CURRENT_LANG = 'en';
+window.CURRENT_LANG = 'en'; // exposed for fogo-enhance.js
 
 const TRANSLATIONS = {
   en: {
@@ -4436,6 +4457,14 @@ const TRANSLATIONS = {
     leaderboard_back:   '← 뒤로',
     leaderboard_empty:  '아직 참가자가 없습니다. 첫 번째가 되세요!',
     nav_leaderboard:    '리더보드',
+    // How to maximise rows (HTML fallback — enhance.js also handles these)
+    maxi_eyebrow: '참가권 최대화 방법',
+    maxi_1: '🎴 트레이더 카드 생성',
+    maxi_2: '𝕏 X에 카드 공유',
+    maxi_3: '📊 온체인 볼륨 ($50당)',
+    maxi_4: '⚡ Valiant / Pyron / Brasa / Ignition 사용',
+    maxi_5: '🎬 X에 UGC 공유 (최대 3개)',
+    maxi_footer: '🏆 225명 당첨 · 볼륨 포인트 무제한 · 활동이 많을수록 참가권 증가',
     // Prize strip labels
     prize_lbl_lb:       '리더보드',
     prize_lbl_draw:     '럭키 드로우',
@@ -4465,6 +4494,7 @@ const TIER_KO = [
 
 function setLanguage(lang) {
   CURRENT_LANG = lang;
+  window.CURRENT_LANG = lang; // keep enhance.js in sync
   const t = TRANSLATIONS[lang];
 
   // Toggle button states — all sets including nav
@@ -4632,7 +4662,47 @@ function setLanguage(lang) {
   setTxt('t-lb-lucky-draw',  t.lb_lucky_draw  || '200× Lucky Draw');
   setTxt('t-lb-top-ugc',     t.lb_top_ugc     || '10× Top UGC');
   // Re-run enhance.js maximise list with new language
+  // How to maximise — HTML fallback (works without enhance.js)
+  setTxt('gate-maxi-eyebrow', t.maxi_eyebrow || 'How to Maximise Your Entries');
+  setTxt('t-maxi-1', t.maxi_1 || '🎴 Generate your Trader Card');
+  setTxt('t-maxi-2', t.maxi_2 || '𝕏 Share card on X');
+  setTxt('t-maxi-3', t.maxi_3 || '📊 Onchain volume (per $50)');
+  setTxt('t-maxi-4', t.maxi_4 || '⚡ Use Valiant / Pyron / Brasa / Ignition');
+  setTxt('t-maxi-5', t.maxi_5 || '🎬 Share UGC on X (max 3 posts)');
+  setTxt('t-maxi-footer', t.maxi_footer || '🏆 225 Winners · Volume points uncapped · More activity = more entries');
   if (typeof window.rerunMaxiList === 'function') window.rerunMaxiList();
+  if (typeof window.rerunRailHead === 'function') window.rerunRailHead();
+  if (typeof window.rerunTierNames === 'function') window.rerunTierNames();
+
+  // Back / rescan buttons
+  setTxt('t-back-btn',  lang === 'ko' ? '← 뒤로' : '← Back');
+  const rescanBtn = document.getElementById('rescan-btn');
+  if (rescanBtn && !rescanBtn.disabled) rescanBtn.innerHTML = `<span style="font-size:11px;margin-right:6px;">↻</span> ${t.tasks_rescan || '↻ Rescan Wallet'}`;
+
+  // Reown connect button label
+  const connectBtn = document.getElementById('reown-connect-btn');
+  if (connectBtn) {
+    const lbl = connectBtn.querySelector('span:last-child');
+    if (lbl) lbl.textContent = lang === 'ko' ? '지갑 연결하기' : 'Connect Wallet';
+  }
+
+  // Reown supported wallets note
+  const supported = document.querySelector('.reown-supported');
+  if (supported) supported.textContent = lang === 'ko'
+    ? 'Phantom · Solflare · Backpack · WalletConnect · 300+ 지갑'
+    : 'Phantom · Solflare · Backpack · WalletConnect · 300+ wallets';
+
+  // Wallet section labels
+  setTxt('t-connect-head', t.connect_head || 'Connect Your Wallet');
+  setTxt('t-sol-label',    t.sol_label    || 'Solana / FOGO Wallet');
+
+  // KOL placeholder
+  const kolPlaceholder = document.getElementById('t-kol-placeholder');
+  if (kolPlaceholder) kolPlaceholder.textContent = lang === 'ko' ? '— KOL 선택 —' : '— Select a KOL —';
+
+  // Tasks section
+  setTxt('t-tasks-heading', t.tasks_heading || 'Your Tasks');
+  setTxt('t-tasks-sub',     t.tasks_sub     || 'Complete tasks to earn more raffle entries. Every point = 1 entry.');
   setTxt('t-x-share-label',   t.x_share_label       || 'Share your card on X and paste the link here to earn +50 points');
   const xPlaceholderEl = document.getElementById('raffle-x-link');
   if (xPlaceholderEl) xPlaceholderEl.placeholder = t.x_share_placeholder || 'https://x.com/yourpost...';
