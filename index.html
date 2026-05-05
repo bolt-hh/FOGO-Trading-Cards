@@ -59,7 +59,15 @@
     't-gate-eyebrow':      '500,000 $FOGO · 시즌 2 활성화',
     't-gate-headline-span':'$FOGO를 획득하세요.',
     't-gate-btn':          '트레이더 카드 받기 →',
-    // Leaderboard
+    // Leaderboard nav button
+    't-nav-leaderboard': '리더보드',
+    // Leaderboard page
+    't-lb-eyebrow':  'FOGO 커뮤니티 활성화',
+    't-lb-heading':  '리더보드',
+    't-lb-sub':      '총 캠페인 포인트 기준 순위',
+    't-lb-refresh':  '↻ 새로고침',
+    't-lb-back':     '← 뒤로',
+    // Leaderboard prizes panel
     't-lb-prizes-head':    '리더보드 상금',
     't-lb-lucky-draw':     '200× 럭키 드로우',
     't-lb-top-ugc':        '10× 상위 UGC',
@@ -87,6 +95,16 @@
     // Reown connect button
     var cb = document.getElementById('reown-connect-btn');
     if (cb) { var sp = cb.querySelector('span:last-child'); if (sp) sp.textContent = '지갑 연결하기'; }
+    // Leaderboard table headers (dynamic — patched on each applyKo call)
+    document.querySelectorAll('.leaderboard-table th').forEach(function(th) {
+      var map = {'Rank':'순위','Wallet':'지갑','Handle':'핸들','Points':'포인트','Tier':'등급','Volume':'볼륨','KOL':'KOL'};
+      if (map[th.textContent.trim()]) th.textContent = map[th.textContent.trim()];
+    });
+    // Leaderboard empty/loading text
+    document.querySelectorAll('#leaderboard-content .empty-state, #leaderboard-content div').forEach(function(el){
+      if (el.textContent.trim() === 'No entries yet. Be the first!') el.textContent = '아직 참가자가 없습니다. 첫 번째가 되세요!';
+      if (el.textContent.trim() === 'Loading leaderboard...') el.textContent = '리더보드 로딩 중...';
+    });
     // Rescan btn
     var rb = document.getElementById('rescan-btn');
     if (rb && !rb.disabled) rb.innerHTML = '<span style="font-size:11px;margin-right:6px;">↻</span> 지갑 재스캔';
