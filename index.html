@@ -1581,15 +1581,15 @@ body::before{
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:28px 0;">
         <div style="background:var(--panel);border:1px solid rgba(195,251,165,0.2);border-radius:8px;padding:14px 12px;text-align:center;">
           <div style="font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;color:var(--lime);line-height:1.1;">225,000<br><span style="font-size:10px;letter-spacing:0.06em;">$FOGO</span></div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;">Leaderboard</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;" id="t-prize-lbl-lb">Leaderboard</div>
         </div>
         <div style="background:var(--panel);border:1px solid rgba(255,61,0,0.25);border-radius:8px;padding:14px 12px;text-align:center;">
           <div style="font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;color:var(--fire);line-height:1.1;">200,000<br><span style="font-size:10px;letter-spacing:0.06em;">$FOGO</span></div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;">Lucky Draw</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;" id="t-prize-lbl-draw">Lucky Draw</div>
         </div>
         <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 12px;text-align:center;">
           <div style="font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;color:var(--sub);line-height:1.1;">50,000<br><span style="font-size:10px;letter-spacing:0.06em;">$FOGO</span></div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;">Top UGC</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;" id="t-prize-lbl-ugc">Top UGC</div>
         </div>
       </div>
 
@@ -1615,7 +1615,7 @@ body::before{
         <div style="position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,var(--fire),var(--ember),var(--lime));animation:gate-lb-scan 3s ease-in-out infinite;"></div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.26em;text-transform:uppercase;color:var(--fire);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
           <span style="width:5px;height:5px;border-radius:50%;background:var(--fire);box-shadow:0 0 8px var(--fire);display:inline-block;animation:pulse-live 1.5s ease-in-out infinite;"></span>
-          Leaderboard Prizes
+          <span id="t-lb-prizes-head">Leaderboard Prizes</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
           <!-- #1 — glowing highlight -->
@@ -1628,8 +1628,8 @@ body::before{
           <div style="display:flex;justify-content:space-between;padding:7px 12px;"><span style="font-size:11px;color:var(--dimmer);">#4–5</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">20,000 $FOGO each</span></div>
           <div style="display:flex;justify-content:space-between;padding:7px 12px;"><span style="font-size:11px;color:var(--dimmer);">#6–10</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">15,000 $FOGO each</span></div>
           <div style="display:flex;justify-content:space-between;padding:7px 12px;"><span style="font-size:11px;color:var(--dimmer);">#11–15</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">5,000 $FOGO each</span></div>
-          <div style="display:flex;justify-content:space-between;padding:7px 12px;border-top:1px solid rgba(255,255,255,0.05);margin-top:4px;"><span style="font-size:11px;color:var(--dim);">200× Lucky Draw</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">1,000 $FOGO each</span></div>
-          <div style="display:flex;justify-content:space-between;padding:7px 12px;"><span style="font-size:11px;color:var(--dim);">10× Top UGC</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">5,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 12px;border-top:1px solid rgba(255,255,255,0.05);margin-top:4px;"><span id="t-lb-lucky-draw" style="font-size:11px;color:var(--dim);">200× Lucky Draw</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">1,000 $FOGO each</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 12px;"><span id="t-lb-top-ugc" style="font-size:11px;color:var(--dim);">10× Top UGC</span><span style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;">5,000 $FOGO each</span></div>
         </div>
       </div>
 
@@ -4436,6 +4436,19 @@ const TRANSLATIONS = {
     leaderboard_back:   '← 뒤로',
     leaderboard_empty:  '아직 참가자가 없습니다. 첫 번째가 되세요!',
     nav_leaderboard:    '리더보드',
+    // Prize strip labels
+    prize_lbl_lb:       '리더보드',
+    prize_lbl_draw:     '럭키 드로우',
+    prize_lbl_ugc:      '상위 UGC',
+    // Gate leaderboard panel
+    lb_prizes_head:     '리더보드 상금',
+    lb_lucky_draw:      '200× 럭키 드로우',
+    lb_top_ugc:         '10× 상위 UGC',
+    // Gate tier section
+    gate_divider:       '트레이더 등급',
+    stat_protocols:     '당첨자',
+    stat_season:        '시즌',
+    stat_verified:      '온체인 검증',
   }
 };
 
@@ -4609,6 +4622,17 @@ function setLanguage(lang) {
   setTxt('t-lb-refresh',      t.leaderboard_refresh || '↻ Refresh');
   setTxt('t-lb-back',         t.leaderboard_back    || '← Back');
   setTxt('t-nav-leaderboard', t.nav_leaderboard     || 'Leaderboard');
+
+  // Gate prize strip
+  setTxt('t-prize-lbl-lb',   t.prize_lbl_lb   || 'Leaderboard');
+  setTxt('t-prize-lbl-draw', t.prize_lbl_draw || 'Lucky Draw');
+  setTxt('t-prize-lbl-ugc',  t.prize_lbl_ugc  || 'Top UGC');
+  // Gate leaderboard panel
+  setTxt('t-lb-prizes-head', t.lb_prizes_head || 'Leaderboard Prizes');
+  setTxt('t-lb-lucky-draw',  t.lb_lucky_draw  || '200× Lucky Draw');
+  setTxt('t-lb-top-ugc',     t.lb_top_ugc     || '10× Top UGC');
+  // Re-run enhance.js maximise list with new language
+  if (typeof window.rerunMaxiList === 'function') window.rerunMaxiList();
   setTxt('t-x-share-label',   t.x_share_label       || 'Share your card on X and paste the link here to earn +50 points');
   const xPlaceholderEl = document.getElementById('raffle-x-link');
   if (xPlaceholderEl) xPlaceholderEl.placeholder = t.x_share_placeholder || 'https://x.com/yourpost...';
