@@ -169,52 +169,83 @@
   // ============================================================
   // GATE — "How to maximise" list rows
   // ============================================================
+  const MAXI_I18N = {
+    en: {
+      heading: 'How to Maximise Your Entries',
+      rows: [
+        { ic: 'card',     label: 'Generate your Trader Card',               pts: '+50 pts',   cls: '' },
+        { ic: 'twitterX', label: 'Share card on X',                         pts: '+50 pts',   cls: '' },
+        { ic: 'barChart', label: 'On-chain volume (per $50)',               pts: '+25 pts',   cls: '' },
+        { ic: 'flame',    label: 'Use Valiant / Pyron / Brasa / Ignition',  pts: '+200 each', cls: 'fire' },
+        { ic: 'film',     label: 'Share UGC on X (max 3 posts)',            pts: '+100 each', cls: 'dim'  }
+      ],
+      footer: '225 Winners · Volume points uncapped · More activity = more entries'
+    },
+    ko: {
+      heading: '참가권 최대화 방법',
+      rows: [
+        { ic: 'card',     label: '트레이더 카드 생성',               pts: '+50 pts',   cls: '' },
+        { ic: 'twitterX', label: 'X에 카드 공유',                   pts: '+50 pts',   cls: '' },
+        { ic: 'barChart', label: '온체인 볼륨 ($50당)',             pts: '+25 pts',   cls: '' },
+        { ic: 'flame',    label: 'Valiant / Pyron / Brasa / Ignition 사용', pts: '+200 each', cls: 'fire' },
+        { ic: 'film',     label: 'X에 UGC 공유 (최대 3개 게시물)',  pts: '+100 each', cls: 'dim'  }
+      ],
+      footer: '225명 당첨 · 볼륨 포인트 무제한 · 더 많은 활동 = 더 많은 참가권'
+    }
+  };
+
   function wireMaxiList(){
-    // Find the eyebrow div directly — it is unique
-    let eyebrow = null;
-    const cands = document.querySelectorAll('div[style*="letter-spacing"]');
-    for (const d of cands) {
-      // Eyebrow has no element children — text only
-      if (d.children.length === 0 && d.textContent.trim() === 'How to Maximise Your Entries') {
-        eyebrow = d; break;
+    const lang = (window.CURRENT_LANG === 'ko') ? 'ko' : 'en';
+    const t = MAXI_I18N[lang];
+
+    // Find block by ID first, then fall back to text scan
+    let block = document.getElementById('gate-maxi-block');
+    if (!block) {
+      const cands = document.querySelectorAll('div[style*="border-radius"]');
+      for (const d of cands) {
+        if (d.textContent.includes('How to Maximise') || d.textContent.includes('참가권 최대화') || d.textContent.includes('Maximise')) {
+          block = d; block.id = 'gate-maxi-block'; break;
+        }
       }
     }
-    if (!eyebrow) return;
-    const block = eyebrow.parentElement;
     if (!block) return;
-    if (block.dataset.fogoMaxi === '1') return;
-    block.dataset.fogoMaxi = '1';
 
-    // The rows live inside the immediate-next sibling of the eyebrow
-    const rowsContainer = eyebrow.nextElementSibling;
-    if (!rowsContainer) return;
+    // Update eyebrow heading
+    const eyebrow = block.querySelector('[id="gate-maxi-eyebrow"], [style*="letter-spacing"]');
+    if (eyebrow && eyebrow.children.length === 0) eyebrow.textContent = t.heading;
 
-    const data = [
-      { ic: 'card',     label: 'Generate your Trader Card',          pts: '+50 pts',     cls: '' },
-      { ic: 'twitterX', label: 'Share card on X',                    pts: '+50 pts',     cls: '' },
-      { ic: 'barChart', label: 'On-chain volume (per $50)',          pts: '+25 pts',     cls: '' },
-      { ic: 'flame',    label: 'Use Valiant / Pyron / Brasa / Ignition', pts: '+200 each',cls: 'fire' },
-      { ic: 'film',     label: 'Share UGC on X (max 3 posts)',       pts: '+100 each',   cls: 'dim' }
-    ];
-    const list = document.createElement('div');
-    list.className = 'gate-maxi-list';
-    list.innerHTML = data.map(d => `
+    // Replace or update the rows list
+    let list = block.querySelector('.gate-maxi-list');
+    if (!list) {
+      list = document.createElement('div');
+      list.className = 'gate-maxi-list';
+      // insert after eyebrow's next sibling (original rows container)
+      const firstRow = block.querySelector('div[style*="justify-content"]');
+      if (firstRow && firstRow.parentElement === block) {
+        firstRow.replaceWith(list);
+      } else {
+        const ey2 = block.querySelector(':scope > div');
+        if (ey2) ey2.insertAdjacentElement('afterend', list);
+      }
+    }
+    list.innerHTML = t.rows.map(d => `
       <div class="gate-maxi-row ${d.cls}">
         <span class="label"><span class="fline-icon ${d.cls}">${ICONS[d.ic]}</span>${d.label}</span>
         <span class="pts">${d.pts}</span>
       </div>`).join('');
-    rowsContainer.replaceWith(list);
 
-    // Replace the trophy footnote line — it has border-top inline style
-    const footChildren = block.querySelectorAll('div');
-    for (const c of footChildren) {
+    // Update footer line
+    const footDivs = block.querySelectorAll('div');
+    for (const c of footDivs) {
       const s = c.getAttribute('style') || '';
-      if (s.includes('border-top') && c.textContent.includes('225')) {
-        c.innerHTML = `<span class="fline-icon" style="color:var(--lime);width:22px;height:22px;vertical-align:-6px;margin-right:6px;">${ICONS.trophy}</span> 225 Winners · Volume points uncapped · More activity = more entries`;
+      if (s.includes('border-top')) {
+        c.innerHTML = `<span class="fline-icon" style="color:var(--lime);width:22px;height:22px;vertical-align:-6px;margin-right:6px;">${ICONS.trophy}</span> ${t.footer}`;
         break;
       }
     }
   }
+  // Expose so setLanguage() can re-run it
+  window.rerunMaxiList = wireMaxiList;
 
   // ============================================================
   // CARD VIEW — restructure to split layout
