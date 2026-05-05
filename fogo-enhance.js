@@ -169,6 +169,15 @@
   // ============================================================
   // GATE — "How to maximise" list rows
   // ============================================================
+  // Reliable language detection — reads URL param directly, no timing dependency
+  function getLang(){
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('lang') === 'ko') return 'ko';
+    } catch(e){}
+    return (window.CURRENT_LANG === 'ko') ? 'ko' : 'en';
+  }
+
   const MAXI_I18N = {
     en: {
       heading: 'How to Maximise Your Entries',
@@ -195,7 +204,7 @@
   };
 
   function wireMaxiList(){
-    const lang = (window.CURRENT_LANG === 'ko') ? 'ko' : 'en';
+    const lang = getLang();
     const t = MAXI_I18N[lang];
 
     // Find block by ID first, then fall back to text scan
@@ -254,7 +263,7 @@
   const TIER_NAMES_KO = ['현물 누적자','전술적 트레이더','모멘텀 오퍼레이터','퍼프 아키텍트','알파 추출자','FOGO 에이펙스'];
   const TIER_NAMES_EN = ['Spot Accumulator','Tactical Trader','Momentum Operator','Perp Architect','Alpha Extractor','FOGO Apex'];
   function updateTierNames(){
-    const ko = (window.CURRENT_LANG === 'ko');
+    const ko = getLang() === 'ko';
     const names = ko ? TIER_NAMES_KO : TIER_NAMES_EN;
     names.forEach((name, i) => {
       const el = document.getElementById('t-tier-' + (i + 1));
@@ -300,7 +309,7 @@
     railHead.id = 'fogo-rail-head';
     right.appendChild(railHead);
     function updateRailHead(){
-      const ko = window.CURRENT_LANG === 'ko';
+      const ko = getLang() === 'ko';
       railHead.innerHTML = `
         <div class="rail-eyebrow">${ko ? '트레이더 카드 · 라이브 드롭' : 'Trader Card · Live Drop'}</div>
         <div class="rail-title">${ko ? '카드가 준비됐습니다.' : 'Your card is ready.'}</div>
