@@ -2793,6 +2793,13 @@ function loadSavedHandles() {
         const hiddenInput = document.getElementById('raffle-x-link');
         if (hiddenInput) hiddenInput.value = savedXShare;
       }
+      // Restore KOL selection — skip selector entirely on return visits
+      const savedKolId   = localStorage.getItem('fogo_kol_id_'   + STATE.wallet);
+      const savedKolName = localStorage.getItem('fogo_kol_name_' + STATE.wallet);
+      if (savedKolId !== null || savedKolName) {
+        STATE.kol_id   = savedKolId   || null;
+        STATE.kol_name = savedKolName || null;
+      }
     }
     if (savedX)  { const el = document.getElementById('x-handle');  if (el) el.value = savedX; }
     if (savedTg) { const el = document.getElementById('tg-handle'); if (el) el.value = savedTg; }
@@ -4494,8 +4501,19 @@ async function showKolSelectorIfNeeded() {
   const eligibleEntry = document.getElementById('eligible-entry');
   if (!panel) return;
 
-  // If already selected, keep eligible-entry visible
-  if (STATE.kol_id) {
+  // If already entered raffle — skip both KOL selector AND raffle entry form
+  // Just let the "You're in the Draw" state show (handled by setEligibilityUI/raffle-done)
+  if (STATE.raffleEntered) {
+    panel.style.display = 'none';
+    // Show eligible-entry so UGC/tasks remain accessible, but hide step-1
+    if (eligibleEntry) eligibleEntry.style.display = 'block';
+    const s1 = document.getElementById('raffle-step-1');
+    if (s1) s1.style.display = 'none';
+    return;
+  }
+
+  // If KOL already selected (from localStorage), skip selector
+  if (STATE.kol_id || STATE.kol_name) {
     panel.style.display = 'none';
     return;
   }
@@ -4577,6 +4595,14 @@ function confirmKolSelection() {
   } else {
     return;
   }
+
+  // Persist KOL selection — never needs re-selecting on return visits
+  try {
+    if (STATE.wallet) {
+      localStorage.setItem('fogo_kol_id_'   + STATE.wallet, STATE.kol_id   || '');
+      localStorage.setItem('fogo_kol_name_' + STATE.wallet, STATE.kol_name || '');
+    }
+  } catch(e){}
 
   // Update KOL badges
   const kolB1 = document.getElementById('kol-badge');   if (kolB1) kolB1.textContent = `KOL: ${STATE.kol_name}`;
