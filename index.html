@@ -1953,9 +1953,9 @@ body::before{
 
       <!-- KOL Selector — mandatory, loaded from admin KOLs tab -->
       <div class="field" id="app-kol-field">
-        <label class="field-label">Who referred you? <span style="color:var(--fire);font-size:10px;">required</span></label>
+        <label class="field-label"><span id="t-kol-ref-label">Who referred you?</span> <span style="color:var(--fire);font-size:10px;" id="t-required-kol">required</span></label>
         <select class="field-input" id="app-kol-select" onchange="checkHandlesReady()" style="cursor:pointer;">
-          <option value="">— Select a KOL —</option>
+          <option value="" id="t-kol-ref-placeholder">— Select a KOL —</option>
         </select>
         <div id="app-kol-fallback" style="display:none;margin-top:8px;">
           <input class="field-input" id="app-kol-manual" type="text" placeholder="Enter KOL name or handle..." oninput="checkHandlesReady()">
@@ -5109,6 +5109,8 @@ const TRANSLATIONS = {
     pfp_hint:           'PNG, JPG, GIF · 카드에 원형 아바타로 표시됩니다',
     required:           '필수',
     both_handles:       '카드 생성 및 래플 참가를 위해 두 핸들 모두 필요합니다.',
+    kol_ref_label:      '누가 추천했나요?',
+    kol_ref_placeholder:'— KOL 선택 —',
     load_txt:           'FOGO 체인 데이터 읽는 중',
     // Card
     vol_lbl:            '거래량',
@@ -5317,6 +5319,11 @@ function setLanguage(lang) {
   setTxt('t-required-x',      t.required        || 'required');
   setTxt('t-required-tg',     t.required        || 'required');
   setTxt('t-both-handles',    t.both_handles    || 'Both handles are required to generate your card and enter the draw.');
+  setTxt('t-kol-ref-label',   t.kol_ref_label   || 'Who referred you?');
+  setTxt('t-required-kol',    t.required        || 'required');
+  // KOL inline placeholder option
+  const kolRefOpt = document.getElementById('t-kol-ref-placeholder');
+  if (kolRefOpt && !kolRefOpt.value) kolRefOpt.textContent = t.kol_ref_placeholder || '— Select a KOL —';
   setTxt('t-load-txt',     t.load_txt);
   // placeholder handled above in handle label block
 
@@ -5427,13 +5434,6 @@ function setLanguage(lang) {
   if (connectBtn) {
     const lbl = connectBtn.querySelector('span:last-child');
     if (lbl) lbl.textContent = lang === 'ko' ? '지갑 연결하기' : 'Connect Wallet';
-  }
-
-  // Reown connect button label
-  const connectBtn2 = document.getElementById('reown-connect-btn');
-  if (connectBtn2) {
-    const lbl2 = connectBtn2.querySelector('span:last-child');
-    if (lbl2) lbl2.textContent = lang === 'ko' ? '지갑 연결하기' : 'Connect Wallet';
   }
 
   // Reown supported wallets note
