@@ -1923,16 +1923,16 @@ body::before{
 
       <!-- PFP Upload -->
       <div class="field" style="margin-bottom:10px;">
-        <label class="field-label">Profile Picture (shown on your card)</label>
+        <label class="field-label" id="t-pfp-label">Profile Picture (shown on your card)</label>
         <div id="pfp-upload-area" style="display:flex;align-items:center;gap:12px;margin-top:6px;">
           <div id="pfp-preview" style="width:52px;height:52px;border-radius:50%;background:var(--panel2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;transition:border-color 0.2s;" onclick="document.getElementById('pfp-file-input').click()">
             <svg style="width:20px;height:20px;color:var(--dim);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>
           </div>
           <div style="flex:1;">
             <button type="button" onclick="document.getElementById('pfp-file-input').click()" style="background:var(--panel2);border:1px solid var(--border);color:var(--sub);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;padding:8px 14px;border-radius:5px;cursor:pointer;width:100%;text-align:left;transition:border-color 0.15s;">
-              Upload photo →
+              <span id="t-upload-btn">Upload photo →</span>
             </button>
-            <div style="font-size:10px;color:var(--dim);margin-top:4px;">PNG, JPG, GIF · appears as circular avatar on card</div>
+            <div style="font-size:10px;color:var(--dim);margin-top:4px;" id="t-pfp-hint">PNG, JPG, GIF · appears as circular avatar on card</div>
           </div>
           <input type="file" id="pfp-file-input" accept="image/*" style="display:none;" onchange="handlePfpUpload(event)">
         </div>
@@ -1940,15 +1940,15 @@ body::before{
 
       <!-- X Handle (mandatory) -->
       <div class="field" style="margin-bottom:8px;">
-        <label class="field-label"><span style="color:var(--text);">𝕏</span> X / Twitter Handle <span style="color:var(--fire);font-size:10px;">required</span></label>
+        <label class="field-label"><span style="color:var(--text);">𝕏</span> <span id="t-x-handle-label">X / Twitter Handle</span> <span style="color:var(--fire);font-size:10px;" id="t-required-x">required</span></label>
         <input class="field-input" id="x-handle" type="text" placeholder="@yourhandle" oninput="checkHandlesReady()">
       </div>
 
       <!-- Telegram Handle (mandatory) -->
       <div class="field">
-        <label class="field-label"><span style="color:#2AABEE;">✈</span> Telegram Handle <span style="color:var(--fire);font-size:10px;">required</span></label>
+        <label class="field-label"><span style="color:#2AABEE;">✈</span> <span id="t-tg-handle-label">Telegram Handle</span> <span style="color:var(--fire);font-size:10px;" id="t-required-tg">required</span></label>
         <input class="field-input" id="tg-handle" type="text" placeholder="@yourtelegramhandle" oninput="checkHandlesReady()">
-        <div style="font-size:10px;color:var(--dim);margin-top:4px;">Both handles are required to generate your card and enter the draw.</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:4px;" id="t-both-handles">Both handles are required to generate your card and enter the draw.</div>
       </div>
 
       <!-- KOL Selector — mandatory, loaded from admin KOLs tab -->
@@ -5104,6 +5104,11 @@ const TRANSLATIONS = {
     no_wallet:          '지갑이 없으신가요? <a href="https://phantom.app" target="_blank">Phantom</a>, <a href="https://solflare.com" target="_blank">Solflare</a>, 또는 <a href="https://backpack.app" target="_blank">Backpack</a>을 받으세요 — 모두 무료.',
     disconnect:         '연결 해제',
     gen_btn:            '내 트레이더 카드 생성',
+    pfp_label:          '프로필 사진 (카드에 표시됨)',
+    upload_btn:         '사진 업로드 →',
+    pfp_hint:           'PNG, JPG, GIF · 카드에 원형 아바타로 표시됩니다',
+    required:           '필수',
+    both_handles:       '카드 생성 및 래플 참가를 위해 두 핸들 모두 필요합니다.',
     load_txt:           'FOGO 체인 데이터 읽는 중',
     // Card
     vol_lbl:            '거래량',
@@ -5301,9 +5306,17 @@ function setLanguage(lang) {
     setTxt('t-x-label', t.x_label);
     const inp = document.getElementById('x-handle'); if (inp) inp.placeholder = lang === 'ko' ? '@핸들명' : '@yourhandle';
   }
-  setHtml('t-no-wallet',   t.no_wallet);
-  setTxt('t-disconnect',   t.disconnect);
-  setTxt('t-gen-btn',      t.gen_btn);
+  setHtml('t-no-wallet',      t.no_wallet);
+  setTxt('t-disconnect',      t.disconnect);
+  setTxt('t-gen-btn',         t.gen_btn);
+  setTxt('t-pfp-label',       t.pfp_label       || 'Profile Picture (shown on your card)');
+  setTxt('t-upload-btn',      t.upload_btn      || 'Upload photo →');
+  setTxt('t-pfp-hint',        t.pfp_hint        || 'PNG, JPG, GIF · appears as circular avatar on card');
+  setTxt('t-x-handle-label',  t.x_label         || 'X / Twitter Handle');
+  setTxt('t-tg-handle-label', t.tg_label        || 'Telegram Handle');
+  setTxt('t-required-x',      t.required        || 'required');
+  setTxt('t-required-tg',     t.required        || 'required');
+  setTxt('t-both-handles',    t.both_handles    || 'Both handles are required to generate your card and enter the draw.');
   setTxt('t-load-txt',     t.load_txt);
   // placeholder handled above in handle label block
 
@@ -5416,11 +5429,18 @@ function setLanguage(lang) {
     if (lbl) lbl.textContent = lang === 'ko' ? '지갑 연결하기' : 'Connect Wallet';
   }
 
+  // Reown connect button label
+  const connectBtn2 = document.getElementById('reown-connect-btn');
+  if (connectBtn2) {
+    const lbl2 = connectBtn2.querySelector('span:last-child');
+    if (lbl2) lbl2.textContent = lang === 'ko' ? '지갑 연결하기' : 'Connect Wallet';
+  }
+
   // Reown supported wallets note
   const supported = document.querySelector('.reown-supported');
   if (supported) supported.textContent = lang === 'ko'
-    ? 'Phantom · Solflare · Backpack · WalletConnect · 300+ 지갑'
-    : 'Phantom · Solflare · Backpack · WalletConnect · 300+ wallets';
+    ? 'Nightly (추천) · Phantom · Solflare · Backpack · WalletConnect · 300+ 지갑'
+    : 'Nightly (recommended) · Phantom · Solflare · Backpack · WalletConnect · 300+ wallets';
 
   // Wallet section labels
   setTxt('t-connect-head', t.connect_head || 'Connect Your Wallet');
