@@ -2978,7 +2978,7 @@ async function checkExistingSubmission(walletAddr) {
   if (!db) return;
   const { data } = await db
     .from('card_submissions')
-    .select('id,tier_name,total_volume_usd,power_score,tx_count,protocols,created_at')
+    .select('id,tier_name,total_volume_usd,power_score,tx_count,protocols,created_at,ugc_points,total_points,x_share_link,social_link')
     .eq('wallet_address', walletAddr)
     .maybeSingle();
 
@@ -3297,6 +3297,9 @@ async function generateCard() {
       const hiddenInput = document.getElementById('raffle-x-link');
       if (hiddenInput) hiddenInput.value = savedXLink;
     }
+
+    // Restore UGC points from DB so calculatePoints includes them in breakdown
+    STATE.ugcPoints = d.ugc_points || 0;
 
     // Pre-load total_points from DB into STATE so the raffle success screen shows correct count
     const { total: dbPts, breakdown: dbBreakdown } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
@@ -3951,16 +3954,25 @@ async function adminUgcApprove(ugcId, walletAddress) {
   if (!db) return;
   try {
     // Mark submission approved with 100 points
-    await db.from('ugc_submissions').update({ status: 'approved', points_awarded: 100 }).eq('id', ugcId);
+    const { error: ugcErr } = await db.from('ugc_submissions')
+      .update({ status: 'approved', points_awarded: 100 }).eq('id', ugcId);
+    if (ugcErr) { alert('UGC update error: ' + ugcErr.message); return; }
 
     // Add 100 to ugc_points and total_points in card_submissions
-    const { data: sub } = await db.from('card_submissions')
+    const { data: sub, error: fetchErr } = await db.from('card_submissions')
       .select('ugc_points,total_points').eq('wallet_address', walletAddress).maybeSingle();
+
+    if (fetchErr) { alert('Fetch error: ' + fetchErr.message); refreshAdminUgc(); return; }
+
     if (sub) {
       const newUgc   = (sub.ugc_points   || 0) + 100;
       const newTotal = (sub.total_points || 0) + 100;
-      await db.from('card_submissions').update({ ugc_points: newUgc, total_points: newTotal, entry_count: newTotal })
+      const { error: updateErr } = await db.from('card_submissions')
+        .update({ ugc_points: newUgc, total_points: newTotal, entry_count: newTotal })
         .eq('wallet_address', walletAddress);
+      if (updateErr) alert('Points update error: ' + updateErr.message);
+    } else {
+      alert('Warning: no card_submissions row found for ' + walletAddress + '. UGC approved but points not added.');
     }
     refreshAdminUgc();
   } catch(e) { alert('Error: ' + e.message); }
