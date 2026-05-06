@@ -4009,7 +4009,7 @@ function switchAdminTab(tab) {
     if (btn)   btn.classList.toggle('active', t === tab);
   });
   if (tab === 'tasks')       refreshAdminTasks();
-  if (tab === 'dashboard')   loadAdminLeaderboard();
+  if (tab === 'dashboard')   renderDashboard();
   if (tab === 'ugc')         refreshAdminUgc();
   if (tab === 'link-clicks') loadLinkClickStats();
 }
@@ -4119,7 +4119,7 @@ async function refreshAdmin() {
   renderKolTable();
   renderSubmissionsTable(STATE.allSubmissions);
   renderKolMgmtTable();
-  renderDashboard();
+  await renderDashboard();
 }
 
 function renderAdminStats() {
