@@ -4149,10 +4149,12 @@ async function renderDashboard() {
   setV('a-vol', '$' + (subs.reduce((s,r)=>s+(r.total_volume_usd||0),0)/1000).toFixed(1) + 'K');
   setV('a-kols', STATE.allKols.filter(k=>k.active!==false).length);
 
-  // Link clicks count
+  // Link clicks count — safe async with try/catch
   if (db) {
-    const { count } = await db.from('link_clicks').select('*', {count:'exact',head:true}).catch(()=>({count:0}));
-    setV('a-link-clicks', count || 0);
+    try {
+      const { count } = await db.from('link_clicks').select('*', { count: 'exact', head: true });
+      setV('a-link-clicks', count || 0);
+    } catch(e) { setV('a-link-clicks', 0); }
   }
 
   // ── Entries last 14 days ─────────────────────────────────────
@@ -4264,8 +4266,9 @@ async function renderDashboard() {
   // ── Link clicks mini ─────────────────────────────────────────
   const lbDiv = document.getElementById('dash-link-clicks');
   if (lbDiv && db) {
-    const { data: lc } = await db.from('link_clicks').select('link_key').catch(()=>({data:[]}));
-    const lcCounts = {}; (lc||[]).forEach(r=>{ lcCounts[r.link_key]=(lcCounts[r.link_key]||0)+1; });
+    let lc = [];
+    try { const { data } = await db.from('link_clicks').select('link_key'); lc = data || []; } catch(e) {}
+    const lcCounts = {}; lc.forEach(r=>{ lcCounts[r.link_key]=(lcCounts[r.link_key]||0)+1; });
     const lcTotal = Object.values(lcCounts).reduce((s,v)=>s+v,0);
     const lcSorted = Object.entries(lcCounts).sort(([,a],[,b])=>b-a);
     const lcMax = lcSorted[0]?.[1]||1;
