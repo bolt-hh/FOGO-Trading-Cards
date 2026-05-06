@@ -3286,6 +3286,10 @@ async function fetchFogoData(address) {
   // Add current wallet balance on FOGO chain (money still deployed / held)
   volumeUsd += walletBalanceUsd;
 
+  // Round to nearest $100 — dampens price-driven micro-fluctuations in wallet balance
+  // so a small $FOGO price move doesn't visibly change the card number
+  volumeUsd = Math.round(volumeUsd / 100) * 100;
+
   const walletAge = formatAge(oldestTime);
 
   // Top Protocol — show a DApp, never the base chain
