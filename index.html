@@ -3576,13 +3576,12 @@ function renderCard(wallet, handle, data, tier, power) {
 async function trackLinkClick(key, url, source) {
   if (!db) return;
   try {
+    // Table uses 'product' column (not link_key) and 'clicked_at' (not created_at)
     await db.from('link_clicks').insert({
-      wallet_address: STATE.wallet || null,
-      link_key: key,
-      link_url: url,
-      source: source,
+      product: key,
+      source:  source,
     });
-  } catch(e) {}
+  } catch(e) { console.warn('[FOGO] trackLinkClick:', e?.message); }
 }
 
 /* ================================================================
@@ -4267,8 +4266,8 @@ async function renderDashboard() {
   const lbDiv = document.getElementById('dash-link-clicks');
   if (lbDiv && db) {
     let lc = [];
-    try { const { data } = await db.from('link_clicks').select('link_key'); lc = data || []; } catch(e) {}
-    const lcCounts = {}; lc.forEach(r=>{ lcCounts[r.link_key]=(lcCounts[r.link_key]||0)+1; });
+    try { const { data } = await db.from('link_clicks').select('product'); lc = data || []; } catch(e) {}
+    const lcCounts = {}; lc.forEach(r=>{ lcCounts[r.product]=(lcCounts[r.product]||0)+1; });
     const lcTotal = Object.values(lcCounts).reduce((s,v)=>s+v,0);
     const lcSorted = Object.entries(lcCounts).sort(([,a],[,b])=>b-a);
     const lcMax = lcSorted[0]?.[1]||1;
@@ -6247,14 +6246,15 @@ async function loadLinkClickStats() {
   if (!el || !db) return;
   el.innerHTML = '<div style="color:var(--dim);font-size:11px;padding:10px;">Loading...</div>';
 
-  const { data } = await db.from('link_clicks').select('link_key,source').catch(() => ({ data: [] }));
-  const items = data || [];
+  let items = [];
+  try { const { data } = await db.from('link_clicks').select('product,source'); items = data || []; } catch(e) {}
 
-  // Aggregate by link_key + source
+  // Aggregate by product + source (table uses 'product' column not 'link_key')
   const byKey = {};
   items.forEach(r => {
-    if (!byKey[r.link_key]) byKey[r.link_key] = { ticker: 0, gate: 0, tasks: 0 };
-    byKey[r.link_key][r.source || 'tasks'] = (byKey[r.link_key][r.source || 'tasks'] || 0) + 1;
+    const k = r.product || 'unknown';
+    if (!byKey[k]) byKey[k] = { ticker: 0, gate: 0, tasks: 0 };
+    byKey[k][r.source || 'tasks'] = (byKey[k][r.source || 'tasks'] || 0) + 1;
   });
 
   const dapps = ['valiant','pyron','brasa','ignition','ambient','x_share'];
