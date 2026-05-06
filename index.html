@@ -2116,9 +2116,9 @@ body::before{
         <div style="display:flex;align-items:center;gap:10px;background:rgba(195,251,165,0.05);border:1px solid rgba(195,251,165,0.2);border-radius:6px;padding:10px 14px;margin-bottom:12px;">
           <span style="font-size:16px;">📖</span>
           <div style="flex:1;font-size:11px;color:var(--sub);line-height:1.5;">
-            <span id="t-guide-label">New to FOGO dApps? Step-by-step guide on how to complete the onchain tasks and earn up to 800 points.</span>
+            <span id="t-guide-label" data-en="New to FOGO dApps? Step-by-step guide on how to complete the onchain tasks and earn up to 800 points." data-ko="FOGO dApp이 처음이신가요? 온체인 태스크 완료 방법과 최대 800포인트 획득 방법을 단계별로 안내합니다.">New to FOGO dApps? Step-by-step guide on how to complete the onchain tasks and earn up to 800 points.</span>
           </div>
-          <a id="t-guide-link" href="https://docs.google.com/document/d/1_kX0JVcdom-ObW7IfYlqrxC6k35b7tTrrvl17GYZBFU/edit?usp=sharing" target="_blank" rel="noopener noreferrer" style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;color:var(--lime);background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);padding:5px 10px;border-radius:4px;white-space:nowrap;text-decoration:none;flex-shrink:0;">View Guide →</a>
+          <a id="t-guide-link" data-en="View Guide →" data-ko="가이드 보기 →" href="https://docs.google.com/document/d/1_kX0JVcdom-ObW7IfYlqrxC6k35b7tTrrvl17GYZBFU/edit?usp=sharing" target="_blank" rel="noopener noreferrer" style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;color:var(--lime);background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);padding:5px 10px;border-radius:4px;white-space:nowrap;text-decoration:none;flex-shrink:0;">View Guide →</a>
         </div>
         <div class="task-grid" id="task-grid">
           <div class="empty-state" style="padding:20px;">Loading tasks...</div>
@@ -5337,8 +5337,11 @@ function setLanguage(lang) {
   setTxt('t-required-x',      t.required        || 'required');
   setTxt('t-required-tg',     t.required        || 'required');
   setTxt('t-both-handles',    t.both_handles    || 'Both handles are required to generate your card and enter the draw.');
-  setTxt('t-guide-label', t.guide_label || 'New to FOGO dApps? Step-by-step guide on how to complete the onchain tasks and earn up to 800 points.');
-  setTxt('t-guide-link',  t.guide_link  || 'View Guide →');
+  // Guide banner — use data-en/data-ko attributes so toggle works at any point in the page lifecycle
+  ['t-guide-label','t-guide-link'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = el.dataset[lang] || el.dataset.en || el.textContent;
+  });
   // Re-render task tab tooltips with current language
   if (STATE.taskTabs) renderTaskTabsUI();
   setTxt('t-kol-ref-label',  t.kol_ref_label   || 'Who referred you?');
@@ -5598,6 +5601,11 @@ async function loadTasks() {
     renderTaskTabsUI();
     renderTasksUI(STATE.tasks);
     renderUgcInlineSlots();
+    // Apply current language to guide banner (visible for first time after wallet connects)
+    ['t-guide-label','t-guide-link'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = el.dataset[CURRENT_LANG] || el.dataset.en || el.textContent;
+    });
   } catch(e) {
     console.warn('[FOGO] loadTasks error:', e);
   }
