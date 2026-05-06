@@ -4527,8 +4527,48 @@ function copyCode(code) {
 function exportCsv() {
   const rows = STATE.allSubmissions;
   if (!rows.length) { alert('No data to export.'); return; }
-  const cols = ['wallet_address','twitter_handle','telegram_handle','kol_id','total_volume_usd','tier_name','total_points','x_share_link','protocols','created_at'];
-  const csv = [cols.join(','), ...rows.map(r => cols.map(c => JSON.stringify(r[c] ?? '')).join(','))].join('\n');
+
+  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+
+  const headers = [
+    'Wallet','X Handle','Telegram','KOL',
+    'Volume USD','Tier','Points','X Share Link',
+    'Valiant','Pyron','Brasa','Ignition',
+    'UGC 1','UGC 2','UGC 3','Date'
+  ];
+
+  // Build KOL name lookup from STATE.allKols
+  const kolMap = {};
+  (STATE.allKols || []).forEach(k => { kolMap[k.id] = k.name; });
+
+  const csvRows = rows.map(r => {
+    const proto = r.protocols || {};
+    const ugc   = (STATE.ugcByWallet || {})[r.wallet_address] || [];
+    const d     = new Date(r.created_at);
+    const dateStr = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const kolName = kolMap[r.kol_id] || r.kol_passcode || r.kol_id || '';
+
+    return [
+      q(r.wallet_address),
+      q(r.twitter_handle),
+      q(r.telegram_handle),
+      q(kolName),
+      q(r.total_volume_usd || 0),
+      q(r.tier_name),
+      q(r.total_points ?? r.entry_count ?? 0),
+      q(r.x_share_link || r.social_link),
+      q((proto.valiant  || 0) > 0 ? 'Yes' : 'No'),
+      q((proto.pyron    || 0) > 0 ? 'Yes' : 'No'),
+      q((proto.brasa    || 0) > 0 ? 'Yes' : 'No'),
+      q((proto.ignition || 0) > 0 ? 'Yes' : 'No'),
+      q(ugc[0]?.post_link || ''),
+      q(ugc[1]?.post_link || ''),
+      q(ugc[2]?.post_link || ''),
+      q(dateStr),
+    ].join(',');
+  });
+
+  const csv = [headers.map(q).join(','), ...csvRows].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -5424,9 +5464,14 @@ function renderTasksUI(tasks) {
       </div>`;
     }
 
+    // For link-type tasks, make the name a clickable link to the dApp
+    const nameHtml = (task.task_type === 'link' && task.link)
+      ? `<a href="${task.link}" target="_blank" onclick="trackLinkClick('${key}','${task.link}','tasks')" style="color:inherit;text-decoration:none;border-bottom:1px dotted rgba(255,61,0,0.4);">${name}</a>`
+      : name;
+
     return `<div class="task-card ${done ? 'done' : ''} ${typeClass}">
       <div class="task-card-info">
-        <div class="task-card-name">${name}</div>
+        <div class="task-card-name">${nameHtml}</div>
         ${desc ? `<div class="task-card-desc">${desc}</div>` : ''}
       </div>
       <span class="task-points-badge${task.task_type === 'link' ? ' fire' : ''}">+${pts} pts</span>
