@@ -3129,14 +3129,26 @@ async function fetchFogoData(address) {
     .filter(d => d.count > 0)
     .sort((a, b) => b.count - a.count);
 
+  // Check if we have a saved topProto for this wallet — keeps it stable across visits
+  const savedTopProto = STATE.wallet ? (() => { try { return localStorage.getItem('fogo_top_proto_' + STATE.wallet); } catch(e){ return null; } })() : null;
+
   let topProto;
-  if (usedDapps.length > 0) {
-    // If multiple DApps used, randomly pick among used ones (for equal marketing)
-    topProto = usedDapps[Math.floor(Math.random() * usedDapps.length)].name;
+  if (savedTopProto) {
+    topProto = savedTopProto; // Use saved value — don't randomise on rescan
+  } else if (usedDapps.length > 0) {
+    topProto = usedDapps[0].name; // Pick highest-usage DApp (deterministic)
   } else {
-    // No DApps detected — rotate randomly so all DApps get marketed equally
-    const seed = (Math.abs(totalCount) * 7 + Math.floor(Date.now() / 86400000)) % DAPPS.length;
+    // No DApps detected — assign one based on wallet address (stable per wallet)
+    const seed = [...(STATE.wallet || 'x')].reduce((a, c) => a + c.charCodeAt(0), 0) % DAPPS.length;
     topProto = DAPPS[seed];
+  }
+
+  // Persist both wallet age and top protocol
+  if (STATE.wallet) {
+    try {
+      localStorage.setItem('fogo_wallet_age_' + STATE.wallet, walletAge);
+      localStorage.setItem('fogo_top_proto_' + STATE.wallet, topProto);
+    } catch(e){}
   }
 
   return {
@@ -3209,13 +3221,18 @@ async function generateCard() {
       }
     } catch(e) { walletAgeStr = '—'; }
 
+    // Restore saved topProtocol — never default to 'FOGO' (the chain)
+    const DAPPS_FB = ['Valiant','Pyron','Brasa','Ignition'];
+    const savedProto = (() => { try { return localStorage.getItem('fogo_top_proto_' + STATE.wallet); } catch(e){ return null; } })();
+    const restoredProto = savedProto || DAPPS_FB[[...(STATE.wallet||'x')].reduce((a,c)=>a+c.charCodeAt(0),0) % DAPPS_FB.length];
+
     const synth = {
       ok: true,
       volumeUsd:   d.total_volume_usd,
       txCount:     d.tx_count,
       walletAge:   walletAgeStr,
       protocols:   d.protocols || {},
-      topProtocol: 'FOGO',
+      topProtocol: restoredProto,
     };
     STATE.cardData = { data: synth, vol: d.total_volume_usd, tier, power };
 
@@ -5367,8 +5384,11 @@ async function rescanWallet() {
   const t = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.en;
   btn.textContent = t.tasks_rescanning || 'Rescanning...';
   btn.disabled = true;
-  // Clear cached wallet age so it refetches
-  try { localStorage.removeItem('fogo_wallet_age_' + STATE.wallet); } catch(e){}
+  // Clear cached values so rescan picks up fresh data
+  try {
+    localStorage.removeItem('fogo_wallet_age_' + STATE.wallet);
+    localStorage.removeItem('fogo_top_proto_' + STATE.wallet);
+  } catch(e){}
 
   try {
     const data = await fetchFogoData(STATE.wallet);
