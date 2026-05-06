@@ -2603,7 +2603,7 @@ const CONFIG = {
   // 2. Go to Settings > API
   // 3. Copy "Project URL" and "anon public" key here
   sb_url:          'https://nhdktvsllunlgdsaninx.supabase.co',
-  sb_key:          'sb_publishable_7UBiqJ-CTExbzHc9j_Nrdw_CzeHn0mD',
+  sb_key:          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oZGt0dnNsbHVubGdkc2FuaW54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NTIxMjgsImV4cCI6MjA5MTQyODEyOH0.GUFMjeDdphFeFp84jkeAtJNLX6-pi7KppEBdfDGXkhM',
   sb_project_ref:  'nhdktvsllunlgdsaninx',
 
   // ── ADMIN ─────────────────────────────────────────────────────
@@ -3574,14 +3574,14 @@ function renderCard(wallet, handle, data, tier, power) {
    LINK CLICK TRACKING
 ================================================================ */
 async function trackLinkClick(key, url, source) {
-  if (!db) return;
+  if (!db) { console.warn('[FOGO] trackLinkClick: db not initialised'); return; }
   try {
-    // Table uses 'product' column (not link_key) and 'clicked_at' (not created_at)
-    await db.from('link_clicks').insert({
+    const { error } = await db.from('link_clicks').insert({
       product: key,
       source:  source,
     });
-  } catch(e) { console.warn('[FOGO] trackLinkClick:', e?.message); }
+    if (error) console.warn('[FOGO] trackLinkClick insert error:', error.message, error.code);
+  } catch(e) { console.warn('[FOGO] trackLinkClick exception:', e?.message); }
 }
 
 /* ================================================================
