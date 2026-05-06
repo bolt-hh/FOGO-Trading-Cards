@@ -2990,6 +2990,14 @@ async function checkExistingSubmission(walletAddr) {
       hint.className   = 'wallet-sign-hint';
     }
     document.getElementById('gen-btn').innerHTML = '<span class="btn-sheen"></span>View My Card';
+  } else {
+    // No DB entry — admin may have deleted it. Clear localStorage raffle state
+    // so the user can enter fresh without any stale state blocking them.
+    try {
+      localStorage.removeItem('fogo_raffle_entered_' + walletAddr);
+    } catch(e){}
+    STATE.alreadySubmitted = false;
+    STATE.existingCardData = null;
   }
 }
 
@@ -3309,13 +3317,20 @@ async function generateCard() {
     STATE.raffleEntered = true;
     try { if (STATE.wallet) localStorage.setItem('fogo_raffle_entered_' + STATE.wallet, STATE.currentPoints.toString()); } catch(e){}
 
-    // Keep eligible-entry visible so UGC tasks remain accessible
-    document.getElementById('raffle-step-1').style.display = 'none';
-    document.getElementById('raffle-step-2').style.display = 'none';
-    document.getElementById('raffle-done').style.display   = 'block';
+    // Call showRaffleDone() so enhance.js intercepts it and shows the fogo success card
+    if (typeof window.showRaffleDone === 'function') {
+      window.showRaffleDone(false);
+    } else {
+      document.getElementById('raffle-step-1').style.display = 'none';
+      document.getElementById('raffle-step-2').style.display = 'none';
+      document.getElementById('raffle-done').style.display   = 'block';
+    }
 
-    // Show update-entry prompt if current points exceed stored entry count
-    setTimeout(() => checkAndShowUpdatePrompt(), 500);
+    // Also patch the points in the success card after enhance.js renders it
+    setTimeout(() => {
+      showRaffleSuccessPts(STATE.currentPoints);
+      checkAndShowUpdatePrompt();
+    }, 700);
     return;
   }
 
@@ -4512,9 +4527,10 @@ async function showKolSelectorIfNeeded() {
     return;
   }
 
-  // If KOL already selected (from localStorage), skip selector
+  // If KOL already selected (from localStorage), skip selector and show raffle entry
   if (STATE.kol_id || STATE.kol_name) {
     panel.style.display = 'none';
+    if (eligibleEntry) eligibleEntry.style.display = 'block';
     return;
   }
 
