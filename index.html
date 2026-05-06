@@ -2169,6 +2169,18 @@ body::before{
         </div>
 
         <!-- Final confirmation -->
+        <!-- Points update prompt — shown when points exceed stored entry count -->
+        <div id="points-update-prompt" style="display:none;background:rgba(195,251,165,0.06);border:1px solid rgba(195,251,165,0.3);border-radius:10px;padding:16px 18px;margin-bottom:12px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--fire),var(--lime));"></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--lime);margin-bottom:6px;">⬆ You've earned more points!</div>
+          <div style="font-size:12px;color:var(--sub);margin-bottom:12px;">Your points have increased since you entered. Update your entry to secure more raffle tickets.</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span id="update-pts-badge" style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;color:var(--lime);">—</span>
+            <span style="font-size:11px;color:var(--dim);">total points = total entries</span>
+            <button onclick="updateRaffleEntry()" style="background:var(--lime);border:none;color:#070520;font-family:'Inter',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;padding:10px 18px;border-radius:6px;cursor:pointer;margin-left:auto;">Update Entry →</button>
+          </div>
+        </div>
+
         <div id="raffle-done" class="raffle-card raffle-done-card" style="display:none;">
           <div class="raffle-done-icon">🔥</div>
           <div class="raffle-done-title" id="t-raffle-done-title">You're in the Draw</div>
@@ -2773,6 +2785,15 @@ function loadSavedHandles() {
     const savedX  = localStorage.getItem('fogo_x_handle');
     const savedTg = localStorage.getItem('fogo_tg_handle');
     const savedPfp = localStorage.getItem('fogo_pfp');
+    // Restore X share link per wallet
+    if (STATE.wallet) {
+      const savedXShare = localStorage.getItem('fogo_x_share_' + STATE.wallet);
+      if (savedXShare) {
+        STATE._savedXLink = savedXShare;
+        const hiddenInput = document.getElementById('raffle-x-link');
+        if (hiddenInput) hiddenInput.value = savedXShare;
+      }
+    }
     if (savedX)  { const el = document.getElementById('x-handle');  if (el) el.value = savedX; }
     if (savedTg) { const el = document.getElementById('tg-handle'); if (el) el.value = savedTg; }
     if (savedPfp) {
@@ -3252,6 +3273,15 @@ async function generateCard() {
     };
     STATE.cardData = { data: synth, vol: d.total_volume_usd, tier, power };
 
+    // Restore X share link — DB first, then localStorage, so it never needs re-uploading
+    const savedXLink = d.x_share_link || d.social_link ||
+      (() => { try { return localStorage.getItem('fogo_x_share_' + STATE.wallet); } catch(e){ return null; } })();
+    if (savedXLink) {
+      STATE._savedXLink = savedXLink;
+      const hiddenInput = document.getElementById('raffle-x-link');
+      if (hiddenInput) hiddenInput.value = savedXLink;
+    }
+
     // Pre-load total_points from DB into STATE so the raffle success screen shows correct count
     const { total: dbPts, breakdown: dbBreakdown } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
     STATE.currentPoints = (d.total_points && d.total_points > 0) ? d.total_points : dbPts;
@@ -3268,11 +3298,17 @@ async function generateCard() {
     // Fetch real leaderboard rank in background
     fetchLeaderboardRank(STATE.wallet);
 
-    // Already entered — show done state directly
+    // Already entered — restore raffle state and show tasks + UGC (still available)
     STATE.raffleEntered = true;
+    try { if (STATE.wallet) localStorage.setItem('fogo_raffle_entered_' + STATE.wallet, STATE.currentPoints.toString()); } catch(e){}
+
+    // Keep eligible-entry visible so UGC tasks remain accessible
     document.getElementById('raffle-step-1').style.display = 'none';
     document.getElementById('raffle-step-2').style.display = 'none';
     document.getElementById('raffle-done').style.display   = 'block';
+
+    // Show update-entry prompt if current points exceed stored entry count
+    setTimeout(() => checkAndShowUpdatePrompt(), 500);
     return;
   }
 
@@ -3300,6 +3336,7 @@ async function generateCard() {
     showView('view-card');
     setEligibilityUI(vol);
     fetchLeaderboardRank(STATE.wallet);
+    setTimeout(() => checkAndShowUpdatePrompt(), 500);
 
   } catch(e) {
     document.getElementById('loading').classList.remove('on');
@@ -3581,6 +3618,8 @@ async function enterRaffle() {
 
   STATE.raffleEntered    = true;
   STATE.raffleEntryCount = totalPoints;
+  // Persist raffle state so it survives page refresh
+  try { if (STATE.wallet) localStorage.setItem('fogo_raffle_entered_' + STATE.wallet, totalPoints.toString()); } catch(e){}
   showRaffleStep2(totalPoints);
   showRaffleSuccessPts(totalPoints);
 }
@@ -5257,11 +5296,14 @@ async function submitXShareInline() {
   // Save to STATE
   STATE._savedXLink = link;
 
+  // Persist to localStorage so it survives page refresh
+  try { if (STATE.wallet) localStorage.setItem('fogo_x_share_' + STATE.wallet, link); } catch(e){}
+
   // Sync to the hidden raffle input so enterRaffle() picks it up
   const hiddenInput = document.getElementById('raffle-x-link');
   if (hiddenInput) hiddenInput.value = link;
 
-  // Save to DB if they already have an entry (update x_share_link)
+  // Save to DB — upsert against wallet address (works even before raffle entry)
   if (db && STATE.wallet) {
     await db.from('card_submissions')
       .update({ x_share_link: link, social_link: link })
@@ -5274,6 +5316,55 @@ async function submitXShareInline() {
   if (STATE.tasks) renderTasksUI(STATE.tasks);
   // Also enable the raffle confirm checkbox if the user hasn't checked it yet
   // (the checkbox is the last gate before entering)
+}
+
+/* ================================================================
+   POINTS UPDATE PROMPT + RESUBMIT
+================================================================ */
+function checkAndShowUpdatePrompt() {
+  if (!STATE.raffleEntered || !STATE.cardData) return;
+  const { total } = calculatePoints(STATE.cardData, !!STATE._savedXLink);
+  const totalWithUgc = total + (STATE.ugcPoints || 0);
+  const storedEntry = STATE.raffleEntryCount || 0;
+
+  if (totalWithUgc > storedEntry) {
+    const prompt = document.getElementById('points-update-prompt');
+    const badge  = document.getElementById('update-pts-badge');
+    if (prompt) { prompt.style.display = 'block'; }
+    if (badge)  { badge.textContent = totalWithUgc.toLocaleString() + ' pts'; }
+  }
+}
+
+async function updateRaffleEntry() {
+  if (!STATE.wallet || !STATE.cardData) return;
+  const btn = document.querySelector('#points-update-prompt button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Updating…'; }
+
+  const { total, breakdown } = calculatePoints(STATE.cardData, !!STATE._savedXLink);
+  const finalPts = total + (STATE.ugcPoints || 0);
+
+  // Update Supabase
+  if (db) {
+    const { error } = await db.from('card_submissions').update({
+      total_points:     finalPts,
+      entry_count:      finalPts,
+      points_breakdown: breakdown,
+    }).eq('wallet_address', STATE.wallet);
+    if (error) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Error — retry'; }
+      return;
+    }
+  }
+
+  STATE.raffleEntryCount = finalPts;
+  STATE.currentPoints    = finalPts;
+  try { if (STATE.wallet) localStorage.setItem('fogo_raffle_entered_' + STATE.wallet, finalPts.toString()); } catch(e){}
+
+  // Hide prompt and update success card
+  const prompt = document.getElementById('points-update-prompt');
+  if (prompt) prompt.style.display = 'none';
+  showRaffleSuccessPts(finalPts);
+  updatePointsDisplay();
 }
 
 async function renderUgcInlineSlots() {
@@ -5296,18 +5387,32 @@ async function renderUgcInlineSlots() {
 
   let html = '';
 
-  // Filled slots — show submitted links with status
+  // Filled slots — approved/pending show status; rejected unlock for resubmission
   existing.forEach((s, i) => {
-    const statusClass = s.status === 'approved' ? 'approved' : s.status === 'rejected' ? 'rejected' : 'pending';
-    const statusLabel = s.status === 'approved' ? '✓ Approved' : s.status === 'rejected' ? '✗ Rejected' : '⏳ Pending review';
-    const pts = s.points_awarded > 0 ? ` · +${s.points_awarded} pts` : '';
-    html += `<div class="ugc-slot">
-      <div class="ugc-slot-label">Post ${i + 1}</div>
-      <div class="ugc-slot-status">
-        <a href="${s.post_link}" target="_blank" title="${s.post_link}">${s.post_link}</a>
-        <span class="ugc-slot-badge ${statusClass}">${statusLabel}${pts}</span>
-      </div>
-    </div>`;
+    if (s.status === 'rejected') {
+      // Rejected — unlock the slot so user can submit a different link
+      html += `<div class="ugc-slot" id="ugc-slot-r-${s.id}">
+        <div class="ugc-slot-label" style="color:rgba(255,77,77,0.7);">Post ${i + 1} — ✗ Rejected · Submit a different post</div>
+        <div class="ugc-slot-row">
+          <input class="ugc-slot-input" id="ugc-input-r-${s.id}" type="url"
+            placeholder="https://x.com/yourpost..."
+            oninput="document.getElementById('ugc-btn-r-${s.id}').disabled=!this.value.trim()">
+          <button class="ugc-slot-submit" id="ugc-btn-r-${s.id}"
+            disabled onclick="resubmitUgcSlot('${s.id}', 'ugc-input-r-${s.id}', 'ugc-btn-r-${s.id}')">Resubmit</button>
+        </div>
+      </div>`;
+    } else {
+      const statusClass = s.status === 'approved' ? 'approved' : 'pending';
+      const statusLabel = s.status === 'approved' ? '✓ Approved' : '⏳ Pending review';
+      const pts = s.points_awarded > 0 ? ` · +${s.points_awarded} pts` : '';
+      html += `<div class="ugc-slot">
+        <div class="ugc-slot-label">Post ${i + 1}</div>
+        <div class="ugc-slot-status">
+          <a href="${s.post_link}" target="_blank" title="${s.post_link}">${s.post_link}</a>
+          <span class="ugc-slot-badge ${statusClass}">${statusLabel}${pts}</span>
+        </div>
+      </div>`;
+    }
   });
 
   // Empty slots — show input + submit
@@ -5331,6 +5436,20 @@ async function renderUgcInlineSlots() {
   }
 
   slotsEl.innerHTML = html;
+}
+
+async function resubmitUgcSlot(ugcId, inputId, btnId) {
+  const input = document.getElementById(inputId);
+  const btn   = document.getElementById(btnId);
+  const link  = input?.value?.trim();
+  if (!link || !db || !STATE.wallet) return;
+  btn.disabled = true; btn.textContent = '...';
+  // Update the existing row with new link and reset to pending
+  const { error } = await db.from('ugc_submissions')
+    .update({ post_link: link, status: 'pending', points_awarded: 0 })
+    .eq('id', ugcId);
+  if (error) { btn.disabled = false; btn.textContent = 'Error'; return; }
+  await renderUgcInlineSlots();
 }
 
 async function submitUgcInline(slotIdx) {
