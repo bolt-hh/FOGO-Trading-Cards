@@ -1983,11 +1983,13 @@ body::before{
           <div class="c-series" id="c-series">Season II — Trader Card</div>
         </div>
         <div class="card-identity c-z">
-          <!-- PFP avatar -->
-          <div id="c-pfp-wrap" style="display:none;margin-bottom:10px;">
-            <img id="c-pfp" src="" alt="PFP" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(195,251,165,0.3);box-shadow:0 0 12px rgba(195,251,165,0.15);">
+          <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+            <!-- PFP avatar — inline with handle -->
+            <div id="c-pfp-wrap" style="display:none;flex-shrink:0;">
+              <img id="c-pfp" src="" alt="PFP" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid rgba(195,251,165,0.35);box-shadow:0 0 14px rgba(195,251,165,0.2);">
+            </div>
+            <div class="card-handle" id="c-handle" style="min-width:0;">@handle</div>
           </div>
-          <div class="card-handle" id="c-handle">@handle</div>
           <div class="vol-block">
             <div class="vol-num" id="c-vol">$0</div>
             <div class="vol-lbl" id="t-vol-lbl">Volume</div>
@@ -3116,9 +3118,26 @@ async function fetchFogoData(address) {
   volumeUsd += walletBalanceUsd;
 
   const walletAge = formatAge(oldestTime);
-  const topProto  = Object.entries(protoCounts)
-    .filter(([, v]) => v > 0)
-    .sort(([, a], [, b]) => b - a)[0]?.[0] || 'FOGO';
+
+  // Top Protocol — show a DApp, never the base chain
+  // If user has used DApps, pick one weighted by usage count
+  // If none used, rotate randomly so all DApps get visibility
+  const DAPPS = ['Valiant', 'Pyron', 'Brasa', 'Ignition'];
+  const DAPP_KEYS = ['valiant', 'pyron', 'brasa', 'ignition'];
+  const usedDapps = DAPP_KEYS
+    .map((k, i) => ({ name: DAPPS[i], count: protoCounts[k] || 0 }))
+    .filter(d => d.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  let topProto;
+  if (usedDapps.length > 0) {
+    // If multiple DApps used, randomly pick among used ones (for equal marketing)
+    topProto = usedDapps[Math.floor(Math.random() * usedDapps.length)].name;
+  } else {
+    // No DApps detected — rotate randomly so all DApps get marketed equally
+    const seed = (Math.abs(totalCount) * 7 + Math.floor(Date.now() / 86400000)) % DAPPS.length;
+    topProto = DAPPS[seed];
+  }
 
   return {
     ok: true,
@@ -3174,8 +3193,21 @@ async function generateCard() {
     const d    = STATE.existingCardData;
     const tier = getTier(d.total_volume_usd);
     const power = d.power_score || computePower(d.total_volume_usd);
-    // Wallet age needs a live Fogoscan fetch — show placeholder, rescan updates it
-    const walletAgeStr = '↻ Rescan';
+    // Wallet age: try localStorage cache first, then fetch live
+    let walletAgeStr = '—';
+    try {
+      const cachedAge = localStorage.getItem('fogo_wallet_age_' + STATE.wallet);
+      if (cachedAge) {
+        walletAgeStr = cachedAge;
+      } else {
+        // Quick background fetch of first transaction time via Fogoscan
+        const ageRes = await fetch(`${FOGOSCAN_API}/account/transfer?address=${STATE.wallet}&page=1&page_size=1&order=asc`).then(r => r.json()).catch(() => null);
+        if (ageRes?.data?.length) {
+          const oldest = ageRes.data[ageRes.data.length - 1]?.block_time;
+          if (oldest) { walletAgeStr = formatAge(oldest); try { localStorage.setItem('fogo_wallet_age_' + STATE.wallet, walletAgeStr); } catch(e){} }
+        }
+      }
+    } catch(e) { walletAgeStr = '—'; }
 
     const synth = {
       ok: true,
@@ -5335,6 +5367,8 @@ async function rescanWallet() {
   const t = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS.en;
   btn.textContent = t.tasks_rescanning || 'Rescanning...';
   btn.disabled = true;
+  // Clear cached wallet age so it refetches
+  try { localStorage.removeItem('fogo_wallet_age_' + STATE.wallet); } catch(e){}
 
   try {
     const data = await fetchFogoData(STATE.wallet);
