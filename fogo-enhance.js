@@ -396,8 +396,8 @@
     // initial placeholder bars so it never looks empty
     const spark = sig.querySelector('#c-spark');
     if (spark && !spark.children.length) {
-      const heights = [22, 35, 28, 48, 30, 55, 42, 38, 62, 48, 70, 54, 45, 60];
-      spark.innerHTML = heights.map((h,i) => `<div class="bar${i===10?' fire':''}" style="height:${h}%"></div>`).join('');
+      const heights = [18,30,22,45,28,52,38,34,60,44,68,50,40,56,32,48,62,35,55,42,70,58];
+      spark.innerHTML = heights.map((h,i) => `<div class="bar${(i===10||i===16||i===20)?' fire':''}" style="height:${h}%"></div>`).join('');
     }
   }
 
@@ -407,7 +407,7 @@
       const seed = (Math.abs(power|0) * 9301 + ((volStr||'').toString().length) * 49297 + 1) % 233280;
       let s = seed || 1;
       const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-      const bars = 14;
+      const bars = 22;
       let html = '';
       for (let i = 0; i < bars; i++) {
         const h = 14 + rand() * 70;
