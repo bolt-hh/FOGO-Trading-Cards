@@ -1722,7 +1722,7 @@ body::before{
           <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-1" style="color:var(--sub);">🎴 Generate your Trader Card</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+50 pts</span></div>
           <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-2" style="color:var(--sub);">𝕏 Share card on X</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+50 pts</span></div>
           <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-3" style="color:var(--sub);">📊 Onchain volume (per $50)</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+25 pts</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-4" style="color:var(--sub);">⚡ Use Valiant / Pyron / Brasa / Ignition</span><span style="color:var(--fire);font-family:'JetBrains Mono',monospace;font-size:11px;">+200 each</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-4" style="color:var(--sub);">⚡ Use <a href="https://valiant.trade" target="_blank" onclick="trackLinkClick('valiant','https://valiant.trade','gate')" style="color:var(--fire);text-decoration:none;">Valiant</a> / <a href="https://app.pyron.fi" target="_blank" onclick="trackLinkClick('pyron','https://app.pyron.fi','gate')" style="color:var(--fire);text-decoration:none;">Pyron</a> / <a href="https://brasa.finance" target="_blank" onclick="trackLinkClick('brasa','https://brasa.finance','gate')" style="color:var(--fire);text-decoration:none;">Brasa</a> / <a href="https://app.ignitionfi.xyz/rewards" target="_blank" onclick="trackLinkClick('ignition','https://app.ignitionfi.xyz/rewards','gate')" style="color:var(--fire);text-decoration:none;">Ignition</a></span><span style="color:var(--fire);font-family:'JetBrains Mono',monospace;font-size:11px;">+200 each</span></div>
           <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-5" style="color:var(--sub);">🎬 Share UGC on X (max 3 posts)</span><span style="color:var(--sub);font-family:'JetBrains Mono',monospace;font-size:11px;">+100 each</span></div>
         </div>
         <div id="t-maxi-footer" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);letter-spacing:0.08em;">🏆 225 Winners · Volume points uncapped · More activity = more entries</div>
@@ -2303,6 +2303,10 @@ body::before{
           </div>
           <div id="dash-leaderboard"><div class="empty-state">Loading...</div></div>
         </div>
+        <div class="admin-section-full" style="margin-top:20px;">
+          <div class="admin-section-head">DApp Link Clicks <button class="btn-small" onclick="loadLinkClickStats()" style="font-size:9px;padding:5px 10px;">↻</button></div>
+          <div id="link-clicks-stats"><div class="empty-state">Click refresh to load.</div></div>
+        </div>
       </div>
 
       <!-- ── UGC TAB ───────────────────────────────────────────── -->
@@ -2377,7 +2381,14 @@ body::before{
                 <th>Volume</th>
                 <th>Tier</th>
                 <th>Points</th>
-                <th>Social Link</th>
+                <th>X Share</th>
+                <th>Valiant</th>
+                <th>Pyron</th>
+                <th>Brasa</th>
+                <th>Ignition</th>
+                <th>UGC 1</th>
+                <th>UGC 2</th>
+                <th>UGC 3</th>
                 <th>Date</th>
                 <th></th>
               </tr>
@@ -2635,6 +2646,7 @@ let STATE = {
   currentPoints: 0,
   _prevView: 'view-gate',
   allTasks: [],
+  ugcByWallet: {},
 };
 
 /* ================================================================
@@ -3522,6 +3534,21 @@ function renderCard(wallet, handle, data, tier, power) {
 }
 
 /* ================================================================
+   LINK CLICK TRACKING
+================================================================ */
+async function trackLinkClick(key, url, source) {
+  if (!db) return;
+  try {
+    await db.from('link_clicks').insert({
+      wallet_address: STATE.wallet || null,
+      link_key: key,
+      link_url: url,
+      source: source,
+    });
+  } catch(e) {}
+}
+
+/* ================================================================
    SHARE + ENTRY
 ================================================================ */
 function shareX() {
@@ -4038,6 +4065,18 @@ async function refreshAdmin() {
   STATE.allPasscodes   = []; // legacy — passcodes replaced by kols table
   STATE.allKols        = kolMgmtRes.data || [];
 
+  // Fetch UGC submissions indexed by wallet for admin table
+  STATE.ugcByWallet = {};
+  if (db) {
+    const { data: ugcAll } = await db.from('ugc_submissions')
+      .select('wallet_address,post_link,status,points_awarded')
+      .order('created_at', { ascending: true });
+    (ugcAll || []).forEach(u => {
+      if (!STATE.ugcByWallet[u.wallet_address]) STATE.ugcByWallet[u.wallet_address] = [];
+      STATE.ugcByWallet[u.wallet_address].push(u);
+    });
+  }
+
   renderAdminStats();
   renderKolTable();
   renderSubmissionsTable(STATE.allSubmissions);
@@ -4170,7 +4209,7 @@ function renderSubmissionsTable(data) {
   const tbody = document.getElementById('submissions-body');
 
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">No entries yet.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="18"><div class="empty-state">No entries yet.</div></td></tr>';
     return;
   }
 
@@ -4180,9 +4219,18 @@ function renderSubmissionsTable(data) {
     const wallet = r.wallet_address ? r.wallet_address.slice(0, 8) + '...' : '—';
     const isTest = (r.kol_passcode || '').includes('TEST') || (r.wallet_address || '').includes('TEST');
     const testTag = isTest ? ' <span style="font-size:7px;background:rgba(255,200,0,0.15);color:#ffc800;border:1px solid rgba(255,200,0,0.3);padding:1px 4px;border-radius:2px;letter-spacing:0.08em;">TEST</span>' : '';
-    const socialCell = r.social_link
-      ? `<a href="${r.social_link}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>`
-      : (r.bonus_entry ? '⏳' : '—');
+    const xShareCell = r.x_share_link
+      ? `<a href="${r.x_share_link}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>`
+      : '—';
+    const proto = r.protocols || {};
+    const valiantCell  = (proto.valiant  || 0) > 0 ? '✓' : '—';
+    const pyronCell    = (proto.pyron    || 0) > 0 ? '✓' : '—';
+    const brasaCell    = (proto.brasa    || 0) > 0 ? '✓' : '—';
+    const ignitionCell = (proto.ignition || 0) > 0 ? '✓' : '—';
+    const ugcList = STATE.ugcByWallet[r.wallet_address] || [];
+    const ugc1 = ugcList[0]?.post_link ? `<a href="${ugcList[0].post_link}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>` : '—';
+    const ugc2 = ugcList[1]?.post_link ? `<a href="${ugcList[1].post_link}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>` : '—';
+    const ugc3 = ugcList[2]?.post_link ? `<a href="${ugcList[2].post_link}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>` : '—';
     return `<tr>
       <td><input type="checkbox" class="entry-checkbox" data-id="${r.id}" onchange="updateDeleteSelectedBtn()"></td>
       <td class="addr" title="${r.wallet_address || ''}">${wallet}${testTag}</td>
@@ -4192,7 +4240,14 @@ function renderSubmissionsTable(data) {
       <td class="hi">${fmtUsd(r.total_volume_usd || 0)}</td>
       <td>${r.tier_name || '—'}</td>
       <td class="hi">${r.total_points ?? r.entry_count ?? '—'}</td>
-      <td>${socialCell}</td>
+      <td>${xShareCell}</td>
+      <td>${valiantCell}</td>
+      <td>${pyronCell}</td>
+      <td>${brasaCell}</td>
+      <td>${ignitionCell}</td>
+      <td>${ugc1}</td>
+      <td>${ugc2}</td>
+      <td>${ugc3}</td>
       <td class="addr">${dateStr}</td>
       <td><button class="admin-del-btn" onclick="deleteEntry('${r.id}')">Del</button></td>
     </tr>`;
@@ -4472,7 +4527,7 @@ function copyCode(code) {
 function exportCsv() {
   const rows = STATE.allSubmissions;
   if (!rows.length) { alert('No data to export.'); return; }
-  const cols = ['wallet_address','twitter_handle','telegram_handle','kol_passcode','total_volume_usd','tier_name','power_score','tx_count','entry_count','social_link','bonus_entry','created_at'];
+  const cols = ['wallet_address','twitter_handle','telegram_handle','kol_id','total_volume_usd','tier_name','total_points','x_share_link','protocols','created_at'];
   const csv = [cols.join(','), ...rows.map(r => cols.map(c => JSON.stringify(r[c] ?? '')).join(','))].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
@@ -5301,7 +5356,7 @@ function renderTasksUI(tasks) {
     const statusClass = done ? (task.task_type === 'auto' ? 'verified' : 'done') : 'pending';
 
     const linkBtn = (task.task_type === 'link' && task.link)
-      ? `<button class="task-go-btn" onclick="window.open('${task.link}','_blank')">${t.tasks_go_dapp || 'Visit →'}</button>`
+      ? `<button class="task-go-btn" onclick="window.open('${task.link}','_blank');trackLinkClick('${key}','${task.link}','tasks')">${t.tasks_go_dapp || 'Visit →'}</button>`
       : '';
     // Check button for link/auto dApp tasks — lets user manually verify onchain
     const checkBtn = (task.task_type === 'link' || (task.task_type === 'auto' && key && ['valiant','pyron','brasa','ignition'].includes(key))) && !done
@@ -5335,7 +5390,7 @@ function renderTasksUI(tasks) {
         <div class="ugc-slots" style="margin-top:10px;">
           <div class="ugc-slot">
             <div class="ugc-slot-row" style="margin-bottom:7px;">
-              <button class="task-go-btn" style="flex:1;" onclick="shareX()">
+              <button class="task-go-btn" style="flex:1;" onclick="shareX();trackLinkClick('x_share','https://twitter.com/intent/tweet','tasks')">
                 𝕏 Share on X →
               </button>
             </div>
@@ -6012,6 +6067,20 @@ async function loadAdminLeaderboard() {
   } catch(e) {
     wrap.innerHTML = '<div class="empty-state">Error loading leaderboard.</div>';
   }
+}
+
+async function loadLinkClickStats() {
+  const el = document.getElementById('link-clicks-stats');
+  if (!el || !db) return;
+  el.innerHTML = 'Loading...';
+  const { data } = await db.from('link_clicks').select('link_key').then(r => r).catch(() => ({ data: [] }));
+  const counts = {};
+  (data || []).forEach(r => { counts[r.link_key] = (counts[r.link_key] || 0) + 1; });
+  const rows = Object.entries(counts).sort(([,a],[,b]) => b-a)
+    .map(([k,n]) => `<tr><td class="hi">${k}</td><td>${n}</td></tr>`).join('');
+  el.innerHTML = rows.length
+    ? `<table class="admin-entry-table"><thead><tr><th>Link</th><th>Clicks</th></tr></thead><tbody>${rows}</tbody></table>`
+    : '<div class="empty-state">No clicks tracked yet.</div>';
 }
 </script>
 
