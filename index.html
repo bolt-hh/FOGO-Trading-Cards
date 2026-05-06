@@ -2387,7 +2387,8 @@ body::before{
               <tr>
                 <th><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" title="Select All"></th>
                 <th>Wallet</th>
-                <th>Handle</th>
+                <th>X Handle</th>
+                <th>Telegram</th>
                 <th>KOL</th>
                 <th>Volume</th>
                 <th>Tier</th>
@@ -2398,7 +2399,7 @@ body::before{
               </tr>
             </thead>
             <tbody id="submissions-body">
-              <tr><td colspan="10"><div class="empty-state">No entries yet.</div></td></tr>
+              <tr><td colspan="11"><div class="empty-state">No entries yet.</div></td></tr>
             </tbody>
           </table>
         </div>
@@ -3249,7 +3250,7 @@ async function generateCard() {
   const cleanTg     = rawTg ? (rawTg.startsWith('@') ? rawTg : '@' + rawTg) : '';
   STATE.handle    = cleanHandle;
   STATE.handle_tg = cleanTg;
-  STATE.handle_stored = cleanHandle + (cleanTg ? ' | TG:' + cleanTg : '');
+  STATE.handle_stored = cleanHandle; // X handle only — TG stored separately
   saveHandles();
 
   // If already submitted, render existing card from DB data without re-fetching
@@ -3577,6 +3578,7 @@ async function enterRaffle() {
       wallet_signature: STATE.signature,
       sig_nonce:        STATE.sig_nonce,
       twitter_handle:   STATE.handle_stored || STATE.handle,
+      telegram_handle:  STATE.handle_tg || null,
       kol_passcode:     STATE.passcode || STATE.kol_name || (STATE._testMode ? 'TEST-MODE' : null),
       kol_id:           STATE.kol_id   || null,
       total_volume_usd: STATE.cardData?.vol || 0,
@@ -3768,7 +3770,8 @@ async function submitUgcLink() {
 
     const { error } = await db.from('ugc_submissions').insert({
       wallet_address: STATE.wallet,
-      twitter_handle: STATE.handle_stored || STATE.handle || null,
+      twitter_handle:  STATE.handle_stored || STATE.handle || null,
+      telegram_handle: STATE.handle_tg || null,
       post_link: link,
       status: 'pending',
     });
@@ -4130,6 +4133,7 @@ function renderSubmissionsTable(data) {
       <td><input type="checkbox" class="entry-checkbox" data-id="${r.id}" onchange="updateDeleteSelectedBtn()"></td>
       <td class="addr" title="${r.wallet_address || ''}">${wallet}${testTag}</td>
       <td>${r.twitter_handle || '—'}</td>
+      <td>${r.telegram_handle || '—'}</td>
       <td class="hi">${r.kol_passcode || '—'}</td>
       <td class="hi">${fmtUsd(r.total_volume_usd || 0)}</td>
       <td>${r.tier_name || '—'}</td>
@@ -4414,7 +4418,7 @@ function copyCode(code) {
 function exportCsv() {
   const rows = STATE.allSubmissions;
   if (!rows.length) { alert('No data to export.'); return; }
-  const cols = ['wallet_address','twitter_handle','kol_passcode','total_volume_usd','tier_name','power_score','tx_count','entry_count','social_link','bonus_entry','shared_x','shared_kol_channel','created_at'];
+  const cols = ['wallet_address','twitter_handle','telegram_handle','kol_passcode','total_volume_usd','tier_name','power_score','tx_count','entry_count','social_link','bonus_entry','created_at'];
   const csv = [cols.join(','), ...rows.map(r => cols.map(c => JSON.stringify(r[c] ?? '')).join(','))].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
@@ -5516,7 +5520,8 @@ async function submitUgcInline(slotIdx) {
 
     const { error } = await db.from('ugc_submissions').insert({
       wallet_address: STATE.wallet,
-      twitter_handle: STATE.handle_stored || STATE.handle || null,
+      twitter_handle:  STATE.handle_stored || STATE.handle || null,
+      telegram_handle: STATE.handle_tg || null,
       post_link: link,
       status: 'pending',
     });
