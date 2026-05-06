@@ -5075,6 +5075,9 @@ const TRANSLATIONS = {
     tasks_verified:     'Verified onchain',
     tasks_rescan:       '↻ Rescan Wallet',
     tasks_rescanning:   'Rescanning...',
+    guide_label:        'New to FOGO dApps? Step-by-step guide on how to complete the onchain tasks and earn up to 800 points.',
+    guide_link:         'View Guide →',
+    tab_locked_tooltip: 'More tasks soon for more points, stay tuned',
     raffle_points_total:'Total Points = Raffle Entries',
     x_share_label:      'Share your card on X and paste the link here to earn +50 points',
     x_share_placeholder:'https://x.com/yourpost...',
@@ -5125,6 +5128,7 @@ const TRANSLATIONS = {
     kol_ref_placeholder:'— KOL 선택 —',
     guide_label:        'FOGO dApp이 처음이신가요? 온체인 태스크 완료 방법과 최대 800포인트 획득 방법을 단계별로 안내합니다.',
     guide_link:         '가이드 보기 →',
+    tab_locked_tooltip: '더 많은 포인트를 위한 새 태스크가 곧 추가됩니다.',
     load_txt:           'FOGO 체인 데이터 읽는 중',
     // Card
     vol_lbl:            '거래량',
@@ -5333,8 +5337,10 @@ function setLanguage(lang) {
   setTxt('t-required-x',      t.required        || 'required');
   setTxt('t-required-tg',     t.required        || 'required');
   setTxt('t-both-handles',    t.both_handles    || 'Both handles are required to generate your card and enter the draw.');
-  setTxt('t-guide-label',     t.guide_label     || 'New to FOGO dApps? Step-by-step guide on how to complete the onchain tasks and earn up to 800 points.');
-  setTxt('t-guide-link',     t.guide_link      || 'View Guide →');
+  setTxt('t-guide-label', t.guide_label || 'New to FOGO dApps? Step-by-step guide on how to complete the onchain tasks and earn up to 800 points.');
+  setTxt('t-guide-link',  t.guide_link  || 'View Guide →');
+  // Re-render task tab tooltips with current language
+  if (STATE.taskTabs) renderTaskTabsUI();
   setTxt('t-kol-ref-label',  t.kol_ref_label   || 'Who referred you?');
   setTxt('t-required-kol',    t.required        || 'required');
   // KOL inline placeholder option
@@ -5603,10 +5609,12 @@ function renderTaskTabsUI() {
   const row = document.getElementById('task-tab-row');
   if (!row || !STATE.taskTabs) return;
   const lang = CURRENT_LANG;
+  const t    = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  const lockedTooltip = t.tab_locked_tooltip || 'More tasks soon for more points, stay tuned';
   row.innerHTML = STATE.taskTabs.map(tab => {
     if (tab.locked) {
       const label = (lang === 'ko' ? tab.nameKo : tab.name);
-      return `<div class="task-tab-btn locked" data-tooltip="More tasks soon for more points, stay tuned">🔒 ${label}</div>`;
+      return `<div class="task-tab-btn locked" data-tooltip="${lockedTooltip}">🔒 ${label}</div>`;
     }
     const label = (lang === 'ko' ? tab.nameKo : tab.name);
     const active = STATE.activeTaskTab === tab.id ? ' active' : '';
