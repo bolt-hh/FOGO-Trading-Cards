@@ -5797,14 +5797,14 @@ async function submitXShareInline() {
 function checkAndShowUpdatePrompt() {
   if (!STATE.raffleEntered || !STATE.cardData) return;
   const { total } = calculatePoints(STATE.cardData, !!STATE._savedXLink);
-  const totalWithUgc = total + (STATE.ugcPoints || 0);
+  // calculatePoints already includes STATE.ugcPoints — do not add again
   const storedEntry = STATE.raffleEntryCount || 0;
 
-  if (totalWithUgc > storedEntry) {
+  if (total > storedEntry) {
     const prompt = document.getElementById('points-update-prompt');
     const badge  = document.getElementById('update-pts-badge');
     if (prompt) { prompt.style.display = 'block'; }
-    if (badge)  { badge.textContent = totalWithUgc.toLocaleString() + ' pts'; }
+    if (badge)  { badge.textContent = total.toLocaleString() + ' pts'; }
   }
 }
 
@@ -5813,8 +5813,8 @@ async function updateRaffleEntry() {
   const btn = document.querySelector('#points-update-prompt button');
   if (btn) { btn.disabled = true; btn.textContent = 'Updating…'; }
 
-  const { total, breakdown } = calculatePoints(STATE.cardData, !!STATE._savedXLink);
-  const finalPts = total + (STATE.ugcPoints || 0);
+  const { total: finalPts, breakdown } = calculatePoints(STATE.cardData, !!STATE._savedXLink);
+  // calculatePoints already includes STATE.ugcPoints — do not add again
 
   // Update Supabase
   if (db) {
@@ -6089,10 +6089,8 @@ async function rescanWallet() {
     if (db) {
       const existingLink = document.getElementById('raffle-x-link')?.value?.trim()
         || STATE._savedXLink || '';
-      const { total: totalPts, breakdown: ptsBrk } = calculatePoints(STATE.cardData, !!existingLink);
-      // Also fold in any UGC points already awarded
-      const ugcPts = STATE.ugcPoints || 0;
-      const finalPts = totalPts + ugcPts;
+      const { total: finalPts, breakdown: ptsBrk } = calculatePoints(STATE.cardData, !!existingLink);
+      // calculatePoints already includes STATE.ugcPoints — do not add again
       await db.from('card_submissions').update({
         total_volume_usd: vol,
         tier_name:        tier.name,
