@@ -2590,13 +2590,12 @@ const CONFIG = {
   min_volume: 100, // USD — must match tiers[1].min
 
   // ── KNOWN PROGRAM IDs on FOGO mainnet ─────────────────────────
-  // Update these once confirmed from protocol docs / fogoscan
   programs: {
     ambient:  '',
-    valiant:  '',
-    brasa:    '',
-    pyron:    '',
-    ignition: '',
+    valiant:  'vnt1u7PzorND5JjweFWmDawKe2hLWoTwHU6QKz6XX98', // Valiant Swap / Vortex
+    brasa:    '',   // detected via stFOGO token in TOKEN_PROTOCOL_MAP
+    pyron:    'PyRon8FBSDSk6MxNKsZj2uZweBsa2nH5amyKnN6eN57', // Pyron Lending
+    ignition: '',   // detected via iFOGO token in TOKEN_PROTOCOL_MAP
     fogolend: '',
   },
 
@@ -3013,8 +3012,9 @@ const FOGOSCAN_API = window.location.hostname === 'localhost' || window.location
 
 // Token address → protocol (add more as protocols confirm their token mints)
 const TOKEN_PROTOCOL_MAP = {
-  'iFoGoY5nMWpuMJogR7xjUAWDJtygHDF17zREeP4MKuD': 'ignition', // iFOGO
-  'Brasa3xzkSC9XqMBEcN9v53x4oMkpb1nQwfaGMyJE88b': 'brasa',  // stBRASA
+  'iFoGoY5nMWpuMJogR7xjUAWDJtygHDF17zREeP4MKuD': 'ignition',  // iFOGO (Ignition liquid staking)
+  'Brasa3xzkSC9XqMBEcN9v53x4oMkpb1nQwfaGMyJE88b': 'brasa',   // stFOGO (Brasa liquid staking)
+  '6CantHHfZsDtt3qMAQCGx8NphZUGoRkitX4jNZHtY8CW': 'valiant', // VVLP NFT (Valiant liquidity position)
 };
 
 function formatAge(blockTime) {
@@ -3108,6 +3108,22 @@ async function fetchFogoData(address) {
       });
     }
   });
+
+  // Also scan transaction-level program IDs (catches Valiant swap + Pyron)
+  // Transfer endpoint doesn't return program_id, transaction endpoint does
+  try {
+    const txRes = await fetch(`${FOGOSCAN_API}/account/transaction?address=${address}&page=1&page_size=20`)
+      .then(r => r.json()).catch(() => null);
+    const txList = txRes?.data?.transactions || [];
+    txList.forEach(tx => {
+      (tx.parsedInstruction || []).forEach(ins => {
+        const pid = ins.programId || ins.program_id || '';
+        Object.entries(CONFIG.programs).forEach(([name, confPid]) => {
+          if (confPid && pid === confPid) protoCounts[name]++;
+        });
+      });
+    });
+  } catch(e) { /* non-critical — token detection still works */ }
 
   // If history exceeds MAX_FETCH, extrapolate the volume proportionally
   if (totalCount > MAX_FETCH) {
@@ -5145,8 +5161,12 @@ function renderTasksUI(tasks) {
       : (task.task_type === 'manual' ? 'Submit UGC' : (t.tasks_pending || 'Pending'));
     const statusClass = done ? (task.task_type === 'auto' ? 'verified' : 'done') : 'pending';
 
-    const linkBtn = (task.task_type === 'link' && task.link && !done)
+    const linkBtn = (task.task_type === 'link' && task.link)
       ? `<button class="task-go-btn" onclick="window.open('${task.link}','_blank')">${t.tasks_go_dapp || 'Visit →'}</button>`
+      : '';
+    // Check button for link/auto dApp tasks — lets user manually verify onchain
+    const checkBtn = (task.task_type === 'link' || (task.task_type === 'auto' && key && ['valiant','pyron','brasa','ignition'].includes(key))) && !done
+      ? `<button class="task-go-btn" style="background:rgba(195,251,165,0.07);border-color:rgba(195,251,165,0.25);color:var(--lime);margin-left:4px;" onclick="checkDAppTask('${key}','${task.id}')" id="check-btn-${key}">Check ✓</button>`
       : '';
 
     // X share task gets its own inline input card
@@ -5216,7 +5236,7 @@ function renderTasksUI(tasks) {
       </div>
       <span class="task-points-badge${task.task_type === 'link' ? ' fire' : ''}">+${pts} pts</span>
       <span class="task-status-badge ${statusClass}">${statusLabel}</span>
-      ${linkBtn}
+      ${linkBtn}${checkBtn}
     </div>`;
   }).join('');
 }
@@ -5373,6 +5393,79 @@ async function fetchLeaderboardRank(walletAddress) {
       rankEl.dataset.realRank = 'true'; // prevents enhance.js from overwriting
     }
   } catch(e) { /* rank stays as estimate */ }
+}
+
+/* ================================================================
+   DAPP TASK INDIVIDUAL CHECK
+   Fetches transaction list for the wallet and checks if the
+   specific dApp's program ID appears — updates the task card live.
+================================================================ */
+async function checkDAppTask(detectionKey, taskId) {
+  const btn = document.getElementById('check-btn-' + detectionKey);
+  if (!btn || !STATE.wallet) return;
+  if (!STATE.cardData) { showAppErr('Generate your card first to check tasks.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+
+  // Program IDs per detection key
+  const PROGRAM_MAP = {
+    valiant:  'vnt1u7PzorND5JjweFWmDawKe2hLWoTwHU6QKz6XX98',
+    pyron:    'PyRon8FBSDSk6MxNKsZj2uZweBsa2nH5amyKnN6eN57',
+  };
+  // Token-based detection (for Brasa/Ignition that use token mint)
+  const TOKEN_KEYS = {
+    brasa:    'Brasa3xzkSC9XqMBEcN9v53x4oMkpb1nQwfaGMyJE88b',
+    ignition: 'iFoGoY5nMWpuMJogR7xjUAWDJtygHDF17zREeP4MKuD',
+    valiant_lp: '6CantHHfZsDtt3qMAQCGx8NphZUGoRkitX4jNZHtY8CW',
+  };
+
+  let detected = false;
+  try {
+    // Check transaction-level program IDs
+    const pid = PROGRAM_MAP[detectionKey];
+    if (pid) {
+      const txRes = await fetch(`${FOGOSCAN_API}/account/transaction?address=${STATE.wallet}&page=1&page_size=30`)
+        .then(r => r.json()).catch(() => null);
+      const txs = txRes?.data?.transactions || [];
+      detected = txs.some(tx =>
+        (tx.parsedInstruction || []).some(ins => (ins.programId || ins.program_id || '') === pid)
+      );
+    }
+    // Also check token holdings for token-based protocols
+    if (!detected) {
+      const tokenMint = TOKEN_KEYS[detectionKey] || (detectionKey === 'valiant' ? TOKEN_KEYS.valiant_lp : null);
+      if (tokenMint) {
+        const tokRes = await fetch(`${FOGOSCAN_API}/account/transfer?address=${STATE.wallet}&page=1&page_size=100`)
+          .then(r => r.json()).catch(() => null);
+        detected = (tokRes?.data || []).some(t => t.token_address === tokenMint);
+      }
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Error — retry';
+    return;
+  }
+
+  if (detected) {
+    // Update protocol counts in STATE and re-render tasks
+    if (STATE.cardData?.data?.protocols) {
+      STATE.cardData.data.protocols[detectionKey] = (STATE.cardData.data.protocols[detectionKey] || 0) + 1;
+    }
+    if (STATE.tasks) renderTasksUI(STATE.tasks);
+    updatePointsDisplay();
+    // If already entered raffle, update points in DB
+    if (STATE.wallet && db && STATE.raffleEntered) {
+      const { total: newPts, breakdown: newBrk } = calculatePoints(STATE.cardData, !!STATE._savedXLink);
+      STATE.currentPoints = newPts;
+      await db.from('card_submissions').update({ total_points: newPts, points_breakdown: newBrk, entry_count: newPts })
+        .eq('wallet_address', STATE.wallet).catch(() => {});
+    }
+  } else {
+    btn.disabled = false;
+    btn.textContent = 'Not found — try again';
+    setTimeout(() => { if (btn) { btn.disabled = false; btn.textContent = 'Check ✓'; } }, 3000);
+  }
 }
 
 /* ================================================================
