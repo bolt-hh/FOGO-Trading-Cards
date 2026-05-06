@@ -4029,14 +4029,13 @@ async function adminUgcReject(ugcId) {
 async function refreshAdmin() {
   if (!STATE.adminLoggedIn) return;
 
-  const [subRes, kolRes, kolMgmtRes] = await Promise.all([
+  const [subRes, kolMgmtRes] = await Promise.all([
     dbSelect('card_submissions'),
-    dbSelect('kol_passcodes'),
-    db ? db.from('kols').select('*').order('name').then(r => r) : Promise.resolve({ data: [], error: null }),
+    db ? db.from('kols').select('*').order('name').then(r => r).catch(() => ({ data: [], error: null })) : Promise.resolve({ data: [], error: null }),
   ]);
 
   STATE.allSubmissions = subRes.data || [];
-  STATE.allPasscodes   = kolRes.data || [];
+  STATE.allPasscodes   = []; // legacy — passcodes replaced by kols table
   STATE.allKols        = kolMgmtRes.data || [];
 
   renderAdminStats();
@@ -4050,7 +4049,7 @@ function renderAdminStats() {
   const subs = STATE.allSubmissions;
   const total   = subs.length;
   const volSum  = subs.reduce((s, r) => s + (r.total_volume_usd || 0), 0);
-  const activeKols = STATE.allPasscodes.filter(k => k.is_active).length;
+  const activeKols = STATE.allKols.filter(k => k.active !== false).length;
   const xShared = total > 0 ? Math.round(subs.filter(r => r.shared_x).length / total * 100) : 0;
 
   const aTotal  = document.getElementById('a-total');  if (aTotal)  aTotal.textContent  = total.toLocaleString();
@@ -4124,6 +4123,7 @@ function renderDashboard() {
 
 function renderKolTable() {
   const wrap = document.getElementById('kol-table-wrap');
+  if (!wrap) return; // removed — KOL management moved to KOLs tab
   const kols = STATE.allPasscodes;
 
   if (!kols.length) {
