@@ -1384,6 +1384,32 @@ body::before{
 }
 .tasks-section-title{font-family:'Clash Display',sans-serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;}
 .tasks-section-sub{font-size:11px;color:var(--dim);margin-bottom:14px;line-height:1.5;}
+
+/* Task tab buttons */
+.task-tab-row{display:flex;align-items:center;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
+.task-tab-btn{
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.12em;
+  text-transform:uppercase;padding:5px 12px;border-radius:4px;cursor:pointer;
+  border:1px solid rgba(195,251,165,0.35);color:var(--lime);background:transparent;
+  transition:all 0.15s;white-space:nowrap;
+}
+.task-tab-btn.active{background:rgba(195,251,165,0.1);border-color:rgba(195,251,165,0.6);color:var(--lime);}
+.task-tab-btn.locked{
+  border:1px solid rgba(195,251,165,0.25);color:var(--dimmer);cursor:default;
+  position:relative;
+}
+.task-tab-btn.locked:hover::after{
+  content:attr(data-tooltip);
+  position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+  background:#1a1f2e;border:1px solid var(--border);color:var(--sub);
+  font-size:9px;letter-spacing:0.05em;padding:5px 10px;border-radius:4px;
+  white-space:nowrap;pointer-events:none;z-index:99;
+}
+.task-tab-btn.locked:hover::before{
+  content:'';position:absolute;bottom:calc(100% + 1px);left:50%;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:#1a1f2e;pointer-events:none;z-index:99;
+}
+
 .task-grid{display:flex;flex-direction:column;gap:8px;}
 .task-card{
   background:var(--panel2);border:1px solid var(--border);border-radius:6px;
@@ -2081,8 +2107,10 @@ body::before{
           <span>
             <div class="tasks-section-title" id="t-tasks-heading">Your Tasks</div>
           </span>
-          <button class="rescan-btn" id="rescan-btn" onclick="rescanWallet()" id="t-rescan-btn">↻ Rescan Wallet</button>
+          <button class="rescan-btn" id="rescan-btn" onclick="rescanWallet()">↻ Rescan Wallet</button>
         </div>
+        <!-- Task tab row — tabs rendered by renderTaskTabsUI() -->
+        <div class="task-tab-row" id="task-tab-row"></div>
         <p class="tasks-section-sub" id="t-tasks-sub">Complete tasks to earn more raffle entries. Every point = 1 entry.</p>
         <div class="task-grid" id="task-grid">
           <div class="empty-state" style="padding:20px;">Loading tasks...</div>
@@ -2461,6 +2489,18 @@ body::before{
 
       <!-- ── TASKS TAB ──────────────────────────────────────────── -->
       <div id="admin-panel-tasks" class="admin-panel-section" style="display:none;">
+
+        <!-- Task Tabs Config -->
+        <div class="admin-section-full" style="margin-bottom:24px;">
+          <div class="admin-section-head">Task Tabs</div>
+          <div id="task-tabs-config-grid" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
+            <!-- Rendered by renderAdminTabsConfig() -->
+            <div style="color:var(--dim);font-size:11px;">Loading...</div>
+          </div>
+          <button class="btn-small" onclick="saveAdminTabsConfig()">Save Tab Settings</button>
+          <div id="tabs-save-success" style="display:none;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lime);"></div>
+        </div>
+
         <!-- Add Task Form -->
         <div class="admin-section-full">
           <div class="admin-section-head">Add Task</div>
@@ -2480,6 +2520,13 @@ body::before{
             </div>
             <div class="field"><label class="field-label">Detection Key</label><input class="field-input" id="task-add-key" type="text" placeholder="e.g. valiant, brasa, ugc"></div>
             <div class="field"><label class="field-label">Link URL</label><input class="field-input" id="task-add-link" type="url" placeholder="https://valiant.trade"></div>
+            <div class="field"><label class="field-label">Tab</label>
+              <select class="field-input" id="task-add-tab">
+                <option value="1">Tab 1 — Base Tasks</option>
+                <option value="2">Tab 2 — Week 2</option>
+                <option value="3">Tab 3 — Week 3</option>
+              </select>
+            </div>
             <div class="field"><label class="field-label">Max Completions (-1 = unlimited)</label><input class="field-input" id="task-add-max" type="number" value="1"></div>
             <div class="field"><label class="field-label">Sort Order</label><input class="field-input" id="task-add-sort" type="number" value="10"></div>
           </div>
@@ -4007,7 +4054,7 @@ function switchAdminTab(tab) {
     if (panel) panel.style.display = t === tab ? 'block' : 'none';
     if (btn)   btn.classList.toggle('active', t === tab);
   });
-  if (tab === 'tasks')       refreshAdminTasks();
+  if (tab === 'tasks')       { refreshAdminTasks(); renderAdminTabsConfig(); }
   if (tab === 'dashboard')   renderDashboard();
   if (tab === 'ugc')         refreshAdminUgc();
   if (tab === 'link-clicks') loadLinkClickStats();
@@ -5377,6 +5424,7 @@ function setLanguage(lang) {
   const xPlaceholderEl = document.getElementById('raffle-x-link');
   if (xPlaceholderEl) xPlaceholderEl.placeholder = t.x_share_placeholder || 'https://x.com/yourpost...';
   // Re-render tasks if loaded
+  if (STATE.taskTabs) renderTaskTabsUI();
   if (STATE.tasks && STATE.tasks.length) renderTasksUI(STATE.tasks);
   // Re-render points display
   updatePointsDisplay();
@@ -5471,31 +5519,79 @@ function updatePointsDisplay() {
 async function loadTasks() {
   if (!db) return;
   try {
-    const { data, error } = await db.from('tasks').select('*').eq('active', true).order('sort_order');
-    if (error || !data) return;
-    STATE.tasks = data;
-    renderTasksUI(data);
+    // Load tasks + tab settings in parallel
+    const [tasksRes, settingsRes] = await Promise.all([
+      db.from('tasks').select('*').eq('active', true).order('tab_group').order('sort_order'),
+      db.from('app_settings').select('key,value').like('key', 'task_tab_%'),
+    ]);
+    if (tasksRes.error || !tasksRes.data) return;
+    STATE.tasks = tasksRes.data;
+
+    // Parse tab settings
+    const raw = {};
+    (settingsRes.data || []).forEach(r => { raw[r.key] = r.value; });
+    STATE.taskTabs = [1, 2, 3].map(n => ({
+      id:     n,
+      name:   raw[`task_tab_${n}_name`]    || (n === 1 ? 'Base Tasks' : `Week ${n}`),
+      nameKo: raw[`task_tab_${n}_name_ko`] || (n === 1 ? '기본 태스크' : `${n}주차`),
+      locked: (raw[`task_tab_${n}_locked`] || (n === 1 ? 'false' : 'true')) === 'true',
+    }));
+
+    // Initialise active tab (always start on tab 1)
+    if (!STATE.activeTaskTab) STATE.activeTaskTab = 1;
+
+    renderTaskTabsUI();
+    renderTasksUI(STATE.tasks);
     renderUgcInlineSlots();
   } catch(e) {
     console.warn('[FOGO] loadTasks error:', e);
   }
-  // Also init points display
   updatePointsDisplay();
+}
+
+/* Render the tab pill row above the task grid */
+function renderTaskTabsUI() {
+  const row = document.getElementById('task-tab-row');
+  if (!row || !STATE.taskTabs) return;
+  const lang = CURRENT_LANG;
+  row.innerHTML = STATE.taskTabs.map(tab => {
+    if (tab.locked) {
+      const label = (lang === 'ko' ? tab.nameKo : tab.name);
+      return `<div class="task-tab-btn locked" data-tooltip="More tasks soon for more points, stay tuned">🔒 ${label}</div>`;
+    }
+    const label = (lang === 'ko' ? tab.nameKo : tab.name);
+    const active = STATE.activeTaskTab === tab.id ? ' active' : '';
+    return `<div class="task-tab-btn${active}" onclick="switchTaskTab(${tab.id})">${label}</div>`;
+  }).join('');
+}
+
+/* Switch visible task tab */
+function switchTaskTab(n) {
+  STATE.activeTaskTab = n;
+  renderTaskTabsUI();
+  if (STATE.tasks) renderTasksUI(STATE.tasks);
 }
 
 function renderTasksUI(tasks) {
   const grid = document.getElementById('task-grid');
   if (!grid || !STATE.cardData) return;
 
+  // Filter to active tab only
+  const activeTab = STATE.activeTaskTab || 1;
+  const filtered = tasks.filter(t => (t.tab_group || 1) === activeTab);
+
   const proto     = STATE.cardData?.data?.protocols || {};
   const breakdown = calculatePoints(STATE.cardData, !!(document.getElementById('raffle-x-link')?.value?.trim())).breakdown;
   const lang      = CURRENT_LANG;
   const t         = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
-  if (!tasks.length) {
-    grid.innerHTML = '<div class="empty-state" style="padding:20px;">No tasks available.</div>';
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-state" style="padding:20px;">No tasks in this tab yet.</div>';
     return;
   }
+
+  // Reassign tasks variable to filtered set for the rest of the render
+  tasks = filtered;
 
   grid.innerHTML = tasks.map(task => {
     const name  = (lang === 'ko' && task.name_ko) ? task.name_ko : task.name;
@@ -6070,8 +6166,22 @@ function renderLeaderboardTable(data, wrap) {
 async function refreshAdminTasks() {
   if (!db) return;
   try {
-    const { data } = await db.from('tasks').select('*').order('sort_order');
-    STATE.allTasks = data || [];
+    const [tasksRes, settingsRes] = await Promise.all([
+      db.from('tasks').select('*').order('tab_group').order('sort_order'),
+      db.from('app_settings').select('key,value').like('key', 'task_tab_%'),
+    ]);
+    STATE.allTasks = tasksRes.data || [];
+    // Keep STATE.taskTabs in sync for admin table labels
+    if (!STATE.taskTabs) {
+      const raw = {};
+      (settingsRes.data || []).forEach(r => { raw[r.key] = r.value; });
+      STATE.taskTabs = [1,2,3].map(n => ({
+        id: n,
+        name: raw[`task_tab_${n}_name`] || (n===1?'Base Tasks':`Week ${n}`),
+        nameKo: raw[`task_tab_${n}_name_ko`] || '',
+        locked: (raw[`task_tab_${n}_locked`] || (n===1?'false':'true')) === 'true',
+      }));
+    }
     renderAdminTasksTable(STATE.allTasks);
     // Pre-fill UGC max completions
     const ugcTask = STATE.allTasks.find(t => t.detection_key === 'ugc');
@@ -6088,12 +6198,15 @@ function renderAdminTasksTable(tasks) {
   if (!tasks.length) { wrap.innerHTML = '<div class="empty-state">No tasks yet.</div>'; return; }
 
   let html = `<table class="task-mgmt-table"><thead><tr>
-    <th>Name</th><th>Points</th><th>Type</th><th>Detection Key</th><th>Max</th><th>Status</th><th>Actions</th>
+    <th>Name</th><th>Tab</th><th>Points</th><th>Type</th><th>Detection Key</th><th>Max</th><th>Status</th><th>Actions</th>
   </tr></thead><tbody>`;
   tasks.forEach(task => {
-    const dot = task.active ? '<span class="active-dot"></span>' : '<span class="inactive-dot"></span>';
+    const dot    = task.active ? '<span class="active-dot"></span>' : '<span class="inactive-dot"></span>';
+    const tabNum = task.tab_group || 1;
+    const tabLabel = STATE.taskTabs ? (STATE.taskTabs[tabNum-1]?.name || `Tab ${tabNum}`) : `Tab ${tabNum}`;
     html += `<tr>
       <td class="hi">${task.name}</td>
+      <td style="color:var(--lime);font-family:'JetBrains Mono',monospace;">${tabLabel}</td>
       <td>${task.points}</td>
       <td>${task.task_type}</td>
       <td>${task.detection_key || '—'}</td>
@@ -6109,6 +6222,55 @@ function renderAdminTasksTable(tasks) {
   wrap.innerHTML = html;
 }
 
+/* ── Admin: Task Tabs Config ───────────────────────────────── */
+async function renderAdminTabsConfig() {
+  const grid = document.getElementById('task-tabs-config-grid');
+  if (!grid || !db) return;
+  const { data } = await db.from('app_settings').select('key,value').like('key', 'task_tab_%');
+  const raw = {};
+  (data || []).forEach(r => { raw[r.key] = r.value; });
+
+  grid.innerHTML = [1, 2, 3].map(n => {
+    const name   = raw[`task_tab_${n}_name`]    || (n === 1 ? 'Base Tasks' : `Week ${n}`);
+    const nameKo = raw[`task_tab_${n}_name_ko`] || '';
+    const locked = (raw[`task_tab_${n}_locked`] || (n === 1 ? 'false' : 'true')) === 'true';
+    return `
+      <div style="display:grid;grid-template-columns:80px 1fr 1fr auto;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;color:var(--dim);text-transform:uppercase;">Tab ${n}</div>
+        <input class="field-input" id="tab-name-${n}" value="${name}" placeholder="Tab name (EN)" style="margin:0;">
+        <input class="field-input" id="tab-name-ko-${n}" value="${nameKo}" placeholder="Tab name (KO)" style="margin:0;">
+        <label style="display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--sub);white-space:nowrap;cursor:${n===1?'not-allowed':'pointer'};">
+          <input type="checkbox" id="tab-locked-${n}" ${locked?'checked':''} ${n===1?'disabled':''} style="accent-color:var(--lime);">
+          Locked
+        </label>
+      </div>`;
+  }).join('');
+}
+
+async function saveAdminTabsConfig() {
+  if (!db) return;
+  const upserts = [];
+  for (let n = 1; n <= 3; n++) {
+    const name   = document.getElementById(`tab-name-${n}`)?.value.trim();
+    const nameKo = document.getElementById(`tab-name-ko-${n}`)?.value.trim();
+    const locked = n === 1 ? false : document.getElementById(`tab-locked-${n}`)?.checked;
+    if (name)   upserts.push({ key: `task_tab_${n}_name`,    value: name });
+    if (nameKo) upserts.push({ key: `task_tab_${n}_name_ko`, value: nameKo });
+    upserts.push({ key: `task_tab_${n}_locked`, value: String(locked) });
+  }
+  const { error } = await db.from('app_settings').upsert(upserts, { onConflict: 'key' });
+  const succ = document.getElementById('tabs-save-success');
+  if (error) { if (succ) { succ.style.display='block'; succ.style.color='var(--red)'; succ.textContent='Error: '+error.message; } return; }
+  if (succ) { succ.style.display='block'; succ.style.color='var(--lime)'; succ.textContent='Tab settings saved.'; setTimeout(()=>succ.style.display='none',3000); }
+
+  // Also update the tab dropdown labels in Add Task form
+  for (let n = 1; n <= 3; n++) {
+    const name = document.getElementById(`tab-name-${n}`)?.value.trim() || `Tab ${n}`;
+    const opt = document.querySelector(`#task-add-tab option[value="${n}"]`);
+    if (opt) opt.textContent = `Tab ${n} — ${name}`;
+  }
+}
+
 async function adminAddTask() {
   if (!db) { alert('Database not connected.'); return; }
   const name    = document.getElementById('task-add-name').value.trim();
@@ -6119,6 +6281,7 @@ async function adminAddTask() {
   const type    = document.getElementById('task-add-type').value;
   const key     = document.getElementById('task-add-key').value.trim() || null;
   const link    = document.getElementById('task-add-link').value.trim() || null;
+  const tabGrp  = parseInt(document.getElementById('task-add-tab')?.value) || 1;
   const maxC    = parseInt(document.getElementById('task-add-max').value) ?? 1;
   const sort    = parseInt(document.getElementById('task-add-sort').value) || 10;
   const active  = document.getElementById('task-add-active').checked;
@@ -6127,7 +6290,7 @@ async function adminAddTask() {
 
   const { error } = await db.from('tasks').insert({
     name, name_ko: nameKo || null, description: desc || null, description_ko: descKo || null,
-    points, task_type: type, detection_key: key, link, max_completions: maxC, sort_order: sort, active,
+    points, task_type: type, detection_key: key, link, max_completions: maxC, sort_order: sort, active, tab_group: tabGrp,
   });
   if (error) { alert('Error: ' + error.message); return; }
 
