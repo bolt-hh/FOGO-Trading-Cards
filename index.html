@@ -5269,16 +5269,17 @@ function renderTasksUI(tasks) {
     // X share task gets its own inline input card
     if (key === 'x_share') {
       if (done) {
-        // Already submitted — show confirmed state
-        return `<div class="task-card done">
+        // Already submitted — show confirmed state with Edit option
+        return `<div class="task-card done" id="x-share-task-card">
           <div class="task-card-info">
             <div class="task-card-name">${name}</div>
-            <div class="task-card-desc" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;">
+            <div class="task-card-desc" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;">
               <a href="${STATE._savedXLink}" target="_blank" style="color:var(--lime);text-decoration:none;">${STATE._savedXLink}</a>
             </div>
           </div>
           <span class="task-points-badge">+${pts} pts</span>
           <span class="task-status-badge done">${t.tasks_completed || 'Completed'}</span>
+          <button onclick="editXShareLink()" style="background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.1em;padding:4px 10px;border-radius:4px;cursor:pointer;margin-left:4px;white-space:nowrap;" title="Change your X post link">Edit</button>
         </div>`;
       }
       return `<div class="task-card ugc-expanded manual-type" id="x-share-task-card">
@@ -5342,6 +5343,17 @@ function renderTasksUI(tasks) {
    UGC INLINE SLOTS — renders inside the UGC task card
 ================================================================ */
 /* ── X share inline submit (task card) ─────────────────────────── */
+function editXShareLink() {
+  // Clear saved state so the task card re-renders as input mode
+  STATE._savedXLink = null;
+  try { if (STATE.wallet) localStorage.removeItem('fogo_x_share_' + STATE.wallet); } catch(e){}
+  const hiddenInput = document.getElementById('raffle-x-link');
+  if (hiddenInput) hiddenInput.value = '';
+  // Re-render tasks so the input appears
+  if (STATE.tasks) renderTasksUI(STATE.tasks);
+  updatePointsDisplay();
+}
+
 async function submitXShareInline() {
   const input = document.getElementById('x-share-task-input');
   const btn   = document.getElementById('x-share-task-btn');
@@ -5361,12 +5373,13 @@ async function submitXShareInline() {
   const hiddenInput = document.getElementById('raffle-x-link');
   if (hiddenInput) hiddenInput.value = link;
 
-  // Save to DB — upsert against wallet address (works even before raffle entry)
+  // Save to DB — only if a row already exists (row created by enterRaffle)
+  // enterRaffle() also saves x_share_link so it'll be recorded then if not yet
   if (db && STATE.wallet) {
-    await db.from('card_submissions')
+    const { error } = await db.from('card_submissions')
       .update({ x_share_link: link, social_link: link })
-      .eq('wallet_address', STATE.wallet)
-      .then(() => {}).catch(() => {});
+      .eq('wallet_address', STATE.wallet);
+    if (error) console.warn('[FOGO] x_share save:', error.message);
   }
 
   // Recalculate and refresh points display + task grid
