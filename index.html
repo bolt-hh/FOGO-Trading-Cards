@@ -3635,10 +3635,16 @@ async function trackLinkClick(key, url, source) {
    SHARE + ENTRY
 ================================================================ */
 function shareX() {
-  const tier   = STATE.cardData?.tier?.name || 'Chain Observer';
-  const vol    = STATE.cardData ? fmtUsd(STATE.cardData.vol) : '$0';
-  const handle = STATE.handle || '@anon';
-  const text   = `Just minted my FOGO Trader Card.\n\nTier: ${tier} | Volume: ${vol}\n\nWhat does your card say?\n\n${CONFIG.prize_pool}\n\n#FOGO #FogoChain #FasterCapital`;
+  const tier = STATE.cardData?.tier?.name || 'Chain Observer';
+  const vol  = STATE.cardData ? fmtUsd(STATE.cardData.vol) : '$0';
+  const lang = CURRENT_LANG;
+
+  let text;
+  if (lang === 'ko') {
+    text = `방금 FOGO 트레이더 카드를 발급받았습니다.\n\n등급: ${tier} | 거래량: ${vol}\n\nFOGO는 DeFi에서 가장 빠른 체인입니다. 가장 빠른 실행 속도, 가장 낮은 수수료.\n\n상위 트레이더를 위한 500,000 $FOGO 상금 풀이 있습니다.\n\n내 순위를 넘을 수 있나요? #FogoKorea`;
+  } else {
+    text = `Just minted my FOGO Trader Card.\n\nTier: ${tier} | ${vol} in volume.\n\nFOGO is the fastest chain in DeFi. Fastest execution, lowest fees.\n\nThey have 500,000 $FOGO prize pool for top traders.\n\nCan you beat my rank? #FogoKorea`;
+  }
   window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
 }
 
@@ -3961,7 +3967,14 @@ function showRaffleDone(hasBonus) {
 function shareTg() {
   const tier = STATE.cardData?.tier?.name || 'Unknown';
   const vol  = STATE.cardData ? fmtUsd(STATE.cardData.vol) : '$0';
-  const text = `Just minted my FOGO Trader Card.\n\nTier: ${tier} | Volume: ${vol}\n\nWhat does your card say?\n\n${CONFIG.prize_pool}\n\n#FOGO #FogoChain`;
+  const lang = CURRENT_LANG;
+
+  let text;
+  if (lang === 'ko') {
+    text = `방금 FOGO 트레이더 카드를 발급받았습니다.\n\n등급: ${tier} | 거래량: ${vol}\n\nFOGO는 DeFi에서 가장 빠른 체인입니다. 가장 빠른 실행 속도, 가장 낮은 수수료.\n\n상위 트레이더를 위한 500,000 $FOGO 상금 풀이 있습니다.\n\n내 순위를 넘을 수 있나요? #FogoKorea`;
+  } else {
+    text = `Just minted my FOGO Trader Card.\n\nTier: ${tier} | ${vol} in volume.\n\nFOGO is the fastest chain in DeFi. Fastest execution, lowest fees.\n\nThey have 500,000 $FOGO prize pool for top traders.\n\nCan you beat my rank? #FogoKorea`;
+  }
   window.open('https://t.me/share/url?url=' + encodeURIComponent(CONFIG.card_url || 'https://fogo.holohive.io') + '&text=' + encodeURIComponent(text), '_blank');
 }
 
