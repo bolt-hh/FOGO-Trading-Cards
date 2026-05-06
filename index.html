@@ -1925,6 +1925,17 @@ body::before{
         <div style="font-size:10px;color:var(--dim);margin-top:4px;">Both handles are required to generate your card and enter the draw.</div>
       </div>
 
+      <!-- KOL Selector — mandatory, loaded from admin KOLs tab -->
+      <div class="field" id="app-kol-field">
+        <label class="field-label">Who referred you? <span style="color:var(--fire);font-size:10px;">required</span></label>
+        <select class="field-input" id="app-kol-select" onchange="checkHandlesReady()" style="cursor:pointer;">
+          <option value="">— Select a KOL —</option>
+        </select>
+        <div id="app-kol-fallback" style="display:none;margin-top:8px;">
+          <input class="field-input" id="app-kol-manual" type="text" placeholder="Enter KOL name or handle..." oninput="checkHandlesReady()">
+        </div>
+      </div>
+
       <div id="app-err" class="err-box" style="margin-top:12px;"></div>
       <button class="btn-primary" id="gen-btn" onclick="generateCard()" style="margin-top:14px;" disabled>
         <span class="btn-sheen"></span>
@@ -2342,34 +2353,7 @@ body::before{
         </div>
       </div>
 
-      <!-- Two-col grid -->
-      <div class="admin-grid">
-        <!-- Create KOL passcode -->
-        <div class="admin-section">
-          <div class="admin-section-head">Create KOL Passcode</div>
-          <div class="passcode-form">
-            <div class="field"><label class="field-label">KOL Name</label><input class="field-input" id="new-kol-name" type="text" placeholder="e.g. CryptoWhale"></div>
-            <div class="field"><label class="field-label">X / Handle</label><input class="field-input" id="new-kol-handle" type="text" placeholder="@handle"></div>
-          </div>
-          <div class="field" style="margin-bottom:12px;">
-            <label class="field-label">Custom Passcode (optional)</label>
-            <input class="field-input" id="new-kol-code" type="text" placeholder="Leave blank to auto-generate">
-          </div>
-          <button class="btn-small" onclick="createPasscode()">+ Create Passcode</button>
-          <div id="create-success" style="display:none;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lime);"></div>
-        </div>
-
-        <!-- KOL performance -->
-        <div class="admin-section">
-          <div class="admin-section-head">
-            KOL Performance
-            <button class="btn-small" onclick="refreshAdmin()" style="font-size:9px;padding:5px 10px;">↻ Refresh</button>
-          </div>
-          <div id="kol-table-wrap">
-            <div class="empty-state">Loading KOL data...</div>
-          </div>
-        </div>
-      </div>
+      <!-- KOL referral breakdown moved to KOLs tab -->
 
       <!-- Submissions table -->
       <div class="admin-section-full">
@@ -2775,10 +2759,44 @@ function handlePfpUpload(event) {
 }
 
 function checkHandlesReady() {
-  const x = (document.getElementById('x-handle')?.value || '').trim();
-  const tg = (document.getElementById('tg-handle')?.value || '').trim();
+  const x   = (document.getElementById('x-handle')?.value || '').trim();
+  const tg  = (document.getElementById('tg-handle')?.value || '').trim();
+  const sel = document.getElementById('app-kol-select');
+  const man = document.getElementById('app-kol-manual');
+  const kolOk = (sel && sel.value) || (man && man.value.trim());
   const btn = document.getElementById('gen-btn');
-  if (btn) btn.disabled = !(x && tg && STATE.wallet && STATE.signature);
+  if (btn) btn.disabled = !(x && tg && kolOk && STATE.wallet && STATE.signature);
+}
+
+async function loadAppKolDropdown() {
+  const sel = document.getElementById('app-kol-select');
+  const fallback = document.getElementById('app-kol-fallback');
+  if (!sel || !db) return;
+  try {
+    const { data } = await db.from('kols').select('id,name,handle').eq('active', true).order('name');
+    if (!data || !data.length) {
+      sel.style.display = 'none';
+      if (fallback) fallback.style.display = 'block';
+      return;
+    }
+    // Clear and repopulate
+    sel.innerHTML = '<option value="">— Select a KOL —</option>';
+    data.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k.id;
+      opt.textContent = k.name + (k.handle ? ' (' + k.handle + ')' : '');
+      sel.appendChild(opt);
+    });
+    // Pre-select from ?kol= param or saved state
+    const preId = STATE._preselectedKolId || (STATE.kol_id);
+    if (preId) {
+      const match = data.find(k => k.id === preId);
+      if (match) { sel.value = match.id; checkHandlesReady(); }
+    }
+  } catch(e) {
+    sel.style.display = 'none';
+    if (fallback) fallback.style.display = 'block';
+  }
 }
 
 function loadSavedHandles() {
@@ -2928,7 +2946,9 @@ window.handleReownConnection = async function(pubkey) {
   await checkExistingSubmission(pubkey);
   // Load saved handles + PFP now that wallet is verified
   loadSavedHandles();
-  // Gen button only enabled when both handles are filled
+  // Load KOL dropdown from admin-managed list
+  loadAppKolDropdown();
+  // Gen button only enabled when handles + KOL are filled
   checkHandlesReady();
 };
 
@@ -3248,6 +3268,28 @@ async function generateCard() {
   const rawTg = (document.getElementById('tg-handle')?.value || '').trim();
   const cleanHandle = rawX.startsWith('@') ? rawX : '@' + rawX;
   const cleanTg     = rawTg ? (rawTg.startsWith('@') ? rawTg : '@' + rawTg) : '';
+
+  // Read KOL from app-level dropdown (mandatory)
+  const appKolSel = document.getElementById('app-kol-select');
+  const appKolMan = document.getElementById('app-kol-manual');
+  if (appKolSel && appKolSel.value) {
+    STATE.kol_id   = appKolSel.value;
+    STATE.kol_name = appKolSel.options[appKolSel.selectedIndex]?.text?.split(' (')[0] || '';
+  } else if (appKolMan && appKolMan.value.trim()) {
+    STATE.kol_id   = null;
+    STATE.kol_name = appKolMan.value.trim();
+  }
+  if (!STATE.kol_id && !STATE.kol_name) {
+    showAppErr('Please select which KOL referred you.');
+    return;
+  }
+  // Persist KOL selection
+  try {
+    if (STATE.wallet) {
+      localStorage.setItem('fogo_kol_id_'   + STATE.wallet, STATE.kol_id   || '');
+      localStorage.setItem('fogo_kol_name_' + STATE.wallet, STATE.kol_name || '');
+    }
+  } catch(e){}
   STATE.handle    = cleanHandle;
   STATE.handle_tg = cleanTg;
   STATE.handle_stored = cleanHandle; // X handle only — TG stored separately
