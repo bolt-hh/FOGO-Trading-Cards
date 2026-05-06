@@ -2112,6 +2112,14 @@ body::before{
         <!-- Task tab row — tabs rendered by renderTaskTabsUI() -->
         <div class="task-tab-row" id="task-tab-row"></div>
         <p class="tasks-section-sub" id="t-tasks-sub">Complete tasks to earn more raffle entries. Every point = 1 entry.</p>
+        <!-- Ecosystem guide banner -->
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(195,251,165,0.05);border:1px solid rgba(195,251,165,0.2);border-radius:6px;padding:10px 14px;margin-bottom:12px;">
+          <span style="font-size:16px;">📖</span>
+          <div style="flex:1;font-size:11px;color:var(--sub);line-height:1.5;">
+            <span id="t-guide-label">New to FOGO dApps? Step-by-step guide on how to complete the onchain tasks and earn up to 800 points.</span>
+          </div>
+          <a id="t-guide-link" href="https://docs.google.com/document/d/1_kX0JVcdom-ObW7IfYlqrxC6k35b7tTrrvl17GYZBFU/edit?usp=sharing" target="_blank" rel="noopener noreferrer" style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;color:var(--lime);background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);padding:5px 10px;border-radius:4px;white-space:nowrap;text-decoration:none;flex-shrink:0;">View Guide →</a>
+        </div>
         <div class="task-grid" id="task-grid">
           <div class="empty-state" style="padding:20px;">Loading tasks...</div>
         </div>
@@ -5115,6 +5123,8 @@ const TRANSLATIONS = {
     both_handles:       '카드 생성 및 래플 참가를 위해 두 핸들 모두 필요합니다.',
     kol_ref_label:      '누가 추천했나요?',
     kol_ref_placeholder:'— KOL 선택 —',
+    guide_label:        'FOGO dApp이 처음이신가요? 온체인 태스크 완료 방법과 최대 800포인트 획득 방법을 단계별로 안내합니다.',
+    guide_link:         '가이드 보기 →',
     load_txt:           'FOGO 체인 데이터 읽는 중',
     // Card
     vol_lbl:            '거래량',
@@ -5323,7 +5333,9 @@ function setLanguage(lang) {
   setTxt('t-required-x',      t.required        || 'required');
   setTxt('t-required-tg',     t.required        || 'required');
   setTxt('t-both-handles',    t.both_handles    || 'Both handles are required to generate your card and enter the draw.');
-  setTxt('t-kol-ref-label',   t.kol_ref_label   || 'Who referred you?');
+  setTxt('t-guide-label',     t.guide_label     || 'New to FOGO dApps? Step-by-step guide on how to complete the onchain tasks and earn up to 800 points.');
+  setTxt('t-guide-link',     t.guide_link      || 'View Guide →');
+  setTxt('t-kol-ref-label',  t.kol_ref_label   || 'Who referred you?');
   setTxt('t-required-kol',    t.required        || 'required');
   // KOL inline placeholder option
   const kolRefOpt = document.getElementById('t-kol-ref-placeholder');
