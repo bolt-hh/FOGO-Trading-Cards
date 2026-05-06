@@ -1895,14 +1895,34 @@ body::before{
         </div>
       </div>
 
-      <!-- Handle (X or Telegram) -->
-      <div class="field">
-        <label class="field-label"><span class="dot dot-x" id="handle-dot"></span> <span id="t-x-label">X / Twitter Handle</span></label>
-        <div class="platform-toggle">
-          <button type="button" class="platform-btn active" id="plat-x" onclick="setPlatform('x')">𝕏 Twitter</button>
-          <button type="button" class="platform-btn tg" id="plat-tg" onclick="setPlatform('tg')">✈ Telegram</button>
+      <!-- PFP Upload -->
+      <div class="field" style="margin-bottom:10px;">
+        <label class="field-label">Profile Picture (shown on your card)</label>
+        <div id="pfp-upload-area" style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+          <div id="pfp-preview" style="width:52px;height:52px;border-radius:50%;background:var(--panel2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;transition:border-color 0.2s;" onclick="document.getElementById('pfp-file-input').click()">
+            <svg style="width:20px;height:20px;color:var(--dim);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          </div>
+          <div style="flex:1;">
+            <button type="button" onclick="document.getElementById('pfp-file-input').click()" style="background:var(--panel2);border:1px solid var(--border);color:var(--sub);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;padding:8px 14px;border-radius:5px;cursor:pointer;width:100%;text-align:left;transition:border-color 0.15s;">
+              Upload photo →
+            </button>
+            <div style="font-size:10px;color:var(--dim);margin-top:4px;">PNG, JPG, GIF · appears as circular avatar on card</div>
+          </div>
+          <input type="file" id="pfp-file-input" accept="image/*" style="display:none;" onchange="handlePfpUpload(event)">
         </div>
-        <input class="field-input" id="x-handle" type="text" placeholder="@yourhandle">
+      </div>
+
+      <!-- X Handle (mandatory) -->
+      <div class="field" style="margin-bottom:8px;">
+        <label class="field-label"><span style="color:var(--text);">𝕏</span> X / Twitter Handle <span style="color:var(--fire);font-size:10px;">required</span></label>
+        <input class="field-input" id="x-handle" type="text" placeholder="@yourhandle" oninput="checkHandlesReady()">
+      </div>
+
+      <!-- Telegram Handle (mandatory) -->
+      <div class="field">
+        <label class="field-label"><span style="color:#2AABEE;">✈</span> Telegram Handle <span style="color:var(--fire);font-size:10px;">required</span></label>
+        <input class="field-input" id="tg-handle" type="text" placeholder="@yourtelegramhandle" oninput="checkHandlesReady()">
+        <div style="font-size:10px;color:var(--dim);margin-top:4px;">Both handles are required to generate your card and enter the draw.</div>
       </div>
 
       <div id="app-err" class="err-box" style="margin-top:12px;"></div>
@@ -1963,6 +1983,10 @@ body::before{
           <div class="c-series" id="c-series">Season II — Trader Card</div>
         </div>
         <div class="card-identity c-z">
+          <!-- PFP avatar -->
+          <div id="c-pfp-wrap" style="display:none;margin-bottom:10px;">
+            <img id="c-pfp" src="" alt="PFP" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(195,251,165,0.3);box-shadow:0 0 12px rgba(195,251,165,0.15);">
+          </div>
           <div class="card-handle" id="c-handle">@handle</div>
           <div class="vol-block">
             <div class="vol-num" id="c-vol">$0</div>
@@ -2713,6 +2737,61 @@ function showView(id) {
 /* ================================================================
    PLATFORM TOGGLE (X vs Telegram)
 ================================================================ */
+/* ================================================================
+   PFP UPLOAD + HANDLE PERSISTENCE
+================================================================ */
+function handlePfpUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    STATE.userPfp = dataUrl;
+    // Show preview in form
+    const preview = document.getElementById('pfp-preview');
+    if (preview) preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    // Show on card if already generated
+    const cardPfp = document.getElementById('c-pfp');
+    const cardPfpWrap = document.getElementById('c-pfp-wrap');
+    if (cardPfp) { cardPfp.src = dataUrl; if (cardPfpWrap) cardPfpWrap.style.display = 'block'; }
+    // Persist
+    try { localStorage.setItem('fogo_pfp', dataUrl); } catch(e){}
+  };
+  reader.readAsDataURL(file);
+}
+
+function checkHandlesReady() {
+  const x = (document.getElementById('x-handle')?.value || '').trim();
+  const tg = (document.getElementById('tg-handle')?.value || '').trim();
+  const btn = document.getElementById('gen-btn');
+  if (btn) btn.disabled = !(x && tg && STATE.wallet && STATE.signature);
+}
+
+function loadSavedHandles() {
+  try {
+    const savedX  = localStorage.getItem('fogo_x_handle');
+    const savedTg = localStorage.getItem('fogo_tg_handle');
+    const savedPfp = localStorage.getItem('fogo_pfp');
+    if (savedX)  { const el = document.getElementById('x-handle');  if (el) el.value = savedX; }
+    if (savedTg) { const el = document.getElementById('tg-handle'); if (el) el.value = savedTg; }
+    if (savedPfp) {
+      STATE.userPfp = savedPfp;
+      const preview = document.getElementById('pfp-preview');
+      if (preview) preview.innerHTML = `<img src="${savedPfp}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    }
+  } catch(e){}
+  checkHandlesReady();
+}
+
+function saveHandles() {
+  const x  = (document.getElementById('x-handle')?.value || '').trim();
+  const tg = (document.getElementById('tg-handle')?.value || '').trim();
+  try {
+    if (x)  localStorage.setItem('fogo_x_handle', x);
+    if (tg) localStorage.setItem('fogo_tg_handle', tg);
+  } catch(e){}
+}
+
 function setPlatform(p) {
   STATE.handle_platform = p;
   const xBtn  = document.getElementById('plat-x');
@@ -2817,7 +2896,10 @@ window.handleReownConnection = async function(pubkey) {
 
   // Check for existing submission then enable generate
   await checkExistingSubmission(pubkey);
-  document.getElementById('gen-btn').disabled = false;
+  // Load saved handles + PFP now that wallet is verified
+  loadSavedHandles();
+  // Gen button only enabled when both handles are filled
+  checkHandlesReady();
 };
 
 // Called by AppKit when wallet disconnects, or manually
@@ -3078,11 +3160,14 @@ async function generateCard() {
   if (!STATE.wallet)    { showAppErr('Connect your wallet first.'); return; }
   if (!STATE.signature) { showAppErr('Wallet signature missing. Disconnect and reconnect.'); return; }
 
-  const rawHandle = document.getElementById('x-handle').value.trim() || '@anon';
-  const cleanHandle = rawHandle.startsWith('@') ? rawHandle : '@' + rawHandle;
-  STATE.handle = cleanHandle;
-  // Prefix platform for DB storage so admin can distinguish
-  STATE.handle_stored = STATE.handle_platform === 'tg' ? 'TG:' + cleanHandle : cleanHandle;
+  const rawX  = (document.getElementById('x-handle')?.value || '').trim() || '@anon';
+  const rawTg = (document.getElementById('tg-handle')?.value || '').trim();
+  const cleanHandle = rawX.startsWith('@') ? rawX : '@' + rawX;
+  const cleanTg     = rawTg ? (rawTg.startsWith('@') ? rawTg : '@' + rawTg) : '';
+  STATE.handle    = cleanHandle;
+  STATE.handle_tg = cleanTg;
+  STATE.handle_stored = cleanHandle + (cleanTg ? ' | TG:' + cleanTg : '');
+  saveHandles();
 
   // If already submitted, render existing card from DB data without re-fetching
   if (STATE.alreadySubmitted && STATE.existingCardData) {
@@ -3220,6 +3305,13 @@ function renderCard(wallet, handle, data, tier, power) {
 
   $('c-handle').textContent = handle;
   $('c-vol').textContent    = fmtUsd(vol);
+
+  // Show PFP on card if uploaded
+  if (STATE.userPfp) {
+    const pfpImg = $('c-pfp');
+    const pfpWrap = $('c-pfp-wrap');
+    if (pfpImg) { pfpImg.src = STATE.userPfp; if (pfpWrap) pfpWrap.style.display = 'block'; }
+  }
   $('c-series').textContent = `${CONFIG.season} — ${tier.name === 'FOGO Apex' ? 'APEX EDITION' : tier.name.toUpperCase()}`;
 
   $('r-icon').textContent   = tier.icon;
