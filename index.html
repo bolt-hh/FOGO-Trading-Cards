@@ -468,13 +468,22 @@ html[lang="ko"] .pvb-en { display:none; }
 .gate-tier.apex{border-color:rgba(195,251,165,0.25);background:rgba(195,251,165,0.04);}
 .gate-tier.apex .gate-tier-name{color:var(--lime);}
 .gate-tier{position:relative;cursor:default;}
-/* Tooltip rendered by JS — see wireTierTooltips() */
-#tier-tooltip{
-  position:fixed;z-index:999;pointer-events:none;
-  background:#1a1f2e;border:1px solid rgba(195,251,165,0.25);
-  color:var(--sub);font-family:'Inter',sans-serif;font-size:10px;line-height:1.5;
-  padding:9px 13px;border-radius:6px;max-width:220px;text-align:center;
-  box-shadow:0 4px 20px rgba(0,0,0,0.5);display:none;
+/* CSS-only tooltip — reads lang from html element, no JS needed */
+.gate-tier[data-tooltip-en]:hover::after{
+  content:attr(data-tooltip-en);
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:#1a1f2e;border:1px solid rgba(195,251,165,0.2);color:var(--sub);
+  font-family:'Inter',sans-serif;font-size:10px;line-height:1.5;
+  padding:8px 12px;border-radius:6px;white-space:normal;width:210px;
+  text-align:center;pointer-events:none;z-index:50;
+  box-shadow:0 4px 16px rgba(0,0,0,0.4);
+}
+html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
+  content:attr(data-tooltip-ko);
+}
+.gate-tier[data-tooltip-en]:hover::before{
+  content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:#1a1f2e;pointer-events:none;z-index:50;
 }
 
 .err-box{
@@ -5372,35 +5381,7 @@ function applyTierTooltips(lang) {
   });
 }
 
-function wireTierTooltips() {
-  // Create floating tooltip div if it doesn't exist
-  let tip = document.getElementById('tier-tooltip');
-  if (!tip) {
-    tip = document.createElement('div');
-    tip.id = 'tier-tooltip';
-    document.body.appendChild(tip);
-  }
-  document.querySelectorAll('.gate-tier').forEach(el => {
-    el.addEventListener('mouseenter', function(e) {
-      const text = this.getAttribute('data-tooltip');
-      if (!text) return;
-      tip.textContent = text;
-      tip.style.display = 'block';
-    });
-    el.addEventListener('mousemove', function(e) {
-      const margin = 12;
-      let x = e.clientX + margin;
-      let y = e.clientY - tip.offsetHeight - margin;
-      if (x + tip.offsetWidth > window.innerWidth) x = e.clientX - tip.offsetWidth - margin;
-      if (y < 0) y = e.clientY + margin;
-      tip.style.left = x + 'px';
-      tip.style.top  = y + 'px';
-    });
-    el.addEventListener('mouseleave', function() {
-      tip.style.display = 'none';
-    });
-  });
-}
+function wireTierTooltips() { /* CSS handles tooltips via html[lang] — no JS needed */ }
 
 function applyKoData() {
   document.querySelectorAll('[data-ko]').forEach(el => {
