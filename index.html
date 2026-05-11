@@ -2768,7 +2768,7 @@ const CONFIG = {
   sb_project_ref:  'nhdktvsllunlgdsaninx',
 
   // ── ADMIN ─────────────────────────────────────────────────────
-  admin_password_hash: '728f5bacc384b4ee31e14b220c461a30f8fcc746eda6b69397bca8f03d2e85de', // SHA-256 of admin password — raw password never stored here
+  // Password hash removed — auth is now server-side via /api/admin-auth
   admin_param: 'admin',        // URL param to show admin view (?admin=1)
 
   // ── FOGO RPC ──────────────────────────────────────────────────
@@ -2835,6 +2835,7 @@ let STATE = {
   _lastInsertedWallet: null,
   submitted: false,
   adminLoggedIn: false,
+  adminToken:    null,
   allSubmissions: [],
   allPasscodes: [],
   allKols: [],
@@ -2951,10 +2952,17 @@ window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => { applyKoData(); applyTierTooltips('ko'); renderPrizeValueBox(); }, 500);
     });
   }
-  // Pre-fill admin gate if already logged in this session
-  if (sessionStorage.getItem('fogo_admin')) {
-    STATE.adminLoggedIn = true;
-    showAdminDashboard();
+  // Restore admin session from stored token (validates expiry client-side before trusting)
+  const storedToken = sessionStorage.getItem('fogo_admin_token');
+  if (storedToken) {
+    const [expiry] = storedToken.split('.');
+    if (expiry && Date.now() < Number(expiry)) {
+      STATE.adminToken    = storedToken;
+      STATE.adminLoggedIn = true;
+      showAdminDashboard();
+    } else {
+      sessionStorage.removeItem('fogo_admin_token'); // expired — clear it
+    }
   }
   // Pre-select KOL from ?kol= URL param
   const kolParam = params.get('kol');
@@ -4166,32 +4174,66 @@ async function downloadCard() {
 /* ================================================================
    ADMIN PANEL
 ================================================================ */
+
+// ── Server-side admin API helper ─────────────────────────────────
+async function adminCall(action, params = {}) {
+  if (!STATE.adminLoggedIn || !STATE.adminToken) {
+    console.warn('[admin] Not authenticated');
+    return { ok: false, error: 'Not authenticated' };
+  }
+  try {
+    const res = await fetch('/api/admin-action', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ token: STATE.adminToken, action, params }),
+    });
+    if (res.status === 401) {
+      // Token expired or invalid — force re-login
+      STATE.adminLoggedIn = false;
+      STATE.adminToken    = null;
+      sessionStorage.removeItem('fogo_admin_token');
+      document.getElementById('admin-gate').style.display      = 'block';
+      document.getElementById('admin-dashboard').style.display = 'none';
+      alert('Admin session expired. Please log in again.');
+      return { ok: false, error: 'Session expired' };
+    }
+    return await res.json();
+  } catch (e) {
+    console.error('[admin] adminCall error:', e);
+    return { ok: false, error: e.message };
+  }
+}
+
 async function adminLogin() {
   const pass = document.getElementById('admin-pass-input').value;
   const err  = document.getElementById('admin-gate-err');
   err.classList.remove('on');
 
-  // Hash the input and compare against stored hash — raw password never lives in source
-  const encoded = new TextEncoder().encode(pass);
-  const hashBuf = await crypto.subtle.digest('SHA-256', encoded);
-  const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
-
-  if (hashHex !== CONFIG.admin_password_hash) {
+  try {
+    const res  = await fetch('/api/admin-auth', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ password: pass }),
+    });
+    if (!res.ok) { err.classList.add('on'); return; }
+    const { token } = await res.json();
+    STATE.adminToken    = token;
+    STATE.adminLoggedIn = true;
+    sessionStorage.setItem('fogo_admin_token', token);
+    showAdminDashboard();
+  } catch (e) {
     err.classList.add('on');
-    return;
+    console.error('[admin] Login error:', e);
   }
-
-  STATE.adminLoggedIn = true;
-  sessionStorage.setItem('fogo_admin', '1');
-  showAdminDashboard();
 }
 
 function adminLogout() {
   STATE.adminLoggedIn = false;
-  sessionStorage.removeItem('fogo_admin');
-  document.getElementById('admin-gate').style.display = 'block';
+  STATE.adminToken    = null;
+  sessionStorage.removeItem('fogo_admin_token');
+  document.getElementById('admin-gate').style.display      = 'block';
   document.getElementById('admin-dashboard').style.display = 'none';
-  document.getElementById('admin-pass-input').value = '';
+  document.getElementById('admin-pass-input').value        = '';
 }
 
 function showAdminDashboard() {
@@ -4268,7 +4310,10 @@ async function refreshAdminUgc() {
 
 async function adminUgcApprove(ugcId, walletAddress) {
   if (!STATE.adminLoggedIn) return;
-  if (!db) return;
+  await adminCall('ugcApprove', { ugcId, walletAddress });
+  refreshAdminUgc();
+  return;
+  if (!db) return; // legacy — unreachable after API migration
   try {
     // Mark submission approved with 100 points
     const { error: ugcErr } = await db.from('ugc_submissions')
@@ -4297,8 +4342,7 @@ async function adminUgcApprove(ugcId, walletAddress) {
 
 async function adminUgcReject(ugcId) {
   if (!STATE.adminLoggedIn) return;
-  if (!db) return;
-  await db.from('ugc_submissions').update({ status: 'rejected', points_awarded: 0 }).eq('id', ugcId);
+  await adminCall('ugcReject', { ugcId });
   refreshAdminUgc();
 }
 
@@ -4607,12 +4651,8 @@ async function deleteEntry(id) {
   if (!STATE.adminLoggedIn) return;
   if (!id) return;
   if (!confirm('Delete this entry? This cannot be undone.')) return;
-  if (!db) { alert('Database not connected.'); return; }
-  const { error } = await db.from('card_submissions').delete().eq('id', id);
-  if (error) {
-    alert('Delete failed: ' + error.message);
-    return;
-  }
+  const result = await adminCall('deleteEntry', { id });
+  if (!result.ok) { alert('Delete failed: ' + (result.error || 'unknown error')); return; }
   STATE.allSubmissions = STATE.allSubmissions.filter(r => String(r.id) !== String(id));
   renderSubmissionsTable(STATE.allSubmissions);
 }
@@ -4640,21 +4680,17 @@ function updateDeleteSelectedBtn() {
 }
 
 async function deleteSelectedEntries() {
+  if (!STATE.adminLoggedIn) return;
   const selected = Array.from(document.querySelectorAll('.entry-checkbox:checked'));
   if (!selected.length) return;
   if (!confirm(`Delete ${selected.length} selected entries? This cannot be undone.`)) return;
-  if (!db) { alert('Database not connected.'); return; }
   const ids = selected.map(el => el.getAttribute('data-id'));
-  const failed = [];
-  for (const id of ids) {
-    const { error } = await db.from('card_submissions').delete().eq('id', id);
-    if (error) { failed.push(id); }
-    else { STATE.allSubmissions = STATE.allSubmissions.filter(r => String(r.id) !== String(id)); }
-  }
+  const result = await adminCall('deleteSelectedEntries', { ids });
+  if (!result.ok) { alert('Bulk delete failed: ' + (result.error || 'unknown error')); return; }
+  STATE.allSubmissions = STATE.allSubmissions.filter(r => !ids.includes(String(r.id)));
   renderSubmissionsTable(STATE.allSubmissions);
   const btn = document.getElementById('adminDeleteSelectedBtn');
   if (btn) btn.classList.remove('visible');
-  if (failed.length) alert(`${failed.length} entries could not be deleted.`);
 }
 
 /* ================================================================
@@ -4924,15 +4960,12 @@ async function addKol() {
   const name   = document.getElementById('kol-add-name').value.trim();
   const handle = document.getElementById('kol-add-handle').value.trim();
   if (!name) { alert('Enter a KOL name.'); return; }
-  if (!db)   { alert('Database not connected.'); return; }
-
-  const { data, error } = await db.from('kols').insert({ name, handle: handle || null, active: true }).select().single();
-  if (error) { alert('Error: ' + error.message); return; }
-
+  const result = await adminCall('addKol', { name, handle });
+  if (!result.ok) { alert('Error adding KOL: ' + (result.error || 'unknown')); return; }
   const succ = document.getElementById('kol-add-success');
   succ.style.display = 'block';
   succ.textContent = 'Added: ' + name;
-  document.getElementById('kol-add-name').value  = '';
+  document.getElementById('kol-add-name').value   = '';
   document.getElementById('kol-add-handle').value = '';
   setTimeout(() => { succ.style.display = 'none'; }, 3000);
   await refreshAdmin();
@@ -4940,8 +4973,7 @@ async function addKol() {
 
 async function toggleKolActive(id, currentActive) {
   if (!STATE.adminLoggedIn) return;
-  if (!db) return;
-  await db.from('kols').update({ active: !currentActive }).eq('id', id);
+  await adminCall('toggleKolActive', { id, active: !currentActive });
   await refreshAdmin();
 }
 
@@ -4949,8 +4981,7 @@ async function deleteKol(id) {
   if (!STATE.adminLoggedIn) return;
   if (!id) return;
   if (!confirm('Delete this KOL? This cannot be undone.')) return;
-  if (!db) return;
-  await db.from('kols').delete().eq('id', id);
+  await adminCall('deleteKol', { id });
   await refreshAdmin();
 }
 
@@ -6517,9 +6548,9 @@ async function saveAdminTabsConfig() {
     if (nameKo) upserts.push({ key: `task_tab_${n}_name_ko`, value: nameKo });
     upserts.push({ key: `task_tab_${n}_locked`, value: String(locked) });
   }
-  const { error } = await db.from('app_settings').upsert(upserts, { onConflict: 'key' });
+  const result = await adminCall('saveTabsConfig', { upserts });
   const succ = document.getElementById('tabs-save-success');
-  if (error) { if (succ) { succ.style.display='block'; succ.style.color='var(--red)'; succ.textContent='Error: '+error.message; } return; }
+  if (!result.ok) { if (succ) { succ.style.display='block'; succ.style.color='var(--red)'; succ.textContent='Error: '+(result.error||'unknown'); } return; }
   if (succ) { succ.style.display='block'; succ.style.color='var(--lime)'; succ.textContent='Tab settings saved.'; setTimeout(()=>succ.style.display='none',3000); }
 
   // Also update the tab dropdown labels in Add Task form
@@ -6532,7 +6563,6 @@ async function saveAdminTabsConfig() {
 
 async function adminAddTask() {
   if (!STATE.adminLoggedIn) return;
-  if (!db) { alert('Database not connected.'); return; }
   const name    = document.getElementById('task-add-name').value.trim();
   const nameKo  = document.getElementById('task-add-name-ko').value.trim();
   const desc    = document.getElementById('task-add-desc').value.trim();
@@ -6545,15 +6575,13 @@ async function adminAddTask() {
   const maxC    = parseInt(document.getElementById('task-add-max').value) ?? 1;
   const sort    = parseInt(document.getElementById('task-add-sort').value) || 10;
   const active  = document.getElementById('task-add-active').checked;
-
   if (!name) { alert('Enter task name.'); return; }
 
-  const { error } = await db.from('tasks').insert({
+  const result = await adminCall('addTask', { task: {
     name, name_ko: nameKo || null, description: desc || null, description_ko: descKo || null,
     points, task_type: type, detection_key: key, link, max_completions: maxC, sort_order: sort, active, tab_group: tabGrp,
-  });
-  if (error) { alert('Error: ' + error.message); return; }
-
+  }});
+  if (!result.ok) { alert('Error adding task: ' + (result.error || 'unknown')); return; }
   const succ = document.getElementById('task-add-success');
   if (succ) { succ.style.display = 'block'; succ.textContent = 'Task added: ' + name; setTimeout(() => succ.style.display = 'none', 3000); }
   await refreshAdminTasks();
@@ -6561,8 +6589,7 @@ async function adminAddTask() {
 
 async function adminToggleTask(id, currentActive) {
   if (!STATE.adminLoggedIn) return;
-  if (!db) return;
-  await db.from('tasks').update({ active: !currentActive }).eq('id', id);
+  await adminCall('toggleTask', { id, active: !currentActive });
   await refreshAdminTasks();
 }
 
@@ -6570,53 +6597,36 @@ async function adminDeleteTask(id) {
   if (!STATE.adminLoggedIn) return;
   if (!id) return;
   if (!confirm('Delete this task?')) return;
-  if (!db) return;
-  await db.from('tasks').delete().eq('id', id);
+  await adminCall('deleteTask', { id });
   await refreshAdminTasks();
 }
 
 async function updateUgcMax() {
-  if (!db) return;
+  if (!STATE.adminLoggedIn) return;
   const val = parseInt(document.getElementById('ugc-max-input').value) ?? 1;
   const ugcTask = STATE.allTasks.find(t => t.detection_key === 'ugc');
   if (!ugcTask) { alert('No UGC task found. Create one with detection_key = ugc first.'); return; }
-  const { error } = await db.from('tasks').update({ max_completions: val }).eq('id', ugcTask.id);
+  const result = await adminCall('updateUgcMax', { id: ugcTask.id, val });
   const msg = document.getElementById('ugc-max-msg');
-  if (!error && msg) { msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 2000); }
+  if (result.ok && msg) { msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 2000); }
   await refreshAdminTasks();
 }
 
 async function awardUgcPoints() {
   if (!STATE.adminLoggedIn) return;
-  if (!db) { alert('Database not connected.'); return; }
-  const wallet  = document.getElementById('ugc-wallet').value.trim();
+  const wallet   = document.getElementById('ugc-wallet').value.trim();
   const postLink = document.getElementById('ugc-post-link').value.trim();
   if (!wallet) { alert('Enter wallet address.'); return; }
-
-  // Fetch current ugc_points and total_points
-  const { data: row } = await db.from('card_submissions').select('ugc_points,total_points,points_breakdown').eq('wallet_address', wallet).maybeSingle();
-  if (!row) { alert('Wallet not found in submissions.'); return; }
-
-  const newUgc   = (row.ugc_points || 0) + 100;
-  const newTotal = (row.total_points || 0) + 100;
-  const newBreak = Object.assign({}, row.points_breakdown || {}, { ugc: newUgc });
-
-  const { error } = await db.from('card_submissions').update({
-    ugc_points:       newUgc,
-    total_points:     newTotal,
-    points_breakdown: newBreak,
-    x_share_link:     postLink || null,
-  }).eq('wallet_address', wallet);
-
+  const result = await adminCall('awardUgcPoints', { wallet, postLink });
   const msg = document.getElementById('ugc-award-msg');
-  if (!error && msg) {
+  if (result.ok && msg) {
     msg.style.display = 'block';
-    msg.textContent = `Awarded 100 UGC pts to ${wallet.slice(0,8)}... Total: ${newTotal} pts`;
+    msg.textContent = `Awarded 100 UGC pts to ${wallet.slice(0,8)}... Total: ${result.newTotal} pts`;
     setTimeout(() => msg.style.display = 'none', 5000);
-    document.getElementById('ugc-wallet').value = '';
+    document.getElementById('ugc-wallet').value   = '';
     document.getElementById('ugc-post-link').value = '';
-  } else if (error) {
-    alert('Error: ' + error.message);
+  } else if (!result.ok) {
+    alert('Error: ' + (result.error || 'unknown'));
   }
 }
 
