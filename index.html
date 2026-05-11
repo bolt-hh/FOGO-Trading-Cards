@@ -4349,12 +4349,13 @@ async function adminUgcReject(ugcId) {
 async function refreshAdmin() {
   if (!STATE.adminLoggedIn) return;
 
-  const [subRes, kolMgmtRes] = await Promise.all([
-    dbSelect('card_submissions'),
+  // Submissions fetched via service-role API so telegram_handle (restricted from anon) is included
+  const [subResult, kolMgmtRes] = await Promise.all([
+    adminCall('fetchSubmissions'),
     db ? db.from('kols').select('*').order('name').then(r => r).catch(() => ({ data: [], error: null })) : Promise.resolve({ data: [], error: null }),
   ]);
 
-  STATE.allSubmissions = subRes.data || [];
+  STATE.allSubmissions = subResult.data || [];
   STATE.allPasscodes   = []; // legacy — passcodes replaced by kols table
   STATE.allKols        = kolMgmtRes.data || [];
 
