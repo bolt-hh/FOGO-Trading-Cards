@@ -1805,18 +1805,28 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 
       <!-- Prize overview strip -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:28px 0;">
+
         <div style="background:var(--panel);border:1px solid rgba(195,251,165,0.2);border-radius:8px;padding:14px 12px;text-align:center;">
           <div style="font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;color:var(--lime);line-height:1.1;">225,000<br><span style="font-size:10px;letter-spacing:0.06em;">$FOGO</span></div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;" id="t-prize-lbl-lb">Leaderboard</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--lime);margin-top:6px;opacity:0.8;" id="t-prize-lbl-lb">Leaderboard</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:3px;line-height:1.4;"
+               data-ko="포인트 상위 트레이더">Top traders by points</div>
         </div>
+
         <div style="background:var(--panel);border:1px solid rgba(255,61,0,0.25);border-radius:8px;padding:14px 12px;text-align:center;">
           <div style="font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;color:var(--fire);line-height:1.1;">200,000<br><span style="font-size:10px;letter-spacing:0.06em;">$FOGO</span></div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;" id="t-prize-lbl-draw">Lucky Draw</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--fire);margin-top:6px;opacity:0.8;" id="t-prize-lbl-draw">Lucky Draw</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:3px;line-height:1.4;"
+               data-ko="200명 무작위 당첨">200 random winners</div>
         </div>
+
         <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 12px;text-align:center;">
           <div style="font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;color:var(--sub);line-height:1.1;">50,000<br><span style="font-size:10px;letter-spacing:0.06em;">$FOGO</span></div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:5px;" id="t-prize-lbl-ugc">Top UGC</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:var(--sub);margin-top:6px;opacity:0.8;" id="t-prize-lbl-ugc">Top Content</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:3px;line-height:1.4;"
+               data-ko="베스트 오리지널 게시물 10개">Best 10 original posts</div>
         </div>
+
       </div>
 
       <!-- How to maximise points -->
@@ -5322,7 +5332,7 @@ const TRANSLATIONS = {
     // Prize strip labels
     prize_lbl_lb:       '리더보드',
     prize_lbl_draw:     '럭키 드로우',
-    prize_lbl_ugc:      '상위 UGC',
+    prize_lbl_ugc:      '상위 콘텐츠',
     // Gate leaderboard panel
     lb_prizes_head:     '리더보드 상금',
     lb_lucky_draw:      '200× 럭키 드로우',
@@ -5590,7 +5600,7 @@ function setLanguage(lang) {
   // Gate prize strip
   setTxt('t-prize-lbl-lb',   t.prize_lbl_lb   || 'Leaderboard');
   setTxt('t-prize-lbl-draw', t.prize_lbl_draw || 'Lucky Draw');
-  setTxt('t-prize-lbl-ugc',  t.prize_lbl_ugc  || 'Top UGC');
+  setTxt('t-prize-lbl-ugc',  t.prize_lbl_ugc  || 'Top Content');
   // Gate leaderboard panel
   setTxt('t-lb-prizes-head', t.lb_prizes_head || 'Leaderboard Prizes');
   setTxt('t-lb-lucky-draw',  t.lb_lucky_draw  || '200× Lucky Draw');
