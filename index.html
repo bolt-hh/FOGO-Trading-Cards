@@ -26,7 +26,7 @@
     't-prize-title':      '시즌 2 래플 — 커뮤니티 상금 풀',
     't-prize-sub':        '아래에서 참가',
     't-countdown-label':  '캠페인 종료',
-    't-campaign-end-date':'2026년 Q2 말',
+    't-campaign-end-date':'2026년 6월 30일',
     't-tasks-weekly':     '매주 새 태스크 추가',
     // Steps
     't-step-n1': '스텝 01', 't-step-t1': '연결 & 생성',
@@ -57,7 +57,7 @@
     't-kol-continue-btn':  '계속하기 →',
     // Gate
     't-gate-eyebrow':      '500,000 $FOGO · 시즌 2 활성화',
-    't-gate-headline-span':'$FOGO를 획득하세요.',
+    't-gate-headline-span':'500,000 $FOGO를 획득하세요.',
     't-gate-btn':          '트레이더 카드 받기 →',
     // Leaderboard nav button
     't-nav-leaderboard': '리더보드',
@@ -1717,7 +1717,7 @@ body::before{
     <!-- Left: hero text + campaign rules -->
     <div class="gate-hero-text">
       <div class="gate-eyebrow" id="t-gate-eyebrow">500,000 $FOGO · Season 2 Activation</div>
-      <h1 class="gate-headline" id="t-gate-headline">Stack Points.<br><span id="t-gate-headline-span">Win $FOGO.</span></h1>
+      <h1 class="gate-headline" id="t-gate-headline">Stack Points.<br><span id="t-gate-headline-span">Get 500,000 $FOGO.</span></h1>
       <p class="gate-sub" id="t-gate-sub">Generate your Trader Card, share it on X, use FOGO ecosystem dApps, and climb the leaderboard for a share of 500,000 $FOGO. Every point you earn is one raffle entry.</p>
 
       <button class="btn-gate-cta" onclick="showView('view-app')" style="margin:28px 0 0;">
@@ -1844,7 +1844,7 @@ body::before{
       <div class="prize-bar-div"></div>
       <div class="countdown-box">
         <div class="countdown-label" id="t-countdown-label" data-ko="캠페인 종료">Campaign ends</div>
-        <div style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;color:var(--fire);letter-spacing:0.04em;line-height:1.1;" id="t-campaign-end-date" data-ko="2026년 Q2 말">End of Q2 2026</div>
+        <div style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;color:var(--fire);letter-spacing:0.04em;line-height:1.1;" id="t-campaign-end-date" data-ko="2026년 6월 30일">June 30, 2026</div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,90,30,0.6);margin-top:4px;" id="t-tasks-weekly" data-ko="매주 새 태스크 추가">New tasks added weekly</div>
       </div>
     </div>
@@ -2703,7 +2703,7 @@ const CONFIG = {
   sol_price_fallback: 80, // USD — fixed price, no external API
 
   // ── RAFFLE END DATE ───────────────────────────────────────────
-  raffle_end_date: '2026-05-31T23:59:59Z', // ISO 8601 UTC — countdown target
+  raffle_end_date: '2026-06-30T23:59:59Z', // ISO 8601 UTC — countdown target
 };
 
 /* ================================================================
@@ -4995,7 +4995,7 @@ const TRANSLATIONS = {
   en: {
     gate_eyebrow:       '500,000 $FOGO · Season 2 Activation',
     gate_headline_line1:'Stack Points.',
-    gate_headline_span: 'Win $FOGO.',
+    gate_headline_span: 'Get 500,000 $FOGO.',
     gate_sub:           'Generate your Trader Card, share it on X, use FOGO ecosystem dApps, and climb the leaderboard for a share of 500,000 $FOGO. Every point earned is one raffle entry.',
     gate_label:         'KOL Passcode',
     gate_placeholder:   'Enter passcode from your KOL...',
@@ -5039,7 +5039,7 @@ const TRANSLATIONS = {
     step_n3: 'Step 03', step_t3: 'Stack Points',      step_b3: 'Use FOGO dApps (+200 pts each), share UGC (+100 pts). Every point = 1 raffle entry. New tasks weekly.',
     step_n4: 'Step 04', step_t4: 'Win $FOGO',         step_b4: 'Top 15 by points win leaderboard prizes. 200 lucky draw winners selected from all entries.',
     countdown_label:    'Campaign ends',
-    campaign_end_date:  'End of Q2 2026',
+    campaign_end_date:  'June 30, 2026',
     tasks_weekly_note:  'New tasks added weekly',
     // Raffle entry
     raffle_eyebrow:        'Raffle Entry',
@@ -5098,7 +5098,7 @@ const TRANSLATIONS = {
   ko: {
     gate_eyebrow:       '500,000 $FOGO · 시즌 2 활성화',
     gate_headline_line1:'포인트를 쌓으세요.',
-    gate_headline_span: '$FOGO를 획득하세요.',
+    gate_headline_span: '500,000 $FOGO를 획득하세요.',
     gate_sub:           '트레이더 카드를 생성하고, X에 공유하고, FOGO 생태계 dApp을 사용하여 500,000 $FOGO 중 일부를 받기 위한 리더보드에 오르세요. 획득한 포인트 1개 = 래플 참가권 1장.',
     gate_label:         'KOL 패스코드',
     gate_placeholder:   'KOL에서 패스코드를 입력하세요...',
@@ -5152,7 +5152,7 @@ const TRANSLATIONS = {
     step_n3: '스텝 03', step_t3: '포인트 쌓기',      step_b3: 'FOGO dApp 사용 (+200pts), UGC 공유 (+100pts). 포인트 1개 = 래플 참가권 1장. 매주 새 태스크 추가.',
     step_n4: '스텝 04', step_t4: '$FOGO 획득',       step_b4: '포인트 상위 15위가 리더보드 상금을 받습니다. 200명의 럭키 드로우 당첨자가 무작위로 선정됩니다.',
     countdown_label:    '캠페인 종료',
-    campaign_end_date:  '2026년 2분기 말',
+    campaign_end_date:  '2026년 6월 30일',
     tasks_weekly_note:  '매주 새 태스크 추가',
     // Raffle entry
     raffle_eyebrow:        '추첨 참가',
