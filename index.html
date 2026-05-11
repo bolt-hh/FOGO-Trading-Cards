@@ -418,6 +418,47 @@ body::before{
   font-family:'JetBrains Mono',monospace;font-size:8px;
   color:var(--dim);margin-top:3px;letter-spacing:0.04em;
 }
+/* Prize value conversion box — 4-side spinning border */
+@keyframes spin-pvb-border { to { transform: rotate(360deg); } }
+
+.pvb-wrap{
+  position:relative;padding:2px;border-radius:12px;
+  overflow:hidden;margin-bottom:16px;
+}
+.pvb-wrap::before{
+  content:'';position:absolute;inset:-120%;
+  background:conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(195,251,165,0.9) 12%,
+    rgba(255,90,30,0.7) 24%,
+    transparent 36%
+  );
+  animation:spin-pvb-border 2.8s linear infinite;
+}
+.prize-value-box{
+  position:relative;
+  background:#0d1420; /* must be fully opaque — blocks the spinning gradient from showing inside */
+  border-radius:10px;padding:18px 24px;text-align:center;
+}
+.pvb-main{
+  font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;
+  color:var(--sub);letter-spacing:-0.01em;line-height:1.2;
+}
+.pvb-value{
+  color:var(--lime);
+  text-shadow:0 0 20px rgba(195,251,165,0.5),0 0 40px rgba(195,251,165,0.2);
+}
+.pvb-sub{
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--dim);margin-top:5px;
+}
+.pvb-updated{
+  font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(195,251,165,0.3);
+  margin-top:6px;letter-spacing:0.06em;
+}
+@media(max-width:640px){.pvb-main{font-size:17px;}}
+
 .gate-tier.apex{border-color:rgba(195,251,165,0.25);background:rgba(195,251,165,0.04);}
 .gate-tier.apex .gate-tier-name{color:var(--lime);}
 .gate-tier{position:relative;}
@@ -1771,6 +1812,15 @@ body::before{
 
     <!-- Right: prize breakdown + tier grid -->
     <div class="gate-card">
+      <!-- Live prize pool value conversion — full 4-side animated border -->
+      <div class="pvb-wrap">
+        <div class="prize-value-box" id="prize-value-box">
+          <div class="pvb-main">500,000 $FOGO ≈ <span class="pvb-value">$11,000</span></div>
+          <div class="pvb-sub">Total Prize Pool Value</div>
+          <div class="pvb-updated">Fetching live price…</div>
+        </div>
+      </div>
+
       <!-- Leaderboard prize breakdown — glowing + animated -->
       <div style="margin-bottom:16px;background:var(--panel2);border:1px solid rgba(255,61,0,0.2);border-radius:10px;padding:16px;position:relative;overflow:hidden;box-shadow:0 0 40px rgba(255,61,0,0.08),0 0 80px rgba(195,251,165,0.04);">
         <!-- animated top accent -->
@@ -2820,6 +2870,9 @@ window.addEventListener('DOMContentLoaded', () => {
   // requestAnimationFrame runs after browser has processed all synchronous code
   // Apply EN tooltips on load for all users; overwritten to KO if lang=ko
   applyTierTooltips(urlLang === 'ko' ? 'ko' : 'en');
+  // Fetch live FOGO price and start hourly refresh
+  refreshFogoPrice();
+  setInterval(refreshFogoPrice, 3600000);
   if (urlLang === 'ko') {
     // Direct data-ko scan — most reliable, no dependency on timing
     applyKoData();
@@ -3231,6 +3284,7 @@ async function fetchFogoData(address) {
     totalCount   = countRes.data || 0;
     acctLamports = acctRes?.data?.lamports || 0;
     wFOGOPrice   = Object.values(acctRes?.metadata?.tokens || {})[0]?.price_usdt || 0;
+    if (wFOGOPrice > 0) { _fogoUsdPrice = wFOGOPrice; renderPrizeValueBox(); }
     tokenData    = tokRes?.data?.tokens || [];
   } catch(e) {
     return { ok: false, sim: false, error: 'Could not reach Fogoscan API. Check your connection.' };
@@ -5255,6 +5309,54 @@ const TIER_KO = [
   { name: 'FOGO 에이펙스',      desc: '체인은 당신의 악기입니다. 당신은 그것을 잘 연주합니다.',           traits: ['에이펙스 등급','기관급','체인 레전드','넘사벽'] },
 ];
 
+/* ================================================================
+   PRIZE VALUE CONVERSION BOX  (500,000 $FOGO → USD / KRW)
+================================================================ */
+let _fogoUsdPrice = 0.020;          // updated on wallet scan + hourly
+const _KRW_PER_USD = 1400;          // approximate — update manually if rate shifts significantly
+const _PRIZE_FOGO  = 500000;
+
+function _fmtKrw(won) {
+  const rounded = Math.round(won / 1000000) * 1000000; // nearest 100만원
+  const man = Math.round(rounded / 10000);
+  return man.toLocaleString('ko-KR') + '만원';
+}
+
+function renderPrizeValueBox() {
+  const box = document.getElementById('prize-value-box');
+  if (!box) return;
+  const usd  = _PRIZE_FOGO * _fogoUsdPrice;
+  const krw  = usd * _KRW_PER_USD;
+  const lang = CURRENT_LANG;
+  const now  = new Date();
+
+  if (lang === 'ko') {
+    const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    box.innerHTML = `
+      <div class="pvb-main">500,000 $FOGO = <span class="pvb-value">${_fmtKrw(krw)}</span></div>
+      <div class="pvb-sub">상당의 상금풀</div>
+      <div class="pvb-updated">실시간 가격 기준 · ${timeStr} 업데이트</div>`;
+  } else {
+    const usdFmt  = '$' + (Math.round(usd / 1000) * 1000).toLocaleString();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    box.innerHTML = `
+      <div class="pvb-main">500,000 $FOGO ≈ <span class="pvb-value">${usdFmt}</span></div>
+      <div class="pvb-sub">Total Prize Pool Value</div>
+      <div class="pvb-updated">Live price · updated ${timeStr}</div>`;
+  }
+}
+
+async function refreshFogoPrice() {
+  try {
+    // Use any FOGO address — metadata.tokens contains prices regardless of balance
+    const res = await fetch(`${FOGOSCAN_API}/account?address=vnt1u7PzorND5JjweFWmDawKe2hLWoTwHU6QKz6XX98`)
+      .then(r => r.json()).catch(() => null);
+    const price = Object.values(res?.metadata?.tokens || {})[0]?.price_usdt;
+    if (price > 0) _fogoUsdPrice = price;
+  } catch(e) { /* keep cached price */ }
+  renderPrizeValueBox();
+}
+
 function applyTierTooltips(lang) {
   document.querySelectorAll('.gate-tier[data-tooltip-en]').forEach(el => {
     el.dataset.tooltip = lang === 'ko' ? el.dataset.tooltipKo : el.dataset.tooltipEn;
@@ -5364,9 +5466,10 @@ function setLanguage(lang) {
     const el = document.getElementById(id);
     if (el) el.textContent = el.dataset[lang] || el.dataset.en || el.textContent;
   });
-  // Re-render task tab tooltips and tier tooltips with current language
+  // Re-render task tab tooltips, tier tooltips, and prize value box with current language
   if (STATE.taskTabs) renderTaskTabsUI();
   applyTierTooltips(lang);
+  renderPrizeValueBox();
   setTxt('t-kol-ref-label',  t.kol_ref_label   || 'Who referred you?');
   setTxt('t-required-kol',    t.required        || 'required');
   // KOL inline placeholder option
