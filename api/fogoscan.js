@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   const origin  = req.headers['origin']  || '';
   const referer = req.headers['referer'] || '';
   // Allow any *.vercel.app subdomain, localhost, or custom domains
-  const allowedPattern = /^https?:\/\/(localhost|127\.0\.0\.1|fogo-trading-cards\.vercel\.app|card\.fogo\.io)(:\d+)?/;
+  const allowedPattern = /^https?:\/\/(localhost|127\.0\.0\.1|fogo-trading-cards\.vercel\.app|fogotradingcards\.com|card\.fogo\.io)(:\d+)?/;
   // Block requests with neither a valid Origin nor a valid Referer (e.g. curl, server-side abuse)
   const isAllowed = origin
     ? allowedPattern.test(origin)
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  const allowedOrigins = ['https://fogo-trading-cards.vercel.app', 'https://card.fogo.io'];
+  const allowedOrigins = ['https://fogo-trading-cards.vercel.app', 'https://fogotradingcards.com', 'https://card.fogo.io'];
   res.setHeader('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
