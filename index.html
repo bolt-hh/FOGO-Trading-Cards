@@ -3440,9 +3440,11 @@ async function fetchFogoData(address) {
   // Add current wallet balance on FOGO chain (money still deployed / held)
   volumeUsd += walletBalanceUsd;
 
-  // Round to nearest $100 — dampens price-driven micro-fluctuations in wallet balance
-  // so a small $FOGO price move doesn't visibly change the card number
-  volumeUsd = Math.round(volumeUsd / 100) * 100;
+  // Tiered rounding — dampens price-driven micro-fluctuations in wallet balance
+  // without zeroing out small volumes (< $50 would round to $0 with flat $100 rounding)
+  if (volumeUsd >= 500)       volumeUsd = Math.round(volumeUsd / 100) * 100; // nearest $100
+  else if (volumeUsd >= 50)   volumeUsd = Math.round(volumeUsd / 10)  * 10;  // nearest $10
+  else                         volumeUsd = Math.round(volumeUsd);             // nearest $1
 
   const walletAge = formatAge(oldestTime);
 
