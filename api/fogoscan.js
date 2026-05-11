@@ -7,9 +7,11 @@ export default async function handler(req, res) {
   const origin  = req.headers['origin']  || '';
   const referer = req.headers['referer'] || '';
   // Allow any *.vercel.app subdomain, localhost, or custom domains
-  const isAllowed = !origin
-    ? referer === '' || /https?:\/\/(localhost|127\.0\.0\.1|fogo-trading-cards\.vercel\.app|card\.fogo\.io)/.test(referer)
-    : /https?:\/\/(localhost|127\.0\.0\.1|fogo-trading-cards\.vercel\.app|card\.fogo\.io)/.test(origin);
+  const allowedPattern = /^https?:\/\/(localhost|127\.0\.0\.1|fogo-trading-cards\.vercel\.app|card\.fogo\.io)(:\d+)?/;
+  // Block requests with neither a valid Origin nor a valid Referer (e.g. curl, server-side abuse)
+  const isAllowed = origin
+    ? allowedPattern.test(origin)
+    : referer !== '' && allowedPattern.test(referer);
 
   if (!isAllowed) {
     return res.status(403).json({ success: false, error: 'Forbidden' });
@@ -31,6 +33,15 @@ export default async function handler(req, res) {
   const path = rawPath
     .replace(/^\/api\/fogoscan/, '')
     .replace(/\?.*$/, '');
+
+  // Block path traversal and only allow known Fogoscan API path prefixes
+  const allowedPaths = ['/account', '/token'];
+  const pathIsAllowed = allowedPaths.some(p => path.startsWith(p))
+    && !/\.\.|\/\/|[^a-zA-Z0-9/_\-.]/.test(path);
+
+  if (!pathIsAllowed) {
+    return res.status(400).json({ success: false, error: 'Invalid path' });
+  }
 
   const qs = req.url.includes('?') ? '?' + req.url.split('?')[1] : '';
   const upstream = 'https://api.fogoscan.com/v1' + path + qs;
