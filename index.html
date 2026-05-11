@@ -436,6 +436,11 @@ body::before{
   );
   animation:spin-pvb-border 2.8s linear infinite;
 }
+/* Language-driven visibility — css reads html[lang] set by early script */
+.pvb-ko { display:none; }
+html[lang="ko"] .pvb-ko { display:inline; }
+html[lang="ko"] .pvb-en { display:none; }
+
 .prize-value-box{
   position:relative;
   background:#0d1420; /* must be fully opaque — blocks the spinning gradient from showing inside */
@@ -461,19 +466,14 @@ body::before{
 
 .gate-tier.apex{border-color:rgba(195,251,165,0.25);background:rgba(195,251,165,0.04);}
 .gate-tier.apex .gate-tier-name{color:var(--lime);}
-.gate-tier{position:relative;}
-.gate-tier[data-tooltip]:hover::after{
-  content:attr(data-tooltip);
-  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
-  background:#1a1f2e;border:1px solid rgba(195,251,165,0.2);color:var(--sub);
-  font-family:'Inter',sans-serif;font-size:10px;line-height:1.5;
-  padding:8px 12px;border-radius:6px;white-space:normal;width:200px;
-  text-align:center;pointer-events:none;z-index:50;
-  box-shadow:0 4px 16px rgba(0,0,0,0.4);
-}
-.gate-tier[data-tooltip]:hover::before{
-  content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);
-  border:6px solid transparent;border-top-color:#1a1f2e;pointer-events:none;z-index:50;
+.gate-tier{position:relative;cursor:default;}
+/* Tooltip rendered by JS — see wireTierTooltips() */
+#tier-tooltip{
+  position:fixed;z-index:999;pointer-events:none;
+  background:#1a1f2e;border:1px solid rgba(195,251,165,0.25);
+  color:var(--sub);font-family:'Inter',sans-serif;font-size:10px;line-height:1.5;
+  padding:9px 13px;border-radius:6px;max-width:220px;text-align:center;
+  box-shadow:0 4px 20px rgba(0,0,0,0.5);display:none;
 }
 
 .err-box{
@@ -1816,10 +1816,17 @@ body::before{
       <div class="pvb-wrap">
         <div class="prize-value-box" id="prize-value-box">
           <div class="pvb-main">
-            <span id="pvb-prefix" data-ko="500,000 $FOGO = " data-en="500,000 $FOGO ≈ ">500,000 $FOGO ≈ </span><span class="pvb-value" id="pvb-value">$11,000</span>
+            <span class="pvb-en">500,000 $FOGO ≈ <span id="pvb-val-en">$11,000</span></span>
+            <span class="pvb-ko">500,000 $FOGO = <span id="pvb-val-ko">1,500만원</span></span>
           </div>
-          <div class="pvb-sub" id="pvb-sub" data-ko="상당의 상금풀" data-en="Total Prize Pool Value">Total Prize Pool Value</div>
-          <div class="pvb-updated" id="pvb-updated"></div>
+          <div class="pvb-sub">
+            <span class="pvb-en">Total Prize Pool Value</span>
+            <span class="pvb-ko">상당의 상금풀</span>
+          </div>
+          <div class="pvb-updated">
+            <span class="pvb-en" id="pvb-time-en"></span>
+            <span class="pvb-ko" id="pvb-time-ko"></span>
+          </div>
         </div>
       </div>
 
@@ -2872,6 +2879,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // requestAnimationFrame runs after browser has processed all synchronous code
   // Apply EN tooltips on load for all users; overwritten to KO if lang=ko
   applyTierTooltips(urlLang === 'ko' ? 'ko' : 'en');
+  wireTierTooltips(); // attach JS mouseover handlers (reads data-tooltip at hover time)
   // Fetch live FOGO price and start hourly refresh
   refreshFogoPrice();
   setInterval(refreshFogoPrice, 3600000);
@@ -2879,14 +2887,14 @@ window.addEventListener('DOMContentLoaded', () => {
     // Direct data-ko scan — most reliable, no dependency on timing
     applyKoData();
     applyTierTooltips('ko');
-    renderPrizeValueBox('ko');
+    renderPrizeValueBox();
     requestAnimationFrame(() => {
       setLanguage('ko');
       applyKoData();
       applyTierTooltips('ko');
-      renderPrizeValueBox('ko');
-      setTimeout(() => { setLanguage('ko'); applyKoData(); applyTierTooltips('ko'); renderPrizeValueBox('ko'); }, 200);
-      setTimeout(() => { applyKoData(); applyTierTooltips('ko'); renderPrizeValueBox('ko'); }, 500);
+      renderPrizeValueBox();
+      setTimeout(() => { setLanguage('ko'); applyKoData(); applyTierTooltips('ko'); renderPrizeValueBox(); }, 200);
+      setTimeout(() => { applyKoData(); applyTierTooltips('ko'); renderPrizeValueBox(); }, 500);
     });
   }
   // Pre-fill admin gate if already logged in this session
@@ -5328,29 +5336,19 @@ function _fmtKrw(won) {
   return man.toLocaleString('ko-KR') + '만원';
 }
 
-function renderPrizeValueBox(forceLang) {
-  const valueEl   = document.getElementById('pvb-value');
-  const prefixEl  = document.getElementById('pvb-prefix');
-  const subEl     = document.getElementById('pvb-sub');
-  const updatedEl = document.getElementById('pvb-updated');
-  if (!valueEl) return;
-
-  const lang = forceLang || CURRENT_LANG || 'en';
-  const usd  = _PRIZE_FOGO * _fogoUsdPrice;
-  const krw  = usd * _KRW_PER_USD;
-  const now  = new Date();
-
-  if (lang === 'ko') {
-    valueEl.textContent  = _fmtKrw(krw);
-    if (prefixEl)  prefixEl.textContent  = '500,000 $FOGO = ';
-    if (subEl)     subEl.textContent     = '상당의 상금풀';
-    if (updatedEl) updatedEl.textContent = now.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' }) + ' 기준';
-  } else {
-    valueEl.textContent  = '$' + (Math.round(usd / 1000) * 1000).toLocaleString();
-    if (prefixEl)  prefixEl.textContent  = '500,000 $FOGO ≈ ';
-    if (subEl)     subEl.textContent     = 'Total Prize Pool Value';
-    if (updatedEl) updatedEl.textContent = 'Live price · ' + now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
-  }
+function renderPrizeValueBox() {
+  // CSS handles EN/KO text via html[lang] — this function only updates the numbers
+  const usd = _PRIZE_FOGO * _fogoUsdPrice;
+  const krw = usd * _KRW_PER_USD;
+  const now = new Date();
+  const enVal  = document.getElementById('pvb-val-en');
+  const koVal  = document.getElementById('pvb-val-ko');
+  const enTime = document.getElementById('pvb-time-en');
+  const koTime = document.getElementById('pvb-time-ko');
+  if (enVal)  enVal.textContent  = '$' + (Math.round(usd / 1000) * 1000).toLocaleString();
+  if (koVal)  koVal.textContent  = _fmtKrw(krw);
+  if (enTime) enTime.textContent = 'Live price · ' + now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  if (koTime) koTime.textContent = now.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' }) + ' 기준';
 }
 
 async function refreshFogoPrice() {
@@ -5365,12 +5363,41 @@ async function refreshFogoPrice() {
 }
 
 function applyTierTooltips(lang) {
+  // Update data-tooltip attribute (used by wireTierTooltips JS handler)
   document.querySelectorAll('.gate-tier').forEach(el => {
     const en = el.getAttribute('data-tooltip-en');
     const ko = el.getAttribute('data-tooltip-ko');
-    if (en || ko) {
-      el.setAttribute('data-tooltip', lang === 'ko' ? (ko || en) : (en || ko));
-    }
+    if (en || ko) el.setAttribute('data-tooltip', lang === 'ko' ? (ko || en) : (en || ko));
+  });
+}
+
+function wireTierTooltips() {
+  // Create floating tooltip div if it doesn't exist
+  let tip = document.getElementById('tier-tooltip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'tier-tooltip';
+    document.body.appendChild(tip);
+  }
+  document.querySelectorAll('.gate-tier').forEach(el => {
+    el.addEventListener('mouseenter', function(e) {
+      const text = this.getAttribute('data-tooltip');
+      if (!text) return;
+      tip.textContent = text;
+      tip.style.display = 'block';
+    });
+    el.addEventListener('mousemove', function(e) {
+      const margin = 12;
+      let x = e.clientX + margin;
+      let y = e.clientY - tip.offsetHeight - margin;
+      if (x + tip.offsetWidth > window.innerWidth) x = e.clientX - tip.offsetWidth - margin;
+      if (y < 0) y = e.clientY + margin;
+      tip.style.left = x + 'px';
+      tip.style.top  = y + 'px';
+    });
+    el.addEventListener('mouseleave', function() {
+      tip.style.display = 'none';
+    });
   });
 }
 
@@ -5480,7 +5507,7 @@ function setLanguage(lang) {
   // Re-render task tab tooltips, tier tooltips, and prize value box with current language
   if (STATE.taskTabs) renderTaskTabsUI();
   applyTierTooltips(lang);
-  renderPrizeValueBox(lang);
+  renderPrizeValueBox();
   setTxt('t-kol-ref-label',  t.kol_ref_label   || 'Who referred you?');
   setTxt('t-required-kol',    t.required        || 'required');
   // KOL inline placeholder option
