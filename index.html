@@ -420,6 +420,20 @@ body::before{
 }
 .gate-tier.apex{border-color:rgba(195,251,165,0.25);background:rgba(195,251,165,0.04);}
 .gate-tier.apex .gate-tier-name{color:var(--lime);}
+.gate-tier{position:relative;}
+.gate-tier[data-tooltip]:hover::after{
+  content:attr(data-tooltip);
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:#1a1f2e;border:1px solid rgba(195,251,165,0.2);color:var(--sub);
+  font-family:'Inter',sans-serif;font-size:10px;line-height:1.5;
+  padding:8px 12px;border-radius:6px;white-space:normal;width:200px;
+  text-align:center;pointer-events:none;z-index:50;
+  box-shadow:0 4px 16px rgba(0,0,0,0.4);
+}
+.gate-tier[data-tooltip]:hover::before{
+  content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:#1a1f2e;pointer-events:none;z-index:50;
+}
 
 .err-box{
   display:none;width:100%;
@@ -1783,12 +1797,12 @@ body::before{
 
       <div class="gate-divider"><span class="gate-divider-txt" id="t-gate-divider">Trader Tiers</span></div>
       <div class="gate-tiers" id="gate-tiers-grid">
-        <div class="gate-tier"><span class="gate-tier-icon">⚡</span><div class="gate-tier-name" id="t-tier-1">Spot Accumulator</div><div class="gate-tier-range">$100+</div></div>
-        <div class="gate-tier"><span class="gate-tier-icon">🎯</span><div class="gate-tier-name" id="t-tier-2">Tactical Trader</div><div class="gate-tier-range">$1,000+</div></div>
-        <div class="gate-tier"><span class="gate-tier-icon">📈</span><div class="gate-tier-name" id="t-tier-3">Momentum Operator</div><div class="gate-tier-range">$5,000+</div></div>
-        <div class="gate-tier"><span class="gate-tier-icon">👑</span><div class="gate-tier-name" id="t-tier-4">Perp Architect</div><div class="gate-tier-range">$10,000+</div></div>
-        <div class="gate-tier"><span class="gate-tier-icon">🔥</span><div class="gate-tier-name" id="t-tier-5">Alpha Extractor</div><div class="gate-tier-range">$25,000+</div></div>
-        <div class="gate-tier apex"><span class="gate-tier-icon">⚔️</span><div class="gate-tier-name" id="t-tier-6">FOGO Apex</div><div class="gate-tier-range">$100,000+</div></div>
+        <div class="gate-tier" data-tooltip-en="Bridge assets to FOGO or swap on Valiant to reach $100 in tracked volume. Any capital deployed on-chain counts." data-tooltip-ko="FOGO로 자산을 브릿지하거나 Valiant에서 스왑하여 $100 거래량을 달성하세요. 온체인에 배포된 모든 자본이 집계됩니다."><span class="gate-tier-icon">⚡</span><div class="gate-tier-name" id="t-tier-1">Spot Accumulator</div><div class="gate-tier-range">$100+</div></div>
+        <div class="gate-tier" data-tooltip-en="Reach $1,000 by bridging, swapping on Valiant, staking on Brasa or Ignition, or depositing on Pyron. Each outflow counts." data-tooltip-ko="브릿지, Valiant 스왑, Brasa·Ignition 스테이킹, Pyron 예치로 $1,000을 달성하세요. 모든 출금 흐름이 집계됩니다."><span class="gate-tier-icon">🎯</span><div class="gate-tier-name" id="t-tier-2">Tactical Trader</div><div class="gate-tier-range">$1,000+</div></div>
+        <div class="gate-tier" data-tooltip-en="Reach $5,000 through consistent bridging, swapping, and staking across the ecosystem. Volume stacks with every on-chain action." data-tooltip-ko="생태계 전반에 걸친 브릿지, 스왑, 스테이킹으로 $5,000을 달성하세요. 온체인 활동마다 거래량이 누적됩니다."><span class="gate-tier-icon">📈</span><div class="gate-tier-name" id="t-tier-3">Momentum Operator</div><div class="gate-tier-range">$5,000+</div></div>
+        <div class="gate-tier" data-tooltip-en="Reach $10,000 by deploying larger amounts across swaps, staking, and lending. Higher positions on Brasa, Ignition, or Pyron accelerate this." data-tooltip-ko="스왑, 스테이킹, 대출에 더 많은 금액을 배포하여 $10,000을 달성하세요. Brasa·Ignition·Pyron에서 큰 포지션이 빠르게 누적됩니다."><span class="gate-tier-icon">👑</span><div class="gate-tier-name" id="t-tier-4">Perp Architect</div><div class="gate-tier-range">$10,000+</div></div>
+        <div class="gate-tier" data-tooltip-en="Reach $25,000 through high-frequency swapping and large capital deployment across ecosystem dApps. Every on-chain move adds up." data-tooltip-ko="높은 빈도의 스왑과 생태계 dApp 전반의 대규모 자본 배포로 $25,000을 달성하세요. 모든 온체인 움직임이 누적됩니다."><span class="gate-tier-icon">🔥</span><div class="gate-tier-name" id="t-tier-5">Alpha Extractor</div><div class="gate-tier-range">$25,000+</div></div>
+        <div class="gate-tier apex" data-tooltip-en="Reach $100,000 in on-chain volume. Sustained bridging, swapping, and protocol usage at scale. Top 1% of all FOGO wallets." data-tooltip-ko="온체인 거래량 $100,000을 달성하세요. 대규모의 지속적인 브릿지, 스왑, 프로토콜 이용이 필요합니다. 전체 FOGO 지갑 상위 1%."><span class="gate-tier-icon">⚔️</span><div class="gate-tier-name" id="t-tier-6">FOGO Apex</div><div class="gate-tier-range">$100,000+</div></div>
       </div>
 
       <!-- Ecosystem stats strip -->
@@ -2804,6 +2818,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Re-apply language after ALL scripts settle (including enhance.js bootstrap)
   // requestAnimationFrame runs after browser has processed all synchronous code
+  // Apply EN tooltips on load for all users; overwritten to KO if lang=ko
+  applyTierTooltips(urlLang === 'ko' ? 'ko' : 'en');
   if (urlLang === 'ko') {
     // Direct data-ko scan — most reliable, no dependency on timing
     applyKoData();
@@ -5239,6 +5255,12 @@ const TIER_KO = [
   { name: 'FOGO 에이펙스',      desc: '체인은 당신의 악기입니다. 당신은 그것을 잘 연주합니다.',           traits: ['에이펙스 등급','기관급','체인 레전드','넘사벽'] },
 ];
 
+function applyTierTooltips(lang) {
+  document.querySelectorAll('.gate-tier[data-tooltip-en]').forEach(el => {
+    el.dataset.tooltip = lang === 'ko' ? el.dataset.tooltipKo : el.dataset.tooltipEn;
+  });
+}
+
 function applyKoData() {
   document.querySelectorAll('[data-ko]').forEach(el => {
     el.textContent = el.dataset.ko;
@@ -5342,8 +5364,9 @@ function setLanguage(lang) {
     const el = document.getElementById(id);
     if (el) el.textContent = el.dataset[lang] || el.dataset.en || el.textContent;
   });
-  // Re-render task tab tooltips with current language
+  // Re-render task tab tooltips and tier tooltips with current language
   if (STATE.taskTabs) renderTaskTabsUI();
+  applyTierTooltips(lang);
   setTxt('t-kol-ref-label',  t.kol_ref_label   || 'Who referred you?');
   setTxt('t-required-kol',    t.required        || 'required');
   // KOL inline placeholder option
