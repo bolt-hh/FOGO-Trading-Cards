@@ -2850,6 +2850,27 @@ let STATE = {
 /* ================================================================
    SUPABASE CLIENT
 ================================================================ */
+/* ================================================================
+   HTML ESCAPE UTILITY — apply to ALL user-supplied DB values
+   before inserting into innerHTML template literals
+================================================================ */
+function esc(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+// Safe URL — only allow http/https schemes to prevent javascript: injection
+function safeUrl(u) {
+  try {
+    const parsed = new URL(u);
+    return (parsed.protocol === 'https:' || parsed.protocol === 'http:') ? u : '#';
+  } catch(e) { return '#'; }
+}
+
 let db = null;
 function initSupabase() {
   if (CONFIG.sb_url === 'YOUR_SUPABASE_URL') return; // not configured
@@ -4231,12 +4252,12 @@ async function refreshAdminUgc() {
         : '';
       return `<tr>
         <td style="font-family:'JetBrains Mono',monospace;font-size:10px;">${i+1}</td>
-        <td class="addr" title="${s.wallet_address}">${wallet}</td>
-        <td>${s.twitter_handle || '—'}</td>
-        <td><a href="${s.post_link}" target="_blank" style="color:var(--lime);font-size:10px;" title="${s.post_link}">View ↗</a></td>
-        <td style="color:${statusColor};font-family:'JetBrains Mono',monospace;font-size:10px;">${s.status}</td>
+        <td class="addr" title="${esc(s.wallet_address)}">${esc(wallet)}</td>
+        <td>${esc(s.twitter_handle || '—')}</td>
+        <td><a href="${safeUrl(s.post_link)}" target="_blank" rel="noopener noreferrer" style="color:var(--lime);font-size:10px;" title="${esc(s.post_link)}">View ↗</a></td>
+        <td style="color:${statusColor};font-family:'JetBrains Mono',monospace;font-size:10px;">${esc(s.status)}</td>
         <td class="hi">${s.points_awarded || 0}</td>
-        <td style="font-size:10px;">${date}</td>
+        <td style="font-size:10px;">${esc(date)}</td>
         <td>${approveBtn}${rejectBtn}</td>
       </tr>`;
     }).join('');
@@ -4246,6 +4267,7 @@ async function refreshAdminUgc() {
 }
 
 async function adminUgcApprove(ugcId, walletAddress) {
+  if (!STATE.adminLoggedIn) return;
   if (!db) return;
   try {
     // Mark submission approved with 100 points
@@ -4274,6 +4296,7 @@ async function adminUgcApprove(ugcId, walletAddress) {
 }
 
 async function adminUgcReject(ugcId) {
+  if (!STATE.adminLoggedIn) return;
   if (!db) return;
   await db.from('ugc_submissions').update({ status: 'rejected', points_awarded: 0 }).eq('id', ugcId);
   refreshAdminUgc();
@@ -4504,11 +4527,11 @@ function renderKolTable() {
     const vol     = volMap[k.passcode]  || 0;
     const dot = k.is_active ? '<span class="active-dot"></span>' : '<span class="inactive-dot"></span>';
     html += `<tr>
-      <td class="hi">${k.kol_name}</td>
-      <td>${k.kol_handle || '—'}</td>
+      <td class="hi">${esc(k.kol_name)}</td>
+      <td>${esc(k.kol_handle || '—')}</td>
       <td>
-        <span class="passcode-badge" onclick="copyCode('${k.passcode}')">${k.passcode}</span>
-        <span class="copy-flash" id="cf-${k.passcode}">Copied!</span>
+        <span class="passcode-badge" onclick="copyCode('${esc(k.passcode)}')">${esc(k.passcode)}</span>
+        <span class="copy-flash" id="cf-${esc(k.passcode)}">Copied!</span>
       </td>
       <td class="hi">${entries}</td>
       <td>${fmtUsd(vol)}</td>
@@ -4536,7 +4559,7 @@ function renderSubmissionsTable(data) {
     const isTest = (r.kol_passcode || '').includes('TEST') || (r.wallet_address || '').includes('TEST');
     const testTag = isTest ? ' <span style="font-size:7px;background:rgba(255,200,0,0.15);color:#ffc800;border:1px solid rgba(255,200,0,0.3);padding:1px 4px;border-radius:2px;letter-spacing:0.08em;">TEST</span>' : '';
     const xShareCell = r.x_share_link
-      ? `<a href="${r.x_share_link}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>`
+      ? `<a href="${safeUrl(r.x_share_link)}" target="_blank" rel="noopener noreferrer" style="color:var(--lime);font-size:9px;">View ↗</a>`
       : '—';
     const proto = r.protocols || {};
     const valiantCell  = (proto.valiant  || 0) > 0 ? '✓' : '—';
@@ -4544,16 +4567,16 @@ function renderSubmissionsTable(data) {
     const brasaCell    = (proto.brasa    || 0) > 0 ? '✓' : '—';
     const ignitionCell = (proto.ignition || 0) > 0 ? '✓' : '—';
     const ugcList = STATE.ugcByWallet[r.wallet_address] || [];
-    const ugc1 = ugcList[0]?.post_link ? `<a href="${ugcList[0].post_link}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>` : '—';
-    const ugc2 = ugcList[1]?.post_link ? `<a href="${ugcList[1].post_link}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>` : '—';
-    const ugc3 = ugcList[2]?.post_link ? `<a href="${ugcList[2].post_link}" target="_blank" style="color:var(--lime);font-size:9px;">View ↗</a>` : '—';
+    const ugc1 = ugcList[0]?.post_link ? `<a href="${safeUrl(ugcList[0].post_link)}" target="_blank" rel="noopener noreferrer" style="color:var(--lime);font-size:9px;">View ↗</a>` : '—';
+    const ugc2 = ugcList[1]?.post_link ? `<a href="${safeUrl(ugcList[1].post_link)}" target="_blank" rel="noopener noreferrer" style="color:var(--lime);font-size:9px;">View ↗</a>` : '—';
+    const ugc3 = ugcList[2]?.post_link ? `<a href="${safeUrl(ugcList[2].post_link)}" target="_blank" rel="noopener noreferrer" style="color:var(--lime);font-size:9px;">View ↗</a>` : '—';
     return `<tr>
       <td><input type="checkbox" class="entry-checkbox" data-id="${r.id}" onchange="updateDeleteSelectedBtn()"></td>
-      <td class="addr" title="${r.wallet_address || ''}">${wallet}${testTag}</td>
-      <td>${r.twitter_handle || '—'}</td>
-      <td>${r.telegram_handle || '—'}</td>
-      <td class="hi">${r.kol_passcode || '—'}</td>
-      <td class="hi">${fmtUsd(r.total_volume_usd || 0)}</td>
+      <td class="addr" title="${esc(r.wallet_address || '')}">${esc(wallet)}${testTag}</td>
+      <td>${esc(r.twitter_handle || '—')}</td>
+      <td>${esc(r.telegram_handle || '—')}</td>
+      <td class="hi">${esc(r.kol_passcode || '—')}</td>
+      <td class="hi">${esc(fmtUsd(r.total_volume_usd || 0))}</td>
       <td>${r.tier_name || '—'}</td>
       <td class="hi">${r.total_points ?? r.entry_count ?? '—'}</td>
       <td>${xShareCell}</td>
@@ -4581,6 +4604,7 @@ function filterSubmissions() {
 }
 
 async function deleteEntry(id) {
+  if (!STATE.adminLoggedIn) return;
   if (!id) return;
   if (!confirm('Delete this entry? This cannot be undone.')) return;
   if (!db) { alert('Database not connected.'); return; }
@@ -4896,6 +4920,7 @@ function exportCsv() {
    KOL MANAGEMENT (Admin)
 ================================================================ */
 async function addKol() {
+  if (!STATE.adminLoggedIn) return;
   const name   = document.getElementById('kol-add-name').value.trim();
   const handle = document.getElementById('kol-add-handle').value.trim();
   if (!name) { alert('Enter a KOL name.'); return; }
@@ -4914,12 +4939,14 @@ async function addKol() {
 }
 
 async function toggleKolActive(id, currentActive) {
+  if (!STATE.adminLoggedIn) return;
   if (!db) return;
   await db.from('kols').update({ active: !currentActive }).eq('id', id);
   await refreshAdmin();
 }
 
 async function deleteKol(id) {
+  if (!STATE.adminLoggedIn) return;
   if (!id) return;
   if (!confirm('Delete this KOL? This cannot be undone.')) return;
   if (!db) return;
@@ -6373,11 +6400,11 @@ function renderLeaderboardTable(data, wrap) {
   data.forEach((row, i) => {
     const rank     = row.rank || (i + 1);
     const rc       = rankClass(rank);
-    const wallet   = truncWallet(row.wallet_address);
-    const handle   = row.twitter_handle || '—';
+    const wallet   = esc(truncWallet(row.wallet_address));
+    const handle   = esc(row.twitter_handle || '—');
     const points   = (row.total_points || 0).toLocaleString();
-    const vol      = fmtUsd(row.total_volume_usd || 0);
-    const tier     = row.tier_name || '—';
+    const vol      = esc(fmtUsd(row.total_volume_usd || 0));
+    const tier     = esc(row.tier_name || '—');
     html += `<tr>
       <td class="${rc}">${rankEmoji(rank)}</td>
       <td class="addr">${wallet}</td>
@@ -6437,7 +6464,7 @@ function renderAdminTasksTable(tasks) {
     const tabNum = task.tab_group || 1;
     const tabLabel = STATE.taskTabs ? (STATE.taskTabs[tabNum-1]?.name || `Tab ${tabNum}`) : `Tab ${tabNum}`;
     html += `<tr>
-      <td class="hi">${task.name}</td>
+      <td class="hi">${esc(task.name)}</td>
       <td style="color:var(--lime);font-family:'JetBrains Mono',monospace;">${tabLabel}</td>
       <td>${task.points}</td>
       <td>${task.task_type}</td>
@@ -6504,6 +6531,7 @@ async function saveAdminTabsConfig() {
 }
 
 async function adminAddTask() {
+  if (!STATE.adminLoggedIn) return;
   if (!db) { alert('Database not connected.'); return; }
   const name    = document.getElementById('task-add-name').value.trim();
   const nameKo  = document.getElementById('task-add-name-ko').value.trim();
@@ -6532,12 +6560,14 @@ async function adminAddTask() {
 }
 
 async function adminToggleTask(id, currentActive) {
+  if (!STATE.adminLoggedIn) return;
   if (!db) return;
   await db.from('tasks').update({ active: !currentActive }).eq('id', id);
   await refreshAdminTasks();
 }
 
 async function adminDeleteTask(id) {
+  if (!STATE.adminLoggedIn) return;
   if (!id) return;
   if (!confirm('Delete this task?')) return;
   if (!db) return;
@@ -6557,6 +6587,7 @@ async function updateUgcMax() {
 }
 
 async function awardUgcPoints() {
+  if (!STATE.adminLoggedIn) return;
   if (!db) { alert('Database not connected.'); return; }
   const wallet  = document.getElementById('ugc-wallet').value.trim();
   const postLink = document.getElementById('ugc-post-link').value.trim();
