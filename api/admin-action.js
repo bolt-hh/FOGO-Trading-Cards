@@ -173,6 +173,15 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: r.ok });
       }
 
+      // ── Admin reads (service role — sees all columns incl. telegram_handle) ──
+
+      case 'fetchSubmissions': {
+        const r = await sb('GET',
+          'card_submissions?select=*&order=total_points.desc.nullslast', null,
+          { 'Prefer': 'return=representation' });
+        return res.status(200).json({ ok: r.ok, data: r.data });
+      }
+
       // ── Tab config ────────────────────────────────────────────────────────
 
       case 'saveTabsConfig': {
