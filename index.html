@@ -2876,11 +2876,13 @@ window.addEventListener('DOMContentLoaded', () => {
   if (urlLang === 'ko') {
     // Direct data-ko scan — most reliable, no dependency on timing
     applyKoData();
+    applyTierTooltips('ko');
     requestAnimationFrame(() => {
       setLanguage('ko');
       applyKoData();
-      setTimeout(() => { setLanguage('ko'); applyKoData(); }, 200);
-      setTimeout(() => applyKoData(), 500);
+      applyTierTooltips('ko');
+      setTimeout(() => { setLanguage('ko'); applyKoData(); applyTierTooltips('ko'); }, 200);
+      setTimeout(() => { applyKoData(); applyTierTooltips('ko'); }, 500);
     });
   }
   // Pre-fill admin gate if already logged in this session
@@ -5358,8 +5360,12 @@ async function refreshFogoPrice() {
 }
 
 function applyTierTooltips(lang) {
-  document.querySelectorAll('.gate-tier[data-tooltip-en]').forEach(el => {
-    el.dataset.tooltip = lang === 'ko' ? el.dataset.tooltipKo : el.dataset.tooltipEn;
+  document.querySelectorAll('.gate-tier').forEach(el => {
+    const en = el.getAttribute('data-tooltip-en');
+    const ko = el.getAttribute('data-tooltip-ko');
+    if (en || ko) {
+      el.setAttribute('data-tooltip', lang === 'ko' ? (ko || en) : (en || ko));
+    }
   });
 }
 
