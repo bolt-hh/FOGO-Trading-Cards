@@ -1815,9 +1815,11 @@ body::before{
       <!-- Live prize pool value conversion — full 4-side animated border -->
       <div class="pvb-wrap">
         <div class="prize-value-box" id="prize-value-box">
-          <div class="pvb-main">500,000 $FOGO ≈ <span class="pvb-value">$11,000</span></div>
-          <div class="pvb-sub">Total Prize Pool Value</div>
-          <div class="pvb-updated"></div>
+          <div class="pvb-main">
+            <span id="pvb-prefix" data-ko="500,000 $FOGO = " data-en="500,000 $FOGO ≈ ">500,000 $FOGO ≈ </span><span class="pvb-value" id="pvb-value">$11,000</span>
+          </div>
+          <div class="pvb-sub" id="pvb-sub" data-ko="상당의 상금풀" data-en="Total Prize Pool Value">Total Prize Pool Value</div>
+          <div class="pvb-updated" id="pvb-updated"></div>
         </div>
       </div>
 
@@ -2877,12 +2879,14 @@ window.addEventListener('DOMContentLoaded', () => {
     // Direct data-ko scan — most reliable, no dependency on timing
     applyKoData();
     applyTierTooltips('ko');
+    renderPrizeValueBox('ko');
     requestAnimationFrame(() => {
       setLanguage('ko');
       applyKoData();
       applyTierTooltips('ko');
-      setTimeout(() => { setLanguage('ko'); applyKoData(); applyTierTooltips('ko'); }, 200);
-      setTimeout(() => { applyKoData(); applyTierTooltips('ko'); }, 500);
+      renderPrizeValueBox('ko');
+      setTimeout(() => { setLanguage('ko'); applyKoData(); applyTierTooltips('ko'); renderPrizeValueBox('ko'); }, 200);
+      setTimeout(() => { applyKoData(); applyTierTooltips('ko'); renderPrizeValueBox('ko'); }, 500);
     });
   }
   // Pre-fill admin gate if already logged in this session
@@ -5325,26 +5329,27 @@ function _fmtKrw(won) {
 }
 
 function renderPrizeValueBox(forceLang) {
-  const box = document.getElementById('prize-value-box');
-  if (!box) return;
+  const valueEl   = document.getElementById('pvb-value');
+  const prefixEl  = document.getElementById('pvb-prefix');
+  const subEl     = document.getElementById('pvb-sub');
+  const updatedEl = document.getElementById('pvb-updated');
+  if (!valueEl) return;
+
+  const lang = forceLang || CURRENT_LANG || 'en';
   const usd  = _PRIZE_FOGO * _fogoUsdPrice;
   const krw  = usd * _KRW_PER_USD;
-  const lang = forceLang || CURRENT_LANG || 'en';
   const now  = new Date();
 
   if (lang === 'ko') {
-    const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-    box.innerHTML = `
-      <div class="pvb-main">500,000 $FOGO = <span class="pvb-value">${_fmtKrw(krw)}</span></div>
-      <div class="pvb-sub">상당의 상금풀</div>
-      <div class="pvb-updated">${timeStr} 기준</div>`;
+    valueEl.textContent  = _fmtKrw(krw);
+    if (prefixEl)  prefixEl.textContent  = '500,000 $FOGO = ';
+    if (subEl)     subEl.textContent     = '상당의 상금풀';
+    if (updatedEl) updatedEl.textContent = now.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' }) + ' 기준';
   } else {
-    const usdFmt  = '$' + (Math.round(usd / 1000) * 1000).toLocaleString();
-    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    box.innerHTML = `
-      <div class="pvb-main">500,000 $FOGO ≈ <span class="pvb-value">${usdFmt}</span></div>
-      <div class="pvb-sub">Total Prize Pool Value</div>
-      <div class="pvb-updated">Live price · ${timeStr}</div>`;
+    valueEl.textContent  = '$' + (Math.round(usd / 1000) * 1000).toLocaleString();
+    if (prefixEl)  prefixEl.textContent  = '500,000 $FOGO ≈ ';
+    if (subEl)     subEl.textContent     = 'Total Prize Pool Value';
+    if (updatedEl) updatedEl.textContent = 'Live price · ' + now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
   }
 }
 
