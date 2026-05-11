@@ -1817,7 +1817,7 @@ body::before{
         <div class="prize-value-box" id="prize-value-box">
           <div class="pvb-main">500,000 $FOGO ≈ <span class="pvb-value">$11,000</span></div>
           <div class="pvb-sub">Total Prize Pool Value</div>
-          <div class="pvb-updated">Fetching live price…</div>
+          <div class="pvb-updated"></div>
         </div>
       </div>
 
@@ -5322,12 +5322,12 @@ function _fmtKrw(won) {
   return man.toLocaleString('ko-KR') + '만원';
 }
 
-function renderPrizeValueBox() {
+function renderPrizeValueBox(forceLang) {
   const box = document.getElementById('prize-value-box');
   if (!box) return;
   const usd  = _PRIZE_FOGO * _fogoUsdPrice;
   const krw  = usd * _KRW_PER_USD;
-  const lang = CURRENT_LANG;
+  const lang = forceLang || CURRENT_LANG || 'en';
   const now  = new Date();
 
   if (lang === 'ko') {
@@ -5335,14 +5335,14 @@ function renderPrizeValueBox() {
     box.innerHTML = `
       <div class="pvb-main">500,000 $FOGO = <span class="pvb-value">${_fmtKrw(krw)}</span></div>
       <div class="pvb-sub">상당의 상금풀</div>
-      <div class="pvb-updated">실시간 가격 기준 · ${timeStr} 업데이트</div>`;
+      <div class="pvb-updated">${timeStr} 기준</div>`;
   } else {
     const usdFmt  = '$' + (Math.round(usd / 1000) * 1000).toLocaleString();
     const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     box.innerHTML = `
       <div class="pvb-main">500,000 $FOGO ≈ <span class="pvb-value">${usdFmt}</span></div>
       <div class="pvb-sub">Total Prize Pool Value</div>
-      <div class="pvb-updated">Live price · updated ${timeStr}</div>`;
+      <div class="pvb-updated">Live price · ${timeStr}</div>`;
   }
 }
 
@@ -5469,7 +5469,7 @@ function setLanguage(lang) {
   // Re-render task tab tooltips, tier tooltips, and prize value box with current language
   if (STATE.taskTabs) renderTaskTabsUI();
   applyTierTooltips(lang);
-  renderPrizeValueBox();
+  renderPrizeValueBox(lang);
   setTxt('t-kol-ref-label',  t.kol_ref_label   || 'Who referred you?');
   setTxt('t-required-kol',    t.required        || 'required');
   // KOL inline placeholder option
