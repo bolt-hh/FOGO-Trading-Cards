@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FOGO | Trader Card</title>
+<!-- Preconnect to esm.sh so wallet modal imports don't stall on cold DNS/TLS -->
+<link rel="preconnect" href="https://esm.sh" crossorigin>
+<link rel="dns-prefetch" href="https://esm.sh">
 <!-- Vercel Web Analytics -->
 <script defer src="/_vercel/insights/script.js"></script>
 <!-- Vercel Speed Insights -->
@@ -1651,6 +1654,38 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
      Project ID: 0ebdc1b350b890b0042e03a793980776
      Dashboard:  https://cloud.reown.com — ensure fogo-trading-cards.vercel.app is an allowed domain
      ════════════════════════════════════════════════════════════════════════ -->
+
+<!-- openReownModal: opens immediately if ready, otherwise queues + shows a
+     loading state so the user doesn't get blocked by an alert on first click. -->
+<script>
+  window._reownPendingOpen = false;
+  window.openReownModal = function () {
+    if (window.reownModal) {
+      window.reownModal.open();
+      return;
+    }
+    // Modal still loading — queue the open and swap button to a spinner
+    window._reownPendingOpen = true;
+    var btn = document.getElementById('reown-connect-btn');
+    if (btn && !btn.dataset.fogoLoading) {
+      btn.dataset.fogoLoading = '1';
+      btn.dataset.fogoOriginal = btn.innerHTML;
+      btn.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"' +
+        ' stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite">' +
+        '<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg> Connecting…';
+      btn.disabled = true;
+      // Inject keyframe if not already present
+      if (!document.getElementById('fogo-spin-kf')) {
+        var s = document.createElement('style');
+        s.id = 'fogo-spin-kf';
+        s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+        document.head.appendChild(s);
+      }
+    }
+  };
+</script>
+
 <script type="module">
   const REOWN_PID = '0ebdc1b350b890b0042e03a793980776';
 
@@ -1696,6 +1731,22 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 
     window.reownModal = modal;
     console.log('[FOGO] Reown AppKit loaded ✓');
+
+    // If the user clicked "Connect Wallet" while we were still loading,
+    // open the modal now and restore the button to its original state.
+    if (window._reownPendingOpen) {
+      window._reownPendingOpen = false;
+      const btn = document.getElementById('reown-connect-btn');
+      if (btn) {
+        btn.disabled = false;
+        if (btn.dataset.fogoOriginal) {
+          btn.innerHTML = btn.dataset.fogoOriginal;
+          delete btn.dataset.fogoOriginal;
+        }
+        delete btn.dataset.fogoLoading;
+      }
+      modal.open();
+    }
 
     modal.subscribeAccount(async (state) => {
       if (state.isConnected && state.address) {
@@ -1999,7 +2050,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 
         <!-- Not connected -->
         <div id="wallet-not-connected">
-          <button class="reown-connect-btn" id="reown-connect-btn" onclick="if(window.reownModal){window.reownModal.open()}else{alert('Wallet connect is still loading — please wait a moment and try again.')}">
+          <button class="reown-connect-btn" id="reown-connect-btn" onclick="openReownModal()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="5" width="20" height="14" rx="3"/>
               <path d="M16 12h2"/>
