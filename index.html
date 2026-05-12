@@ -1645,11 +1645,13 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 }
 .reown-connect-btn:hover{transform:translateY(-2px);background:#D4FDB8;box-shadow:0 6px 0 #9EDC80,0 12px 36px rgba(195,251,165,0.28);}
 .reown-connect-btn:active{transform:translateY(1px);box-shadow:0 2px 0 #9EDC80;}
-.reown-connect-btn:disabled{cursor:not-allowed;pointer-events:none;}
+.reown-connect-btn:disabled{cursor:not-allowed;}
+/* keep pointer-events active on disabled so clicks don't fall through to AppKit's backdrop */
 .reown-connect-btn.reown-loading{
   background:rgba(195,251,165,0.10);color:rgba(195,251,165,0.55);
   box-shadow:none;border:1px solid rgba(195,251,165,0.18);
   animation:reownPulse 1.8s ease-in-out infinite;
+  pointer-events:none;
 }
 .reown-connect-btn.reown-loading:hover{transform:none;box-shadow:none;}
 @keyframes reownPulse{0%,100%{opacity:.55}50%{opacity:.85}}
@@ -1716,10 +1718,16 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
         '9a4cddbdbc19005be790f37cc9176dd24eae51aa2a49fa3edeb3b6a8b089b7be', // Nightly
       ],
       features: { analytics: false, email: false, socials: false },
+      // Prevent AppKit auto-opening on page load (e.g. reconnect flow)
+      enableAutoConnect: false,
     });
 
     window.reownModal = modal;
     console.log('[FOGO] Reown AppKit loaded ✓');
+
+    // Wait for AppKit to fetch wallet metadata from WalletConnect cloud and
+    // register browser extension providers — without this the modal opens empty.
+    await new Promise(r => setTimeout(r, 500));
 
     // Wallets are fully registered — unlock the button and restore its appearance
     const btn = document.getElementById('reown-connect-btn');
