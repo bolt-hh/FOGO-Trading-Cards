@@ -1698,9 +1698,9 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 
     // Use esm.sh bundle mode to resolve all deps in one request
     const [{ createAppKit }, { SolanaAdapter }, { solana }] = await Promise.all([
-      import('https://esm.sh/@reown/appkit@1.8.19?bundle'),
-      import('https://esm.sh/@reown/appkit-adapter-solana@1.8.19?bundle'),
-      import('https://esm.sh/@reown/appkit@1.8.19/networks?bundle'),
+      import('https://esm.sh/@reown/appkit@1.6.8?bundle'),
+      import('https://esm.sh/@reown/appkit-adapter-solana@1.6.8?bundle'),
+      import('https://esm.sh/@reown/appkit@1.6.8/networks?bundle'),
     ]);
 
     const modal = createAppKit({
