@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FOGO | Trader Card</title>
+<!-- Vercel Web Analytics -->
+<script defer src="/_vercel/insights/script.js"></script>
 <!-- Preconnect to esm.sh so wallet modal imports don't stall on cold DNS/TLS -->
 <link rel="preconnect" href="https://esm.sh" crossorigin>
 <link rel="dns-prefetch" href="https://esm.sh">
@@ -13,8 +15,6 @@
 <link rel="dns-prefetch" href="https://explorer-api.walletconnect.com">
 <link rel="preconnect" href="https://registry.walletconnect.com" crossorigin>
 <link rel="dns-prefetch" href="https://registry.walletconnect.com">
-<!-- Vercel Web Analytics -->
-<script defer src="/_vercel/insights/script.js"></script>
 <!-- Vercel Speed Insights -->
 <script defer src="/_vercel/speed-insights/script.js"></script>
 <!-- ══ KOREAN TRANSLATION — EARLIEST POSSIBLE SCRIPT ══════════════
@@ -1666,11 +1666,6 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 .reown-supported{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);text-align:center;margin-top:10px;}
 </style>
 
-<!-- ═══ REOWN APPKIT — Solana Wallet Connect ═══════════════════════════════
-     Project ID: 0ebdc1b350b890b0042e03a793980776
-     Dashboard:  https://cloud.reown.com — ensure fogo-trading-cards.vercel.app is an allowed domain
-     ════════════════════════════════════════════════════════════════════════ -->
-
 <!-- openReownModal: button is disabled until AppKit fully loads, so by the
      time this runs window.reownModal is always set. Safety fallback kept. -->
 <script>
@@ -1683,6 +1678,10 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
   };
 </script>
 
+<!-- ═══ REOWN APPKIT — Solana Wallet Connect ═══════════════════════════════
+     Project ID: 0ebdc1b350b890b0042e03a793980776
+     Dashboard:  https://cloud.reown.com — ensure fogo-trading-cards.vercel.app is an allowed domain
+     ════════════════════════════════════════════════════════════════════════ -->
 <script type="module">
   const REOWN_PID = '0ebdc1b350b890b0042e03a793980776';
 
@@ -1723,8 +1722,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
       featuredWalletIds: [
         '9a4cddbdbc19005be790f37cc9176dd24eae51aa2a49fa3edeb3b6a8b089b7be', // Nightly
       ],
-      features: { analytics: false, email: false, socials: false },
-      // Prevent AppKit auto-opening on page load (e.g. reconnect flow)
+      features:          { analytics: false, email: false, socials: false },
       enableAutoConnect: false,
     });
 
@@ -1733,8 +1731,6 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 
     // Pre-warm WalletConnect explorer API so wallet metadata is in the
     // browser's HTTP cache before the user opens the modal.
-    // AppKit fetches from this endpoint internally — if it's already cached
-    // the modal populates instantly instead of showing an empty shell.
     try {
       fetch(
         `https://explorer-api.walletconnect.com/v3/wallets?projectId=${REOWN_PID}&page=1&entries=40&search=&version=2`,
@@ -4152,10 +4148,9 @@ async function submitUgcLink() {
 
     const { error } = await db.from('ugc_submissions').insert({
       wallet_address: STATE.wallet,
-      twitter_handle:  STATE.handle_stored || STATE.handle || null,
-      telegram_handle: STATE.handle_tg || null,
-      post_link: link,
-      status: 'pending',
+      twitter_handle: STATE.handle_stored || STATE.handle || null,
+      post_link:      link,
+      status:         'pending',
     });
 
     if (error) {
@@ -6266,10 +6261,9 @@ async function submitUgcInline(slotIdx) {
 
     const { error } = await db.from('ugc_submissions').insert({
       wallet_address: STATE.wallet,
-      twitter_handle:  STATE.handle_stored || STATE.handle || null,
-      telegram_handle: STATE.handle_tg || null,
-      post_link: link,
-      status: 'pending',
+      twitter_handle: STATE.handle_stored || STATE.handle || null,
+      post_link:      link,
+      status:         'pending',
     });
 
     if (error) {
