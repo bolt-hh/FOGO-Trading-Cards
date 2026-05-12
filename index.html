@@ -7,6 +7,12 @@
 <!-- Preconnect to esm.sh so wallet modal imports don't stall on cold DNS/TLS -->
 <link rel="preconnect" href="https://esm.sh" crossorigin>
 <link rel="dns-prefetch" href="https://esm.sh">
+<!-- Preconnect to WalletConnect explorer API — pre-warms DNS/TLS so the
+     wallet list fetch (triggered by AppKit internally) is fast on first load -->
+<link rel="preconnect" href="https://explorer-api.walletconnect.com" crossorigin>
+<link rel="dns-prefetch" href="https://explorer-api.walletconnect.com">
+<link rel="preconnect" href="https://registry.walletconnect.com" crossorigin>
+<link rel="dns-prefetch" href="https://registry.walletconnect.com">
 <!-- Vercel Web Analytics -->
 <script defer src="/_vercel/insights/script.js"></script>
 <!-- Vercel Speed Insights -->
@@ -1725,9 +1731,20 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
     window.reownModal = modal;
     console.log('[FOGO] Reown AppKit loaded ✓');
 
-    // Wait for AppKit to fetch wallet metadata from WalletConnect cloud and
-    // register browser extension providers — without this the modal opens empty.
-    await new Promise(r => setTimeout(r, 500));
+    // Pre-warm WalletConnect explorer API so wallet metadata is in the
+    // browser's HTTP cache before the user opens the modal.
+    // AppKit fetches from this endpoint internally — if it's already cached
+    // the modal populates instantly instead of showing an empty shell.
+    try {
+      fetch(
+        `https://explorer-api.walletconnect.com/v3/wallets?projectId=${REOWN_PID}&page=1&entries=40&search=&version=2`,
+        { mode: 'cors', cache: 'default', credentials: 'omit' }
+      ).catch(() => {});
+    } catch (_) {}
+
+    // Give AppKit time to process the wallet list response and register
+    // browser extension providers before the button becomes clickable.
+    await new Promise(r => setTimeout(r, 1200));
 
     // Wallets are fully registered — unlock the button and restore its appearance
     const btn = document.getElementById('reown-connect-btn');
