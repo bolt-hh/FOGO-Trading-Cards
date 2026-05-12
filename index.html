@@ -1729,18 +1729,19 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
     window.reownModal = modal;
     console.log('[FOGO] Reown AppKit loaded ✓');
 
-    // Pre-warm WalletConnect explorer API so wallet metadata is in the
-    // browser's HTTP cache before the user opens the modal.
+    // AppKit only fetches the wallet list when modal.open() is called — not at
+    // init time. So we silently open + close the modal while the button is still
+    // in "Loading wallets…" state. This pre-triggers the internal fetch and
+    // populates AppKit's cache so the real open is instant and never empty.
     try {
-      fetch(
-        `https://explorer-api.walletconnect.com/v3/wallets?projectId=${REOWN_PID}&page=1&entries=40&search=&version=2`,
-        { mode: 'cors', cache: 'default', credentials: 'omit' }
-      ).catch(() => {});
+      const modalEl = document.querySelector('w3m-modal');
+      if (modalEl) modalEl.style.visibility = 'hidden';
+      modal.open();
+      await new Promise(r => setTimeout(r, 800)); // enough for fetch to complete
+      modal.close();
+      await new Promise(r => setTimeout(r, 100)); // let close animation settle
+      if (modalEl) modalEl.style.visibility = '';
     } catch (_) {}
-
-    // Give AppKit time to process the wallet list response and register
-    // browser extension providers before the button becomes clickable.
-    await new Promise(r => setTimeout(r, 1200));
 
     // Wallets are fully registered — unlock the button and restore its appearance
     const btn = document.getElementById('reown-connect-btn');
