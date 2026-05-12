@@ -1738,8 +1738,22 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
       ).catch(() => {});
     } catch (_) {}
 
-    // Wait for the pre-warm fetch to likely complete before enabling the button
-    await new Promise(r => setTimeout(r, 1200));
+    // Silently open + close the modal so AppKit populates its internal wallet
+    // cache. A <style> tag forces opacity:0 + pointer-events:none on the modal
+    // element so nothing is visible to the user during this process.
+    try {
+      const hideStyle = document.createElement('style');
+      hideStyle.id = 'reown-prewarm-hide';
+      hideStyle.textContent = 'w3m-modal{opacity:0!important;pointer-events:none!important;}';
+      document.head.appendChild(hideStyle);
+      modal.open();
+      await new Promise(r => setTimeout(r, 1200)); // wait for internal fetch
+      modal.close();
+      await new Promise(r => setTimeout(r, 150));  // let close settle
+      hideStyle.remove();
+    } catch (_) {
+      document.getElementById('reown-prewarm-hide')?.remove();
+    }
 
     // Wallets are fully registered — unlock the button and restore its appearance
     const btn = document.getElementById('reown-connect-btn');
