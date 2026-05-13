@@ -1730,28 +1730,38 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
     window.reownModal = modal;
     console.log('[FOGO] Reown AppKit loaded ✓');
 
-    // Pre-warm: fire a parallel fetch to seed the browser HTTP cache while
-    // the silent modal open is running — do NOT await it, both must run
-    // concurrently so AppKit hits the cache on its own internal request.
+    // Pre-warm: start the WalletConnect fetch NOW and keep its promise so we
+    // can race against it. Opening the modal concurrently lets AppKit start
+    // its own internal fetch at the same time.
+    let warmFetch;
     try {
-      fetch(
+      warmFetch = fetch(
         `https://explorer-api.walletconnect.com/v3/wallets?projectId=${REOWN_PID}&page=1&entries=40&search=&version=2`,
         { mode: 'cors', cache: 'default', credentials: 'omit' }
-      ).catch(() => {});
-    } catch (_) {}
+      ).catch(() => null);
+    } catch (_) { warmFetch = Promise.resolve(); }
 
     // Silently open + close the modal so AppKit populates its internal wallet
     // cache before the user ever clicks. A <style> tag makes the modal fully
     // invisible during this process so nothing flashes on screen.
+    // We wait until OUR fetch completes (network round-trip done) + 400ms buffer
+    // so AppKit's parallel fetch also has time to finish — hard cap at 5s.
+    // This avoids closing the modal while AppKit's fetch is still in-flight,
+    // which would cause it to show blank on first incognito load.
     try {
       const hideStyle = document.createElement('style');
       hideStyle.id = 'reown-prewarm-hide';
       hideStyle.textContent = 'w3m-modal{opacity:0!important;pointer-events:none!important;}';
       document.head.appendChild(hideStyle);
       modal.open();
-      await new Promise(r => setTimeout(r, 1200)); // wait for AppKit internal fetch
+
+      await Promise.race([
+        warmFetch.then(() => new Promise(r => setTimeout(r, 400))), // fetch done + buffer
+        new Promise(r => setTimeout(r, 5000))                        // hard cap
+      ]);
+
       modal.close();
-      await new Promise(r => setTimeout(r, 150));  // let close animation settle
+      await new Promise(r => setTimeout(r, 150));
       hideStyle.remove();
     } catch (_) {
       document.getElementById('reown-prewarm-hide')?.remove();
