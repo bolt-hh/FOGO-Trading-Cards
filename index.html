@@ -1746,12 +1746,10 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
     try {
       const hideStyle = document.createElement('style');
       hideStyle.id = 'reown-prewarm-hide';
-      hideStyle.textContent =
-        'w3m-modal{opacity:0!important;visibility:hidden!important;' +
-        'pointer-events:none!important;z-index:-99999!important;}';
+      hideStyle.textContent = 'w3m-modal{opacity:0!important;pointer-events:none!important;}';
       document.head.appendChild(hideStyle);
       modal.open();
-      await new Promise(r => setTimeout(r, 1500)); // wait for AppKit internal fetch
+      await new Promise(r => setTimeout(r, 1200)); // wait for AppKit internal fetch
       modal.close();
       await new Promise(r => setTimeout(r, 150));  // let close animation settle
       hideStyle.remove();
