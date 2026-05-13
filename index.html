@@ -1730,13 +1730,18 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
     window.reownModal = modal;
     console.log('[FOGO] Reown AppKit loaded ✓');
 
-    // Pre-warm: fetch wallet metadata into the browser's HTTP cache so AppKit
-    // returns instantly from cache when the user opens the modal for real.
+    // Pre-warm: AWAIT the wallet metadata fetch so the browser HTTP cache is
+    // populated BEFORE AppKit makes its own request. Without this, incognito
+    // first-load has two concurrent cold requests and AppKit loses the race,
+    // rendering a blank modal. 5 s timeout so we never stall forever.
     try {
-      fetch(
-        `https://explorer-api.walletconnect.com/v3/wallets?projectId=${REOWN_PID}&page=1&entries=40&search=&version=2`,
-        { mode: 'cors', cache: 'default', credentials: 'omit' }
-      ).catch(() => {});
+      await Promise.race([
+        fetch(
+          `https://explorer-api.walletconnect.com/v3/wallets?projectId=${REOWN_PID}&page=1&entries=40&search=&version=2`,
+          { mode: 'cors', cache: 'default', credentials: 'omit' }
+        ),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('prefetch timeout')), 5000))
+      ]);
     } catch (_) {}
 
     // Silently open + close the modal so AppKit populates its internal wallet
