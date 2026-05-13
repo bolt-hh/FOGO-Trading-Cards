@@ -5574,7 +5574,12 @@ function setLanguage(lang) {
   setTxt('t-gate-label',        t.gate_label);
   setTxt('t-gate-btn',          t.gate_btn);
   setTxt('t-gate-divider',      t.gate_divider);
-  document.getElementById('gate-code').placeholder = t.gate_placeholder;
+  const gateCodeEl = document.getElementById('gate-code'); if (gateCodeEl) gateCodeEl.placeholder = t.gate_placeholder;
+
+  // Volume notice — set early so it's applied even if something below throws
+  setTxt('t-volume-notice', lang === 'ko'
+    ? '블록체인 익스플로러의 기술적 한계로 인해, 볼륨 점수는 최근 거래 내역을 기준으로 산정됩니다. 더 공정한 시스템을 위해 지속적으로 개선하고 있습니다.'
+    : "We've adjusted the volume scoring system to ensure fair results. Due to blockchain explorer limitations, scores are based on recent transfer history and will continue to be refined.");
 
   // Tier names in gate grid
   t.tier_names.forEach((name, i) => setTxt('t-tier-' + (i + 1), name));
