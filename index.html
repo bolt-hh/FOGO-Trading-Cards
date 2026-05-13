@@ -1664,6 +1664,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 @keyframes reownSpin{to{transform:rotate(360deg)}}
 .reown-connect-btn svg{width:18px;height:18px;flex-shrink:0;}
 .reown-supported{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);text-align:center;margin-top:10px;}
+.volume-notice{font-size:11px;color:var(--text);text-align:center;margin-top:10px;line-height:1.5;padding:8px 12px;border:1px solid rgba(195,251,165,0.15);border-radius:8px;background:rgba(195,251,165,0.04);}
 </style>
 
 <!-- openReownModal: button is disabled until AppKit fully loads, so by the
@@ -2078,6 +2079,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
             <span id="reown-btn-label">Loading wallets…</span>
           </button>
           <div class="reown-supported">Nightly (recommended) · Phantom · Solflare · Backpack · WalletConnect · 300+ wallets</div>
+          <div class="volume-notice" id="t-volume-notice">We've adjusted the volume scoring system to ensure fair results. Due to blockchain explorer limitations, scores are based on recent transfer history and will continue to be refined.</div>
           <div class="no-wallet-link" id="t-no-wallet">
             No wallet? <a href="https://www.nightly.app/" target="_blank" style="color:var(--lime);font-weight:600;">Nightly</a> is recommended for FOGO. Also:
             <a href="https://phantom.app" target="_blank">Phantom</a>,
@@ -3415,7 +3417,7 @@ function fmtUsdFull(n) {
 
 async function fetchFogoData(address) {
   const PAGE_SIZE   = 40;   // Fogoscan API max reliable page_size
-  const MAX_FETCH   = 1000; // cap total transfers fetched
+  const MAX_FETCH   = 3000; // cap total transfers fetched (no extrapolation — see below)
 
   // 1. Fetch transfer count + wallet balances in parallel
   step('Connecting to Fogoscan...');
@@ -3502,10 +3504,9 @@ async function fetchFogoData(address) {
     });
   } catch(e) { /* non-critical — token detection still works */ }
 
-  // If history exceeds MAX_FETCH, extrapolate the volume proportionally
-  if (totalCount > MAX_FETCH) {
-    volumeUsd = volumeUsd * (totalCount / MAX_FETCH);
-  }
+  // No extrapolation — we use the raw fetched volume only.
+  // Wallets with > 3,000 transfers are scored on their 3,000 most recent transfers.
+  // This avoids the wild inflation that extrapolation causes for high-frequency wallets.
 
   // Add current wallet balance on FOGO chain (money still deployed / held)
   volumeUsd += walletBalanceUsd;
@@ -5765,6 +5766,11 @@ function setLanguage(lang) {
   if (supported) supported.textContent = lang === 'ko'
     ? 'Nightly (추천) · Phantom · Solflare · Backpack · WalletConnect · 300+ 지갑'
     : 'Nightly (recommended) · Phantom · Solflare · Backpack · WalletConnect · 300+ wallets';
+
+  // Volume notice — no data-ko attribute, handled here for clean bidirectional switching
+  setTxt('t-volume-notice', lang === 'ko'
+    ? '블록체인 익스플로러의 기술적 한계로 인해, 볼륨 점수는 최근 거래 내역을 기준으로 산정됩니다. 더 공정한 시스템을 위해 지속적으로 개선하고 있습니다.'
+    : "We've adjusted the volume scoring system to ensure fair results. Due to blockchain explorer limitations, scores are based on recent transfer history and will continue to be refined.");
 
   // Wallet section labels
   setTxt('t-connect-head', t.connect_head || 'Connect Your Wallet');
