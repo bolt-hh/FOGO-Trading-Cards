@@ -1730,24 +1730,19 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
     window.reownModal = modal;
     console.log('[FOGO] Reown AppKit loaded ✓');
 
-    // Pre-warm: AWAIT the wallet metadata fetch so the browser HTTP cache is
-    // populated BEFORE AppKit makes its own request. Without this, incognito
-    // first-load has two concurrent cold requests and AppKit loses the race,
-    // rendering a blank modal. 5 s timeout so we never stall forever.
+    // Pre-warm: fire a parallel fetch to seed the browser HTTP cache while
+    // the silent modal open is running — do NOT await it, both must run
+    // concurrently so AppKit hits the cache on its own internal request.
     try {
-      await Promise.race([
-        fetch(
-          `https://explorer-api.walletconnect.com/v3/wallets?projectId=${REOWN_PID}&page=1&entries=40&search=&version=2`,
-          { mode: 'cors', cache: 'default', credentials: 'omit' }
-        ),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('prefetch timeout')), 5000))
-      ]);
+      fetch(
+        `https://explorer-api.walletconnect.com/v3/wallets?projectId=${REOWN_PID}&page=1&entries=40&search=&version=2`,
+        { mode: 'cors', cache: 'default', credentials: 'omit' }
+      ).catch(() => {});
     } catch (_) {}
 
     // Silently open + close the modal so AppKit populates its internal wallet
-    // cache before the user ever clicks. We hide it with aggressive CSS
-    // (opacity + visibility + z-index) so nothing flashes, then poll the
-    // shadow DOM until wallet entries are actually rendered (max 4 s).
+    // cache before the user ever clicks. A <style> tag makes the modal fully
+    // invisible during this process so nothing flashes on screen.
     try {
       const hideStyle = document.createElement('style');
       hideStyle.id = 'reown-prewarm-hide';
@@ -1756,23 +1751,9 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
         'pointer-events:none!important;z-index:-99999!important;}';
       document.head.appendChild(hideStyle);
       modal.open();
-
-      // Poll shadow DOM for wallet content; fall back to 4 s hard timeout
-      await new Promise(resolve => {
-        const deadline = Date.now() + 4000;
-        const poll = setInterval(() => {
-          const m   = document.querySelector('w3m-modal');
-          const src = m?.shadowRoot?.innerHTML || '';
-          const ready = src.includes('w3m-wallet') ||
-                        src.includes('wui-list-wallet') ||
-                        src.includes('wallet-button') ||
-                        Date.now() >= deadline;
-          if (ready) { clearInterval(poll); resolve(); }
-        }, 120);
-      });
-
+      await new Promise(r => setTimeout(r, 1500)); // wait for AppKit internal fetch
       modal.close();
-      await new Promise(r => setTimeout(r, 200)); // let close settle
+      await new Promise(r => setTimeout(r, 150));  // let close animation settle
       hideStyle.remove();
     } catch (_) {
       document.getElementById('reown-prewarm-hide')?.remove();
