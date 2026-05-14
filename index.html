@@ -2883,6 +2883,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
                 <tr>
                   <th>#</th>
                   <th>Wallet</th>
+                  <th>Explorer</th>
                   <th>FOGO ($)</th>
                   <th>USDC ($)</th>
                   <th>Staked ($)</th>
@@ -6774,12 +6775,15 @@ async function runHolderSnapshot() {
     totalNewPts += r.newHolderPts;
     if (r.newHolderPts > 0) earningCount++;
     const short = r.wallet.slice(0, 6) + '…' + r.wallet.slice(-4);
+    const explorerUrl = `https://fogoscan.com/account/${r.wallet}`;
     const deltaStr = r.delta > 0 ? `<span style="color:var(--lime);">+${fmtPts(r.delta)}</span>`
                    : r.delta < 0 ? `<span style="color:#ff6b6b;">${fmtPts(r.delta)}</span>`
                    : `<span style="color:var(--dim);">—</span>`;
     return `<tr>
       <td style="color:var(--dim);">${idx + 1}</td>
       <td style="font-size:9px;color:var(--dim);" title="${r.wallet}">${short}</td>
+      <td><a href="${explorerUrl}" target="_blank" rel="noopener"
+            style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);text-decoration:none;border:1px solid rgba(195,251,165,0.3);padding:2px 7px;border-radius:4px;white-space:nowrap;">↗ View</a></td>
       <td>${fmt(r.nativeUsd)}</td>
       <td>${fmt(r.usdcUsd)}</td>
       <td>${fmt(r.stakedUsd)}</td>
