@@ -4529,7 +4529,9 @@ async function renderDashboard() {
   const setV = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
   setV('a-total', total.toLocaleString());
   setV('a-today', todayCount.toLocaleString());
-  setV('a-vol', '$' + (subs.reduce((s,r)=>s+(r.total_volume_usd||0),0)/1000).toFixed(1) + 'K');
+  const _totalVol = subs.reduce((s,r)=>s+(r.total_volume_usd||0),0);
+  const _fmtVol = v => v>=1e6 ? '$'+(v/1e6).toFixed(2)+'M' : v>=1e3 ? '$'+(v/1e3).toFixed(1)+'K' : '$'+v.toFixed(0);
+  setV('a-vol', _fmtVol(_totalVol));
   setV('a-kols', STATE.allKols.filter(k=>k.active!==false).length);
 
   // Link clicks count — safe async with try/catch
@@ -4550,10 +4552,12 @@ async function renderDashboard() {
     }
     subs.forEach(r => { const d = (r.created_at||'').slice(0,10); if (dayCounts[d] !== undefined) dayCounts[d]++; });
     const maxCount = Math.max(...Object.values(dayCounts), 1);
+    const CHART_H = 70;
     const bars = Object.entries(dayCounts).map(([d, count]) => {
-      const pct = Math.round((count/maxCount)*100);
+      const heightPx = count > 0 ? Math.max(3, Math.round((count/maxCount)*CHART_H)) : 2;
       const label = d.slice(5);
-      return `<div class="bar-chart-outer"><div class="bar-chart-bar" style="height:${Math.max(2,pct)}%;background:${count>0?'linear-gradient(0deg,var(--fire),var(--ember))':'rgba(213,235,213,0.08)'};" title="${d}: ${count} entries"></div><div class="bar-chart-label">${label}</div></div>`;
+      const bg = count > 0 ? 'linear-gradient(0deg,var(--fire),var(--ember))' : 'rgba(213,235,213,0.08)';
+      return `<div class="bar-chart-outer"><div class="bar-chart-bar" style="height:${heightPx}px;background:${bg};" title="${d}: ${count} entries"></div><div class="bar-chart-label">${label}</div></div>`;
     });
     dayChart.innerHTML = `<div style="display:flex;align-items:flex-end;gap:3px;height:90px;">${bars.join('')}</div>`;
   }
