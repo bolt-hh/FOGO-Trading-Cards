@@ -6680,7 +6680,8 @@ async function fetchWalletHoldings(address) {
     for (const tok of tokens) {
       const val = tok.value || 0;
       if (!val) continue;
-      const sym = (tok.symbol || '').toLowerCase().trim();
+      // Fogoscan API uses "tokenSymbol" field (not "symbol")
+      const sym = (tok.tokenSymbol || tok.symbol || '').toLowerCase().trim();
       // Staked FOGO: only iFOGO (Ignition) and stFOGO (Brasa)
       const isStaked = sym === 'ifogo' || sym === 'stfogo';
       // Stablecoins: explicit FOGO-chain symbols + USD-prefixed catch-all
