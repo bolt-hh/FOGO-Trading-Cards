@@ -6683,8 +6683,10 @@ async function fetchWalletHoldings(address) {
       const sym = (tok.symbol || '').toLowerCase().trim();
       // Staked FOGO: only iFOGO (Ignition) and stFOGO (Brasa)
       const isStaked = sym === 'ifogo' || sym === 'stfogo';
-      // Stablecoins: USDC, USDT, and USD-prefixed variants
-      const isStable = sym.startsWith('usd') || sym === 'dai' || sym === 'busd';
+      // Stablecoins: explicit FOGO-chain symbols + USD-prefixed catch-all
+      // USDC.s = bridged USDC on FOGO (Solana origin), usdc/usdt = standard
+      const STABLE_SYMBOLS = new Set(['usdc.s','usdc','usdt','usdce','usdcso','dai','busd']);
+      const isStable = STABLE_SYMBOLS.has(sym) || sym.startsWith('usd');
       if (isStaked)      stakedUsd += val;
       else if (isStable) usdcUsd   += val;
       // All other tokens: not counted
