@@ -2090,7 +2090,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
             <span id="reown-btn-label">Loading wallets…</span>
           </button>
           <div class="reown-supported">Nightly (recommended) · Phantom · Solflare · Backpack · WalletConnect · 300+ wallets</div>
-          <div class="volume-notice" id="t-volume-notice">We've adjusted the volume scoring system to ensure fair results. Due to blockchain explorer limitations, scores are based on recent transfer history and will continue to be refined.</div>
+          <div class="volume-notice" id="t-volume-notice">Trading points now use Valiant's verified on-chain data via Fuul — the exact USD notional volume from your perp and swap activity. Previous scores are preserved; only new Valiant trading adds to your total.</div>
           <div class="no-wallet-link" id="t-no-wallet">
             No wallet? <a href="https://www.nightly.app/" target="_blank" style="color:var(--lime);font-weight:600;">Nightly</a> is recommended for FOGO. Also:
             <a href="https://phantom.app" target="_blank">Phantom</a>,
@@ -3426,10 +3426,24 @@ function fmtUsdFull(n) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-async function fetchFogoData(address) {
-  const PAGE_SIZE   = 40;   // Fogoscan API max reliable page_size
-  const MAX_FETCH   = 3000; // cap total transfers fetched (no extrapolation — see below)
+// ── VALIANT VOLUME (Fuul API) ─────────────────────────────────────────────────
+// Fetches verified on-chain USD notional volume for a wallet from Fuul,
+// which powers Valiant's rewards layer and tracks all perp + swap activity.
+const FUUL_API    = 'https://api.fuul.xyz/api/v1/payouts/leaderboard/volume';
+const FUUL_BEARER = 'f0ccd94978c13f2062b1ac07a00ddc9b3fc7daf322e03b4aa4d9cc3edf681c55';
 
+async function fetchValiantVolume(address) {
+  try {
+    const url = `${FUUL_API}?user_identifier=${encodeURIComponent(address)}&identifier_type=solana_address&limit=1`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${FUUL_BEARER}` } });
+    if (!res.ok) return 0;
+    const json = await res.json();
+    const row = (json?.results || [])[0];
+    return parseFloat(row?.total_amount || '0') || 0;
+  } catch(e) { return 0; }
+}
+
+async function fetchFogoData(address) {
   // 1. Fetch transfer count + wallet balances in parallel
   step('Connecting to Fogoscan...');
   let totalCount = 0, acctLamports = 0, wFOGOPrice = 0, tokenData = [];
@@ -3450,61 +3464,34 @@ async function fetchFogoData(address) {
   }
 
   // Wallet balance on FOGO chain (native FOGO + all SPL tokens)
-  const nativeUsd   = (acctLamports / 1e9) * wFOGOPrice;
-  const tokenUsd    = tokenData.reduce((sum, t) => sum + (t.value || 0), 0);
+  const nativeUsd       = (acctLamports / 1e9) * wFOGOPrice;
+  const tokenUsd        = tokenData.reduce((sum, t) => sum + (t.value || 0), 0);
   const walletBalanceUsd = nativeUsd + tokenUsd;
 
-  if (totalCount === 0 && walletBalanceUsd === 0) {
-    return { ok: true, txCount: 0, volumeUsd: 0, walletAge: 'New', protocols: {}, topProtocol: 'FOGO', sim: false };
+  // 2. Fetch Valiant volume via Fuul API (official on-chain notional USD)
+  step('Fetching Valiant trading volume...');
+  const valiantVolumeUsd = await fetchValiantVolume(address);
+
+  if (totalCount === 0 && walletBalanceUsd === 0 && valiantVolumeUsd === 0) {
+    return { ok: true, txCount: 0, volumeUsd: 0, valiantVolumeUsd: 0, walletAge: 'New', protocols: {}, topProtocol: 'FOGO', sim: false };
   }
 
-  step(`Found ${totalCount} transfers. Loading data...`);
-
-  // 2. Fetch pages in parallel
-  const fetchCount = Math.min(totalCount, MAX_FETCH);
-  const numPages   = Math.ceil(fetchCount / PAGE_SIZE);
-
-  const pages = await Promise.all(
-    Array.from({ length: numPages }, (_, i) =>
-      fetch(`${FOGOSCAN_API}/account/transfer?address=${address}&page=${i + 1}&page_size=${PAGE_SIZE}&remove_spam=false&exclude_amount_zero=false`)
-        .then(r => r.json())
-        .catch(() => ({ data: [] }))
-    )
-  );
-
-  step('Computing volume...');
-
-  const transfers = pages.flatMap(p => Array.isArray(p.data) ? p.data : []);
-
-  // 3. Volume = sum of OUT transfers (capital deployed — avoids double-counting swaps)
-  let volumeUsd  = 0;
-  let oldestTime = null;
+  // 3. Protocol detection via recent transactions (for DApp badges)
+  step('Detecting DApp interactions...');
   const protoCounts = { ambient: 0, valiant: 0, brasa: 0, pyron: 0, ignition: 0, fogolend: 0 };
+  let oldestTime = null;
 
-  transfers.forEach(t => {
-    if (t.block_time && (!oldestTime || t.block_time < oldestTime)) oldestTime = t.block_time;
+  // Fuul confirms Valiant activity authoritatively
+  if (valiantVolumeUsd > 0) protoCounts.valiant = 1;
 
-    // Only count capital leaving the wallet (deployed)
-    if (t.flow === 'out' && (t.value || 0) > 0) volumeUsd += t.value;
-
-    // Protocol detection via token address
-    const proto = TOKEN_PROTOCOL_MAP[t.token_address];
-    if (proto && protoCounts[proto] !== undefined) protoCounts[proto]++;
-
-    // Protocol detection via CONFIG program IDs (once known)
-    if (t.program_id) {
-      Object.entries(CONFIG.programs).forEach(([name, pid]) => {
-        if (pid && t.program_id === pid) protoCounts[name]++;
-      });
-    }
-  });
-
-  // Also scan transaction-level program IDs (catches Valiant swap + Pyron)
-  // Transfer endpoint doesn't return program_id, transaction endpoint does
   try {
     const txRes = await fetch(`${FOGOSCAN_API}/account/transaction?address=${address}&page=1&page_size=20`)
       .then(r => r.json()).catch(() => null);
     const txList = txRes?.data?.transactions || [];
+    if (txList.length) {
+      const times = txList.map(tx => tx.block_time).filter(Boolean);
+      if (times.length) oldestTime = Math.min(...times);
+    }
     txList.forEach(tx => {
       (tx.parsedInstruction || []).forEach(ins => {
         const pid = ins.programId || ins.program_id || '';
@@ -3513,48 +3500,34 @@ async function fetchFogoData(address) {
         });
       });
     });
-  } catch(e) { /* non-critical — token detection still works */ }
+  } catch(e) { /* non-critical — DApp badges degrade gracefully */ }
 
-  // No extrapolation — we use the raw fetched volume only.
-  // Wallets with > 3,000 transfers are scored on their 3,000 most recent transfers.
-  // This avoids the wild inflation that extrapolation causes for high-frequency wallets.
-
-  // Add current wallet balance on FOGO chain (money still deployed / held)
-  volumeUsd += walletBalanceUsd;
-
-  // Tiered rounding — dampens price-driven micro-fluctuations in wallet balance
-  // without zeroing out small volumes (< $50 would round to $0 with flat $100 rounding)
-  if (volumeUsd >= 500)       volumeUsd = Math.round(volumeUsd / 100) * 100; // nearest $100
-  else if (volumeUsd >= 50)   volumeUsd = Math.round(volumeUsd / 10)  * 10;  // nearest $10
-  else                         volumeUsd = Math.round(volumeUsd);             // nearest $1
+  // Volume = Valiant on-chain USD + current wallet balance
+  // (transfer-based history is no longer used — Fuul is the authoritative source)
+  const volumeUsd = valiantVolumeUsd + walletBalanceUsd;
 
   const walletAge = formatAge(oldestTime);
 
   // Top Protocol — show a DApp, never the base chain
-  // If user has used DApps, pick one weighted by usage count
-  // If none used, rotate randomly so all DApps get visibility
-  const DAPPS = ['Valiant', 'Pyron', 'Brasa', 'Ignition'];
+  const DAPPS     = ['Valiant', 'Pyron', 'Brasa', 'Ignition'];
   const DAPP_KEYS = ['valiant', 'pyron', 'brasa', 'ignition'];
   const usedDapps = DAPP_KEYS
     .map((k, i) => ({ name: DAPPS[i], count: protoCounts[k] || 0 }))
     .filter(d => d.count > 0)
     .sort((a, b) => b.count - a.count);
 
-  // Check if we have a saved topProto for this wallet — keeps it stable across visits
   const savedTopProto = STATE.wallet ? (() => { try { return localStorage.getItem('fogo_top_proto_' + STATE.wallet); } catch(e){ return null; } })() : null;
 
   let topProto;
   if (savedTopProto) {
-    topProto = savedTopProto; // Use saved value — don't randomise on rescan
+    topProto = savedTopProto;
   } else if (usedDapps.length > 0) {
-    topProto = usedDapps[0].name; // Pick highest-usage DApp (deterministic)
+    topProto = usedDapps[0].name;
   } else {
-    // No DApps detected — assign one based on wallet address (stable per wallet)
     const seed = [...(STATE.wallet || 'x')].reduce((a, c) => a + c.charCodeAt(0), 0) % DAPPS.length;
     topProto = DAPPS[seed];
   }
 
-  // Persist both wallet age and top protocol
   if (STATE.wallet) {
     try {
       localStorage.setItem('fogo_wallet_age_' + STATE.wallet, walletAge);
@@ -3567,9 +3540,10 @@ async function fetchFogoData(address) {
     txCount: totalCount,
     walletAge,
     volumeUsd,
+    valiantVolumeUsd,
     walletBalance: walletBalanceUsd,
-    protocols:   protoCounts,
-    topProtocol: topProto,
+    protocols:    protoCounts,
+    topProtocol:  topProto,
     sim: false,
   };
 }
@@ -5589,8 +5563,8 @@ function setLanguage(lang) {
 
   // Volume notice — set early so it's applied even if something below throws
   setTxt('t-volume-notice', lang === 'ko'
-    ? '블록체인 익스플로러의 기술적 한계로 인해, 볼륨 점수는 최근 거래 내역을 기준으로 산정됩니다. 더 공정한 시스템을 위해 지속적으로 개선하고 있습니다.'
-    : "We've adjusted the volume scoring system to ensure fair results. Due to blockchain explorer limitations, scores are based on recent transfer history and will continue to be refined.");
+    ? '거래 포인트는 이제 Fuul을 통한 Valiant의 검증된 온체인 데이터를 사용합니다 — 퍼프 및 스왑 활동의 정확한 USD 명목 거래량. 이전 점수는 보존되며 새로운 Valiant 거래만 합계에 추가됩니다.'
+    : "Trading points now use Valiant's verified on-chain data via Fuul — the exact USD notional volume from your perp and swap activity. Previous scores are preserved; only new Valiant trading adds to your total.");
 
   // Tier names in gate grid
   t.tier_names.forEach((name, i) => setTxt('t-tier-' + (i + 1), name));
@@ -5785,8 +5759,8 @@ function setLanguage(lang) {
 
   // Volume notice — no data-ko attribute, handled here for clean bidirectional switching
   setTxt('t-volume-notice', lang === 'ko'
-    ? '블록체인 익스플로러의 기술적 한계로 인해, 볼륨 점수는 최근 거래 내역을 기준으로 산정됩니다. 더 공정한 시스템을 위해 지속적으로 개선하고 있습니다.'
-    : "We've adjusted the volume scoring system to ensure fair results. Due to blockchain explorer limitations, scores are based on recent transfer history and will continue to be refined.");
+    ? '거래 포인트는 이제 Fuul을 통한 Valiant의 검증된 온체인 데이터를 사용합니다 — 퍼프 및 스왑 활동의 정확한 USD 명목 거래량. 이전 점수는 보존되며 새로운 Valiant 거래만 합계에 추가됩니다.'
+    : "Trading points now use Valiant's verified on-chain data via Fuul — the exact USD notional volume from your perp and swap activity. Previous scores are preserved; only new Valiant trading adds to your total.");
 
   // Wallet section labels
   setTxt('t-connect-head', t.connect_head || 'Connect Your Wallet');
@@ -6428,19 +6402,64 @@ async function rescanWallet() {
     const data = await fetchFogoData(STATE.wallet);
     if (!data.ok) { btn.textContent = t.tasks_rescan || '↻ Rescan Wallet'; btn.disabled = false; return; }
 
-    const vol   = data.volumeUsd || 0;
-    const tier  = getTier(vol);
-    const power = computePower(vol);
-    STATE.cardData = { data, vol, tier, power };
-
-    // Update DB record — preserve x_share_link if already submitted
+    // ── Frozen-base + Fuul-delta model ──────────────────────────────────────
+    // Existing wallets: points/volume from pre-Fuul era are frozen.
+    // Only Valiant on-chain volume (via Fuul) adds to the running total.
+    // New wallets (no frozen base yet): calculatePoints() runs normally.
+    let frozenBasePts = null, frozenBaseVol = null;
     if (db) {
-      const existingLink = document.getElementById('raffle-x-link')?.value?.trim()
-        || STATE._savedXLink || '';
-      const { total: finalPts, breakdown: ptsBrk } = calculatePoints(STATE.cardData, !!existingLink);
-      // calculatePoints already includes STATE.ugcPoints — do not add again
+      const { data: rec } = await db.from('card_submissions')
+        .select('points_breakdown, total_volume_usd')
+        .eq('wallet_address', STATE.wallet)
+        .single().catch(() => ({ data: null }));
+      const brk = rec?.points_breakdown || {};
+      if ('_frozen_base_pts' in brk) {
+        frozenBasePts = brk._frozen_base_pts;
+        frozenBaseVol = brk._frozen_vol ?? 0;
+      }
+    }
+
+    const fuulVol          = data.valiantVolumeUsd || 0;
+    const walletBal        = data.walletBalance    || 0;
+    const newValiantPts    = Math.floor(fuulVol / 50) * 25;
+
+    let finalPts, ptsBrk, totalVol;
+
+    if (frozenBasePts !== null) {
+      // Existing user — apply frozen base + new Fuul pts only
+      finalPts = frozenBasePts + newValiantPts;
+      totalVol = frozenBaseVol + fuulVol + walletBal;
+      // Rebuild breakdown from DB and swap in new valiant pts
+      if (db) {
+        const { data: rec } = await db.from('card_submissions')
+          .select('points_breakdown').eq('wallet_address', STATE.wallet)
+          .single().catch(() => ({ data: null }));
+        ptsBrk = { ...(rec?.points_breakdown || {}), valiant: newValiantPts };
+      } else {
+        ptsBrk = { valiant: newValiantPts, _frozen_base_pts: frozenBasePts, _frozen_vol: frozenBaseVol };
+      }
+    } else {
+      // New user — calculate from scratch (Fuul vol + wallet balance)
+      totalVol = fuulVol + walletBal;
+      const existingLink = document.getElementById('raffle-x-link')?.value?.trim() || STATE._savedXLink || '';
+      const calc = calculatePoints({ data, vol: totalVol }, !!existingLink);
+      finalPts = calc.total;
+      ptsBrk   = {
+        ...calc.breakdown,
+        valiant:          newValiantPts,
+        _frozen_base_pts: finalPts - newValiantPts,
+        _frozen_vol:      0,
+      };
+    }
+
+    const tier  = getTier(totalVol);
+    const power = computePower(totalVol);
+    STATE.cardData    = { data: { ...data, volumeUsd: totalVol }, vol: totalVol, tier, power };
+    STATE.currentPoints = finalPts;
+
+    if (db) {
       await db.from('card_submissions').update({
-        total_volume_usd: vol,
+        total_volume_usd: totalVol,
         tier_name:        tier.name,
         power_score:      power,
         tx_count:         data.txCount,
@@ -6448,11 +6467,11 @@ async function rescanWallet() {
         total_points:     finalPts,
         points_breakdown: ptsBrk,
         entry_count:      finalPts,
-      }).eq('wallet_address', STATE.wallet).then(() => {}).catch(() => {});
+      }).eq('wallet_address', STATE.wallet).catch(() => {});
     }
 
-    renderCard(STATE.wallet, STATE.handle, data, tier, power);
-    setEligibilityUI(vol);
+    renderCard(STATE.wallet, STATE.handle, { ...data, volumeUsd: totalVol }, tier, power);
+    setEligibilityUI(totalVol);
     updatePointsDisplay();
     renderTasksUI(STATE.tasks);
     renderUgcInlineSlots();
