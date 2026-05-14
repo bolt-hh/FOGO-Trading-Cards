@@ -6680,8 +6680,10 @@ async function fetchWalletHoldings(address) {
     for (const tok of tokens) {
       const val = tok.value || 0;
       if (!val) continue;
-      const sym = (tok.symbol || '').toUpperCase();
-      if (sym === 'USDC' || sym === 'USDC.E') usdcUsd += val;
+      const sym = (tok.symbol || '').toUpperCase().replace(/[^A-Z]/g, '');
+      // Treat any USD-pegged stablecoin as USDC tier (USDC, USDT, USDCE, USDCso, DAI, etc.)
+      const isStable = sym.startsWith('USD') || sym === 'DAI' || sym === 'USDT' || sym === 'BUSD';
+      if (isStable) usdcUsd += val;
       else stakedUsd += val;
     }
 
