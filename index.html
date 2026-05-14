@@ -2503,6 +2503,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
         <button class="admin-tab" id="tab-tasks" onclick="switchAdminTab('tasks')">Tasks</button>
         <button class="admin-tab" id="tab-tester" onclick="switchAdminTab('tester')">Card Tester</button>
         <button class="admin-tab" id="tab-config" onclick="switchAdminTab('config')">Config</button>
+        <button class="admin-tab" id="tab-snapshot" onclick="switchAdminTab('snapshot')">📸 Snapshot</button>
       </div>
 
       <!-- ── DASHBOARD TAB ───────────────────────────────────────── -->
@@ -2833,6 +2834,70 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
       </div>
       </div><!-- /.admin-section-full config -->
       </div><!-- /#admin-panel-config -->
+
+      <!-- ── SNAPSHOT TAB ───────────────────────────────────────── -->
+      <div id="admin-panel-snapshot" class="admin-panel-section" style="display:none;">
+        <div class="admin-section-full">
+          <div class="admin-section-head" style="margin-bottom:4px;">📸 FOGO Asset Holder Snapshot</div>
+          <p style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);margin:0 0 16px;line-height:1.7;">
+            Fetches live on-chain balances for all registered wallets and calculates holder points.<br>
+            <span style="color:var(--lime);">FOGO native: 1 pt/$1 · USDC: 0.5 pt/$1 · Staked / protocol tokens: 2 pt/$1</span><br>
+            Review the preview below, then click <strong>Apply Points</strong> to write changes to the database.
+          </p>
+
+          <!-- Action bar -->
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+            <button onclick="runHolderSnapshot()" id="snap-fetch-btn"
+              style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:10px 20px;background:rgba(195,251,165,0.1);border:1px solid rgba(195,251,165,0.4);color:var(--lime);border-radius:6px;cursor:pointer;">
+              ⬇ Fetch Holdings
+            </button>
+            <button onclick="applyHolderPoints()" id="snap-apply-btn" disabled
+              style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:10px 20px;background:rgba(195,251,165,0.05);border:1px solid rgba(195,251,165,0.2);color:var(--dim);border-radius:6px;cursor:not-allowed;transition:all 0.2s;">
+              ✓ Apply Points
+            </button>
+            <span id="snap-status" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);"></span>
+          </div>
+
+          <!-- Progress bar -->
+          <div id="snap-progress-wrap" style="display:none;margin-bottom:16px;">
+            <div style="background:var(--border);border-radius:4px;height:4px;overflow:hidden;">
+              <div id="snap-progress-bar" style="height:100%;background:var(--lime);width:0%;transition:width 0.3s;"></div>
+            </div>
+            <div id="snap-progress-label" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);margin-top:6px;"></div>
+          </div>
+
+          <!-- Summary row -->
+          <div id="snap-summary" style="display:none;background:rgba(195,251,165,0.04);border:1px solid rgba(195,251,165,0.15);border-radius:8px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;gap:24px;">
+            <div style="display:flex;gap:32px;flex-wrap:wrap;">
+              <div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px;">Wallets Scanned</div><div id="snap-sum-wallets" style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--lime);">—</div></div>
+              <div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px;">Total Holder Pts</div><div id="snap-sum-pts" style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--lime);">—</div></div>
+              <div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px;">Wallets Earning Pts</div><div id="snap-sum-earning" style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--lime);">—</div></div>
+              <div><div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px;">Snapshot Date</div><div id="snap-sum-date" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--sub);">—</div></div>
+            </div>
+          </div>
+
+          <!-- Preview table -->
+          <div id="snap-table-wrap" style="overflow-x:auto;display:none;">
+            <table class="admin-entry-table" id="snap-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Wallet</th>
+                  <th>FOGO ($)</th>
+                  <th>USDC ($)</th>
+                  <th>Staked ($)</th>
+                  <th>Holder Pts</th>
+                  <th>Prev Holder Pts</th>
+                  <th>Δ Change</th>
+                  <th>New Total Pts</th>
+                </tr>
+              </thead>
+              <tbody id="snap-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /#admin-panel-snapshot -->
+
     </div><!-- /#admin-dashboard -->
   </div>
 </section>
@@ -3379,6 +3444,7 @@ function resetAndGoHome() {
   STATE.passcode        = null;
   STATE.tasks           = [];
   STATE.ugcPoints       = 0;
+  STATE.holderPts       = 0;
   STATE.currentPoints   = 0;
   _kolsLoaded = false;
   // Reset KOL selector UI
@@ -3653,7 +3719,9 @@ async function generateCard() {
     }
 
     // Restore UGC points from DB so calculatePoints includes them in breakdown
-    STATE.ugcPoints = d.ugc_points || 0;
+    STATE.ugcPoints  = d.ugc_points || 0;
+    // Restore holder points from DB breakdown
+    STATE.holderPts  = (d.points_breakdown?.holder_pts) || 0;
 
     // Pre-load total_points from DB into STATE so the raffle success screen shows correct count
     const { total: dbPts, breakdown: dbBreakdown } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
@@ -4309,7 +4377,7 @@ function showAdminDashboard() {
 }
 
 function switchAdminTab(tab) {
-  const tabs = ['dashboard','entries','ugc','kols','tasks','tester','config'];
+  const tabs = ['dashboard','entries','ugc','kols','tasks','tester','config','snapshot'];
   tabs.forEach(t => {
     const panel = document.getElementById('admin-panel-' + t);
     const btn   = document.getElementById('tab-' + t);
@@ -4320,6 +4388,7 @@ function switchAdminTab(tab) {
   if (tab === 'dashboard')   renderDashboard();
   if (tab === 'ugc')         refreshAdminUgc();
   if (tab === 'link-clicks') loadLinkClickStats();
+  if (tab === 'snapshot')    initSnapshotTab();
 }
 
 /* ================================================================
@@ -5812,6 +5881,10 @@ function calculatePoints(cardData, hasXShare) {
   const ugcPts = STATE.ugcPoints || 0;
   if (ugcPts > 0) { breakdown.ugc = ugcPts; total += ugcPts; }
 
+  // Holder points from weekly asset snapshot (admin-applied)
+  const holderPts = STATE.holderPts || 0;
+  if (holderPts > 0) { breakdown.holder_pts = holderPts; total += holderPts; }
+
   return { total, breakdown };
 }
 
@@ -5831,11 +5904,12 @@ function updatePointsDisplay() {
     card_generated: 'Card Generated',
     x_share:        'X Post Share (+50)',
     volume:         'Trading Volume',
-    valiant:        'Valiant Trade',
-    pyron:          'Pyron Trade',
-    brasa:          'Brasa Trade',
-    ignition:       'Ignition Trade',
+    valiant:        'Valiant',
+    pyron:          'Pyron',
+    brasa:          'Brasa',
+    ignition:       'Ignition',
     ugc:            'UGC Content',
+    holder_pts:     'Asset Holder',
   };
   const taskNamesKo = {
     card_generated: '카드 생성',
@@ -5846,11 +5920,12 @@ function updatePointsDisplay() {
     brasa:          'Brasa 거래',
     ignition:       'Ignition 거래',
     ugc:            'UGC 콘텐츠',
+    holder_pts:     '자산 보유',
   };
   const names = CURRENT_LANG === 'ko' ? taskNamesKo : taskNames;
 
   // All possible tasks
-  const allKeys = ['card_generated','x_share','volume','valiant','pyron','brasa','ignition','ugc'];
+  const allKeys = ['card_generated','x_share','volume','valiant','pyron','brasa','ignition','ugc','holder_pts'];
   let html = '';
   allKeys.forEach(key => {
     const pts = breakdown[key] || 0;
@@ -5968,6 +6043,7 @@ function renderTasksUI(tasks) {
     else if (task.task_type === 'auto' && key && breakdown[key]) done = true;
     else if (task.task_type === 'link' && key && proto[key] && proto[key] > 0) done = true;
     else if (task.task_type === 'manual' && key === 'ugc' && (STATE.ugcPoints || 0) > 0) done = true;
+    else if (task.task_type === 'manual' && key === 'holder' && (STATE.holderPts || 0) > 0) done = true;
 
     let typeClass = '';
     if (task.task_type === 'link') typeClass = 'link-type';
@@ -6406,7 +6482,7 @@ async function rescanWallet() {
     // Existing wallets: points/volume from pre-Fuul era are frozen.
     // Only Valiant on-chain volume (via Fuul) adds to the running total.
     // New wallets (no frozen base yet): calculatePoints() runs normally.
-    let frozenBasePts = null, frozenBaseVol = null;
+    let frozenBasePts = null, frozenBaseVol = null, existingHolderPts = 0;
     if (db) {
       const { data: rec } = await db.from('card_submissions')
         .select('points_breakdown, total_volume_usd')
@@ -6417,7 +6493,10 @@ async function rescanWallet() {
         frozenBasePts = brk._frozen_base_pts;
         frozenBaseVol = brk._frozen_vol ?? 0;
       }
+      // Preserve holder points — never reset on rescan
+      existingHolderPts = brk.holder_pts || 0;
     }
+    if (existingHolderPts > 0) STATE.holderPts = existingHolderPts;
 
     const fuulVol          = data.valiantVolumeUsd || 0;
     const walletBal        = data.walletBalance    || 0;
@@ -6426,29 +6505,30 @@ async function rescanWallet() {
     let finalPts, ptsBrk, totalVol;
 
     if (frozenBasePts !== null) {
-      // Existing user — apply frozen base + new Fuul pts only
-      finalPts = frozenBasePts + newValiantPts;
+      // Existing user — apply frozen base + new Fuul pts + holder pts
+      finalPts = frozenBasePts + newValiantPts + existingHolderPts;
       totalVol = frozenBaseVol + fuulVol + walletBal;
-      // Rebuild breakdown from DB and swap in new valiant pts
+      // Rebuild breakdown from DB, swap in new valiant pts, keep holder_pts
       if (db) {
         const { data: rec } = await db.from('card_submissions')
           .select('points_breakdown').eq('wallet_address', STATE.wallet)
           .single().catch(() => ({ data: null }));
         ptsBrk = { ...(rec?.points_breakdown || {}), valiant: newValiantPts };
       } else {
-        ptsBrk = { valiant: newValiantPts, _frozen_base_pts: frozenBasePts, _frozen_vol: frozenBaseVol };
+        ptsBrk = { valiant: newValiantPts, _frozen_base_pts: frozenBasePts, _frozen_vol: frozenBaseVol, holder_pts: existingHolderPts };
       }
     } else {
-      // New user — calculate from scratch (Fuul vol + wallet balance)
+      // New user — calculate from scratch (Fuul vol + wallet balance + holder pts)
       totalVol = fuulVol + walletBal;
       const existingLink = document.getElementById('raffle-x-link')?.value?.trim() || STATE._savedXLink || '';
       const calc = calculatePoints({ data, vol: totalVol }, !!existingLink);
-      finalPts = calc.total;
+      finalPts = calc.total; // already includes STATE.holderPts via calculatePoints
       ptsBrk   = {
         ...calc.breakdown,
         valiant:          newValiantPts,
-        _frozen_base_pts: finalPts - newValiantPts,
+        _frozen_base_pts: finalPts - newValiantPts - existingHolderPts,
         _frozen_vol:      0,
+        holder_pts:       existingHolderPts,
       };
     }
 
@@ -6560,6 +6640,217 @@ function renderLeaderboardTable(data, wrap) {
 
   html += '</tbody></table></div>';
   wrap.innerHTML = html;
+}
+
+/* ================================================================
+   ADMIN — HOLDER SNAPSHOT
+================================================================ */
+
+// Token rate config
+const HOLDER_RATES = {
+  native: 1.0,  // Native FOGO: 1 pt per $1
+  usdc:   0.5,  // USDC: 0.5 pt per $1
+  staked: 2.0,  // All other tokens (staked/protocol): 2 pt per $1
+};
+
+// Fetched results — stored between Fetch and Apply
+let _snapResults = null;
+
+function initSnapshotTab() {
+  // Reset UI to clean state if no results yet
+  if (!_snapResults) {
+    document.getElementById('snap-status').textContent = '';
+    document.getElementById('snap-apply-btn').disabled = true;
+  }
+}
+
+async function fetchWalletHoldings(address) {
+  try {
+    const [acctRes, tokRes] = await Promise.all([
+      fetch(`${FOGOSCAN_API}/account?address=${address}`).then(r => r.json()).catch(() => ({})),
+      fetch(`${FOGOSCAN_API}/account/tokens?address=${address}`).then(r => r.json()).catch(() => ({})),
+    ]);
+    const lamports   = acctRes?.data?.lamports || 0;
+    const fogoPrice  = Object.values(acctRes?.metadata?.tokens || {})[0]?.price_usdt || _fogoUsdPrice || 0;
+    const nativeUsd  = (lamports / 1e9) * fogoPrice;
+    const tokens     = tokRes?.data?.tokens || [];
+
+    let usdcUsd = 0, stakedUsd = 0;
+    for (const tok of tokens) {
+      const val = tok.value || 0;
+      if (!val) continue;
+      const sym = (tok.symbol || '').toUpperCase();
+      if (sym === 'USDC' || sym === 'USDC.E') usdcUsd += val;
+      else stakedUsd += val;
+    }
+
+    const nativePts = Math.floor(nativeUsd  * HOLDER_RATES.native);
+    const usdcPts   = Math.floor(usdcUsd    * HOLDER_RATES.usdc);
+    const stakedPts = Math.floor(stakedUsd  * HOLDER_RATES.staked);
+
+    return { nativeUsd, usdcUsd, stakedUsd, nativePts, usdcPts, stakedPts, totalPts: nativePts + usdcPts + stakedPts };
+  } catch(e) {
+    return { nativeUsd: 0, usdcUsd: 0, stakedUsd: 0, nativePts: 0, usdcPts: 0, stakedPts: 0, totalPts: 0 };
+  }
+}
+
+async function runHolderSnapshot() {
+  if (!db) return;
+
+  const fetchBtn    = document.getElementById('snap-fetch-btn');
+  const applyBtn    = document.getElementById('snap-apply-btn');
+  const statusEl    = document.getElementById('snap-status');
+  const progressWrap= document.getElementById('snap-progress-wrap');
+  const progressBar = document.getElementById('snap-progress-bar');
+  const progressLbl = document.getElementById('snap-progress-label');
+  const tableWrap   = document.getElementById('snap-table-wrap');
+  const summaryEl   = document.getElementById('snap-summary');
+  const tbody       = document.getElementById('snap-tbody');
+
+  fetchBtn.disabled = true;
+  fetchBtn.textContent = '⏳ Fetching…';
+  applyBtn.disabled = true;
+  statusEl.textContent = '';
+  progressWrap.style.display = 'block';
+  tableWrap.style.display    = 'none';
+  summaryEl.style.display    = 'none';
+  tbody.innerHTML = '';
+  _snapResults = null;
+
+  // 1. Load all registered wallets from DB
+  const { data: entries, error } = await db.from('card_submissions')
+    .select('wallet_address, total_points, points_breakdown')
+    .order('total_points', { ascending: false });
+
+  if (error || !entries?.length) {
+    statusEl.textContent = '✗ Failed to load wallets from DB.';
+    fetchBtn.disabled = false;
+    fetchBtn.textContent = '⬇ Fetch Holdings';
+    progressWrap.style.display = 'none';
+    return;
+  }
+
+  const total = entries.length;
+  const results = [];
+
+  // 2. Fetch holdings for each wallet (batched 5 at a time)
+  for (let i = 0; i < total; i += 5) {
+    const batch = entries.slice(i, i + 5);
+    const batchResults = await Promise.all(batch.map(async entry => {
+      const holdings = await fetchWalletHoldings(entry.wallet_address);
+      const prevHolderPts = entry.points_breakdown?.holder_pts || 0;
+      const delta = holdings.totalPts - prevHolderPts;
+      const currentPts = entry.total_points || 0;
+      const newTotalPts = currentPts + delta;
+      return {
+        wallet:        entry.wallet_address,
+        currentPts,
+        prevHolderPts,
+        newHolderPts:  holdings.totalPts,
+        delta,
+        newTotalPts,
+        nativeUsd:     holdings.nativeUsd,
+        usdcUsd:       holdings.usdcUsd,
+        stakedUsd:     holdings.stakedUsd,
+        breakdown:     entry.points_breakdown || {},
+      };
+    }));
+    results.push(...batchResults);
+
+    // Update progress
+    const pct = Math.round(((i + batch.length) / total) * 100);
+    progressBar.style.width = pct + '%';
+    progressLbl.textContent = `Scanned ${i + batch.length} / ${total} wallets…`;
+  }
+
+  _snapResults = results;
+
+  // 3. Render preview table
+  const fmt = n => '$' + n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const fmtPts = n => n.toLocaleString();
+
+  let totalNewPts = 0, earningCount = 0;
+  tbody.innerHTML = results.map((r, idx) => {
+    totalNewPts += r.newHolderPts;
+    if (r.newHolderPts > 0) earningCount++;
+    const short = r.wallet.slice(0, 6) + '…' + r.wallet.slice(-4);
+    const deltaStr = r.delta > 0 ? `<span style="color:var(--lime);">+${fmtPts(r.delta)}</span>`
+                   : r.delta < 0 ? `<span style="color:#ff6b6b;">${fmtPts(r.delta)}</span>`
+                   : `<span style="color:var(--dim);">—</span>`;
+    return `<tr>
+      <td style="color:var(--dim);">${idx + 1}</td>
+      <td style="font-size:9px;color:var(--dim);" title="${r.wallet}">${short}</td>
+      <td>${fmt(r.nativeUsd)}</td>
+      <td>${fmt(r.usdcUsd)}</td>
+      <td>${fmt(r.stakedUsd)}</td>
+      <td style="color:var(--lime);font-weight:700;">${fmtPts(r.newHolderPts)}</td>
+      <td style="color:var(--dim);">${fmtPts(r.prevHolderPts)}</td>
+      <td>${deltaStr}</td>
+      <td style="color:var(--text);">${fmtPts(r.newTotalPts)}</td>
+    </tr>`;
+  }).join('');
+
+  // 4. Show summary
+  document.getElementById('snap-sum-wallets').textContent  = total.toLocaleString();
+  document.getElementById('snap-sum-pts').textContent      = totalNewPts.toLocaleString();
+  document.getElementById('snap-sum-earning').textContent  = earningCount.toLocaleString();
+  document.getElementById('snap-sum-date').textContent     = new Date().toUTCString().slice(0, 25);
+
+  progressWrap.style.display = 'none';
+  summaryEl.style.display    = 'flex';
+  tableWrap.style.display    = 'block';
+  fetchBtn.disabled = false;
+  fetchBtn.textContent = '⬇ Fetch Holdings';
+  statusEl.textContent = `✓ Scan complete — ${total} wallets`;
+
+  // Enable apply button
+  applyBtn.disabled = false;
+  applyBtn.style.background = 'rgba(195,251,165,0.1)';
+  applyBtn.style.borderColor = 'rgba(195,251,165,0.4)';
+  applyBtn.style.color = 'var(--lime)';
+  applyBtn.style.cursor = 'pointer';
+}
+
+async function applyHolderPoints() {
+  if (!_snapResults || !db) return;
+
+  const applyBtn = document.getElementById('snap-apply-btn');
+  const statusEl = document.getElementById('snap-status');
+
+  applyBtn.disabled = true;
+  applyBtn.textContent = '⏳ Applying…';
+  statusEl.textContent = '';
+
+  let successCount = 0, failCount = 0;
+
+  // Batch updates — 10 at a time
+  for (let i = 0; i < _snapResults.length; i += 10) {
+    const batch = _snapResults.slice(i, i + 10);
+    await Promise.all(batch.map(async r => {
+      try {
+        const newBrk = { ...r.breakdown, holder_pts: r.newHolderPts };
+        const { error } = await db.from('card_submissions').update({
+          total_points:     r.newTotalPts,
+          entry_count:      r.newTotalPts,
+          points_breakdown: newBrk,
+        }).eq('wallet_address', r.wallet);
+        if (error) failCount++;
+        else successCount++;
+      } catch(e) { failCount++; }
+    }));
+    statusEl.textContent = `Applying… ${Math.min(i + 10, _snapResults.length)} / ${_snapResults.length}`;
+  }
+
+  applyBtn.textContent = '✓ Apply Points';
+  applyBtn.disabled = false;
+  if (failCount === 0) {
+    statusEl.textContent = `✅ Done — ${successCount} wallets updated`;
+    statusEl.style.color = 'var(--lime)';
+  } else {
+    statusEl.textContent = `⚠ ${successCount} updated, ${failCount} failed`;
+    statusEl.style.color = '#ffaa44';
+  }
+  _snapResults = null; // clear after apply
 }
 
 /* ================================================================
