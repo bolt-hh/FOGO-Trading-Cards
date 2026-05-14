@@ -2841,7 +2841,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
           <div class="admin-section-head" style="margin-bottom:4px;">📸 FOGO Asset Holder Snapshot</div>
           <p style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);margin:0 0 16px;line-height:1.7;">
             Fetches live on-chain balances for all registered wallets and calculates holder points.<br>
-            <span style="color:var(--lime);">FOGO native: 1 pt/$1 · USDC: 0.5 pt/$1 · Staked / protocol tokens: 2 pt/$1</span><br>
+            <span style="color:var(--lime);">FOGO native: 1 pt/$1 · USDC: 0.5 pt/$1 · iFOGO (Ignition) / stFOGO (Brasa): 2 pt/$1 · Other tokens: not counted</span><br>
             Review the preview below, then click <strong>Apply Points</strong> to write changes to the database.
           </p>
 
@@ -2886,7 +2886,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
                   <th>Explorer</th>
                   <th>FOGO ($)</th>
                   <th>USDC ($)</th>
-                  <th>Staked ($)</th>
+                  <th>iFOGO / stFOGO ($)</th>
                   <th>Holder Pts</th>
                   <th>Prev Holder Pts</th>
                   <th>Δ Change</th>
@@ -6680,11 +6680,14 @@ async function fetchWalletHoldings(address) {
     for (const tok of tokens) {
       const val = tok.value || 0;
       if (!val) continue;
-      const sym = (tok.symbol || '').toUpperCase().replace(/[^A-Z]/g, '');
-      // Treat any USD-pegged stablecoin as USDC tier (USDC, USDT, USDCE, USDCso, DAI, etc.)
-      const isStable = sym.startsWith('USD') || sym === 'DAI' || sym === 'USDT' || sym === 'BUSD';
-      if (isStable) usdcUsd += val;
-      else stakedUsd += val;
+      const sym = (tok.symbol || '').toLowerCase().trim();
+      // Staked FOGO: only iFOGO (Ignition) and stFOGO (Brasa)
+      const isStaked = sym === 'ifogo' || sym === 'stfogo';
+      // Stablecoins: USDC, USDT, and USD-prefixed variants
+      const isStable = sym.startsWith('usd') || sym === 'dai' || sym === 'busd';
+      if (isStaked)      stakedUsd += val;
+      else if (isStable) usdcUsd   += val;
+      // All other tokens: not counted
     }
 
     const nativePts = Math.floor(nativeUsd  * HOLDER_RATES.native);
