@@ -3726,6 +3726,20 @@ async function generateCard() {
     STATE.holderPts       = (d.points_breakdown?.holder_pts) || 0;
     STATE.holderSnapshots = (d.points_breakdown?.holder_snapshots) || [];
 
+    // Fallback: if holder_pts not in breakdown but total_points > what we can calculate,
+    // derive the difference as holder_pts so the task card and breakdown always show correctly
+    if (!STATE.holderPts && d.total_points) {
+      const { total: basePts } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
+      const implied = (d.total_points || 0) - basePts;
+      if (implied > 0) STATE.holderPts = implied;
+    }
+
+    // If holder_pts > 0 but no snapshot history yet (pre-history data from old snapshot code),
+    // synthesise a single history entry so the task card shows something meaningful
+    if (STATE.holderPts > 0 && STATE.holderSnapshots.length === 0) {
+      STATE.holderSnapshots = [{ date: d.updated_at ? d.updated_at.slice(0, 10) : new Date().toISOString().slice(0, 10), pts: STATE.holderPts }];
+    }
+
     // Pre-load total_points from DB into STATE so the raffle success screen shows correct count
     const { total: dbPts, breakdown: dbBreakdown } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
     STATE.currentPoints = (d.total_points && d.total_points > 0) ? d.total_points : dbPts;
@@ -6133,12 +6147,21 @@ function renderTasksUI(tasks) {
 
     // Asset Holder snapshot task — expanded card showing per-snapshot history
     if (key === 'holder') {
-      const snaps = (STATE.holderSnapshots || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+      const snaps = (STATE.holderSnapshots || []).slice().sort((a, b) => {
+        if (a.date === 'prior') return 1;
+        if (b.date === 'prior') return -1;
+        return b.date.localeCompare(a.date);
+      });
       const totalHolderPts = STATE.holderPts || 0;
       const historyHtml = snaps.length > 0
         ? snaps.map(s => {
-            const d = new Date(s.date + 'T00:00:00');
-            const label = d.toLocaleDateString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            let label;
+            if (!s.date || s.date === 'prior') {
+              label = CURRENT_LANG === 'ko' ? '이전 스냅샷' : 'Prior snapshot';
+            } else {
+              const sd = new Date(s.date + 'T00:00:00');
+              label = sd.toLocaleDateString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            }
             return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(213,235,213,0.05);">
               <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(213,235,213,0.4);letter-spacing:0.05em;">${label}</span>
               <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--lime);">+${s.pts} pts</span>
@@ -6884,7 +6907,12 @@ async function applyHolderPoints() {
     await Promise.all(batch.map(async r => {
       try {
         const snapDate = new Date().toISOString().slice(0, 10);
-        const prevSnaps = r.breakdown.holder_snapshots || [];
+        let prevSnaps = r.breakdown.holder_snapshots || [];
+        // Backfill: if wallet had holder_pts from old snapshot code but no history yet,
+        // synthesise a prior entry so history doesn't start blank
+        if (prevSnaps.length === 0 && r.prevHolderPts > 0) {
+          prevSnaps = [{ date: 'prior', pts: r.prevHolderPts }];
+        }
         const dedupedSnaps = prevSnaps.filter(s => s.date !== snapDate);
         const newSnaps = [...dedupedSnaps, { date: snapDate, pts: r.newHolderPts }];
         const newBrk = { ...r.breakdown, holder_pts: r.newHolderPts, holder_snapshots: newSnaps };
