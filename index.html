@@ -3446,6 +3446,7 @@ function resetAndGoHome() {
   STATE.tasks           = [];
   STATE.ugcPoints       = 0;
   STATE.holderPts       = 0;
+  STATE.holderSnapshots = [];
   STATE.currentPoints   = 0;
   _kolsLoaded = false;
   // Reset KOL selector UI
@@ -3722,7 +3723,8 @@ async function generateCard() {
     // Restore UGC points from DB so calculatePoints includes them in breakdown
     STATE.ugcPoints  = d.ugc_points || 0;
     // Restore holder points from DB breakdown
-    STATE.holderPts  = (d.points_breakdown?.holder_pts) || 0;
+    STATE.holderPts       = (d.points_breakdown?.holder_pts) || 0;
+    STATE.holderSnapshots = (d.points_breakdown?.holder_snapshots) || [];
 
     // Pre-load total_points from DB into STATE so the raffle success screen shows correct count
     const { total: dbPts, breakdown: dbBreakdown } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
@@ -6129,6 +6131,42 @@ function renderTasksUI(tasks) {
       </div>`;
     }
 
+    // Asset Holder snapshot task — expanded card showing per-snapshot history
+    if (key === 'holder') {
+      const snaps = (STATE.holderSnapshots || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+      const totalHolderPts = STATE.holderPts || 0;
+      const historyHtml = snaps.length > 0
+        ? snaps.map(s => {
+            const d = new Date(s.date + 'T00:00:00');
+            const label = d.toLocaleDateString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(213,235,213,0.05);">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(213,235,213,0.4);letter-spacing:0.05em;">${label}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--lime);">+${s.pts} pts</span>
+            </div>`;
+          }).join('')
+        : `<div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(213,235,213,0.3);padding:6px 0;">${CURRENT_LANG === 'ko' ? '아직 스냅샷 없음' : 'No snapshots yet'}</div>`;
+      const cardState = totalHolderPts > 0 ? 'done manual-type' : 'manual-type';
+      const badge = totalHolderPts > 0
+        ? `<span class="task-status-badge done">${t.tasks_completed || 'Completed'}</span>`
+        : `<span class="task-status-badge pending">${CURRENT_LANG === 'ko' ? '대기 중' : 'Pending'}</span>`;
+      return `<div class="task-card ugc-expanded ${cardState}" id="holder-task-card">
+        <div class="task-card-top">
+          <div class="task-card-info">
+            <div class="task-card-name">${name}</div>
+            ${desc ? `<div class="task-card-desc">${desc}</div>` : ''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+            <span class="task-points-badge">+${totalHolderPts > 0 ? totalHolderPts : pts} pts</span>
+            ${badge}
+          </div>
+        </div>
+        ${snaps.length > 0 ? `<div style="width:100%;margin-top:10px;padding-top:8px;border-top:1px solid rgba(213,235,213,0.07);">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(213,235,213,0.3);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:4px;">${CURRENT_LANG === 'ko' ? '주간 스냅샷 내역' : 'Weekly Snapshot History'}</div>
+          ${historyHtml}
+        </div>` : ''}
+      </div>`;
+    }
+
     // For link-type tasks, make the name a clickable link to the dApp
     const nameHtml = (task.task_type === 'link' && task.link)
       ? `<a href="${task.link}" target="_blank" onclick="trackLinkClick('${key}','${task.link}','tasks')" style="color:inherit;text-decoration:none;border-bottom:1px dotted rgba(255,61,0,0.4);">${name}</a>`
@@ -6845,7 +6883,11 @@ async function applyHolderPoints() {
     const batch = _snapResults.slice(i, i + 10);
     await Promise.all(batch.map(async r => {
       try {
-        const newBrk = { ...r.breakdown, holder_pts: r.newHolderPts };
+        const snapDate = new Date().toISOString().slice(0, 10);
+        const prevSnaps = r.breakdown.holder_snapshots || [];
+        const dedupedSnaps = prevSnaps.filter(s => s.date !== snapDate);
+        const newSnaps = [...dedupedSnaps, { date: snapDate, pts: r.newHolderPts }];
+        const newBrk = { ...r.breakdown, holder_pts: r.newHolderPts, holder_snapshots: newSnaps };
         const { error } = await db.from('card_submissions').update({
           total_points:     r.newTotalPts,
           entry_count:      r.newTotalPts,
