@@ -1,10 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/sync-valiant",
-      "schedule": "0 */6 * * *"
-    }
-  ],
   "rewrites": [
     { "source": "/api/fogoscan/(.*)", "destination": "/api/fogoscan" }
   ],
