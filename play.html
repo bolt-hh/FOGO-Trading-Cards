@@ -638,6 +638,7 @@ const TR = {
   th_plays:          { en: 'Plays',                        ko: '플레이' },
   th_session_taps:   { en: 'Taps (session)',               ko: '세션 탭' },
   th_fogo_txs:       { en: 'Fogo Txs',                    ko: 'FOGO Txs' },
+  th_pts:            { en: 'Points',                       ko: '포인트' },
   th_date:           { en: 'Date',                         ko: '날짜' },
   tab_cumulative:    { en: 'All-Time',                     ko: '누적' },
   tab_sessions:      { en: 'Sessions',                     ko: '세션' },
@@ -1082,7 +1083,7 @@ function renderLeaderboard(data) {
       `<tr><th>#</th><th>${t('th_handle')}</th><th>${t('th_all_time')}</th><th>${t('th_best')}</th><th>${t('th_plays')}</th></tr>`;
   } else {
     document.getElementById('lb-thead').innerHTML =
-      `<tr><th>#</th><th>${t('th_handle')}</th><th>${t('th_session_taps')}</th><th>${t('th_fogo_txs')}</th><th>${t('th_date')}</th></tr>`;
+      `<tr><th>#</th><th>${t('th_handle')}</th><th>${t('th_session_taps')}</th><th>${t('th_pts')}</th><th>${t('th_date')}</th></tr>`;
   }
 
   const rankIcons = ['①','②','③'];
@@ -1109,13 +1110,13 @@ function renderLeaderboard(data) {
       </tr>`;
     } else {
       const clicks = (r.clicks || 0).toLocaleString();
-      const fogo   = ((r.clicks || 0) * TPS).toLocaleString();
+      const pts    = Math.floor((r.clicks || 0) / 10).toLocaleString();
       const date   = r.played_at ? new Date(r.played_at).toLocaleDateString() : '';
       return `<tr${isYou ? ' class="you"' : ''}>
         <td>${rankEl}</td>
         <td>${esc(handle)}</td>
         <td class="hi">${clicks}</td>
-        <td class="fire">${fogo}</td>
+        <td class="fire">${pts}</td>
         <td>${date}</td>
       </tr>`;
     }
