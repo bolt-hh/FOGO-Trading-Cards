@@ -12,6 +12,18 @@
 <link rel="dns-prefetch" href="https://esm.sh">
 <link rel="preconnect" href="https://explorer-api.walletconnect.com" crossorigin>
 <link rel="dns-prefetch" href="https://explorer-api.walletconnect.com">
+<!-- ══ LANGUAGE DETECTION — runs before anything else ══════════════
+     Reads ?lang=ko from URL, then falls back to localStorage
+     (main site writes fogo_lang there when user toggles Korean).
+════════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  var p = new URLSearchParams(location.search).get('lang');
+  if (!p) { try { p = localStorage.getItem('fogo_lang'); } catch(e){} }
+  window.PLAY_LANG = (p === 'ko') ? 'ko' : 'en';
+  if (window.PLAY_LANG === 'ko') document.documentElement.lang = 'ko';
+})();
+</script>
 <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -493,19 +505,19 @@ body::after{
       <div class="result-body">
         <div class="your-taps-block">
           <span class="your-taps-label">You tapped</span>
-          <span class="your-taps-num" id="r-taps">—</span>
+          <span class="your-taps-num" id="r-taps">0</span>
           <span class="your-taps-unit" id="r-taps-unit">times in 10 seconds</span>
         </div>
         <div class="punchline">
           <div class="punchline-pre" id="r-punchline-pre">In 10 seconds · FOGO settled</div>
-          <div class="punchline-num" id="r-fogo">—</div>
+          <div class="punchline-num" id="r-fogo">0</div>
           <div class="punchline-unit">Transactions · 100k TPS · 25 blocks · 4k tx each</div>
           <div class="punchline-tagline" id="r-tagline">Continuously. Every 40ms. Whether you tap or not.</div>
         </div>
         <div class="result-stats">
-          <div class="rstat"><span class="v lime" id="r-total-taps">—</span><span class="l">All-Time Taps</span></div>
-          <div class="rstat"><span class="v fire" id="r-rank">—</span><span class="l">Rank</span></div>
-          <div class="rstat"><span class="v" id="r-rate">—</span><span class="l">Taps / sec</span></div>
+          <div class="rstat"><span class="v lime" id="r-total-taps">0</span><span class="l">All-Time Taps</span></div>
+          <div class="rstat"><span class="v fire" id="r-rank">0</span><span class="l">Rank</span></div>
+          <div class="rstat"><span class="v" id="r-rate">0</span><span class="l">Taps / sec</span></div>
         </div>
         <!-- Points earned badge — shown after server confirms -->
         <div class="pts-earned-badge hidden" id="pts-earned-badge">
@@ -522,7 +534,7 @@ body::after{
         </div>
         <div class="attrem" id="r-best-wrap">
           <span>Best session:</span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--lime);" id="r-best">—</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--lime);" id="r-best">0</span>
           <span>taps</span>
         </div>
       </div>
@@ -543,7 +555,7 @@ body::after{
       <div class="lb-record-flame">🔥</div>
       <div class="lb-record-content">
         <div class="lb-record-label">Record Single Session</div>
-        <div class="lb-record-val" id="lb-record-val">—</div>
+        <div class="lb-record-val" id="lb-record-val"></div>
         <div class="lb-record-meta" id="lb-record-meta">loading…</div>
       </div>
     </div>
@@ -571,6 +583,119 @@ const TPS           = 100000;
 const GAME_DURATION = 10000; // ms
 const SB_URL  = 'https://nhdktvsllunlgdsaninx.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oZGt0dnNsbHVubGdkc2FuaW54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NTIxMjgsImV4cCI6MjA5MTQyODEyOH0.GUFMjeDdphFeFp84jkeAtJNLX6-pi7KppEBdfDGXkhM';
+
+// ── i18n ─────────────────────────────────────────────────────────
+const LANG = window.PLAY_LANG || 'en';
+const TR = {
+  nav_tag:           { en: 'Speed Run · 40ms Challenge',   ko: '스피드 런 · 40ms 챌린지' },
+  nav_leaderboard:   { en: 'Leaderboard',                  ko: '리더보드' },
+  nav_live:          { en: 'Live',                         ko: '라이브' },
+  eyebrow:           { en: '40ms Challenge · Season 2',    ko: '40ms 챌린지 · 시즌 2' },
+  entry_sub:         { en: 'Tap as fast as you can for 10 seconds. Every tap counts. Scores save to your wallet profile.', ko: '10초 동안 최대한 빠르게 탭하세요. 모든 탭이 기록됩니다. 점수는 지갑 프로필에 저장됩니다.' },
+  wallet_off:        { en: 'Wallet not connected',         ko: '지갑 연결 안 됨' },
+  wallet_btn:        { en: 'Connect',                      ko: '연결' },
+  wallet_on:         { en: 'Connected',                    ko: '연결됨' },
+  handle_label:      { en: 'Your X / Twitter Handle',      ko: 'X / 트위터 핸들' },
+  handle_ph:         { en: '@yourhandle',                  ko: '@핸들 입력' },
+  start_no_wallet:   { en: 'Connect wallet to play',       ko: '지갑을 연결하고 플레이하세요' },
+  start_no_handle:   { en: 'Enter X handle to play',       ko: 'X 핸들을 입력하세요' },
+  start_ready:       { en: 'Start Playing',                ko: '시작하기' },
+  stat_tps:          { en: 'TPS',                          ko: 'TPS' },
+  stat_blocks:       { en: 'Blocks',                       ko: '블록' },
+  stat_plays:        { en: 'Plays',                        ko: '플레이' },
+  cd_ready:          { en: 'GET READY',                    ko: '준비하세요' },
+  cd_go_label:       { en: 'TAP AS FAST AS YOU CAN',       ko: '최대한 빠르게 탭하세요' },
+  game_your_taps:    { en: 'YOUR TAPS',                    ko: '내 탭' },
+  game_fogo_txs:     { en: 'FOGO TXs',                    ko: 'FOGO 트랜잭션' },
+  game_block_ticker: { en: '25 blocks/sec · 4k tx each',  ko: '초당 25블록 · 블록당 4k tx' },
+  seconds_left:      { en: 'SECONDS LEFT',                 ko: '남은 시간' },
+  tps_flash:         { en: '+{n} TXs per tap',             ko: '탭당 +{n} TX' },
+  result_eyebrow:    { en: 'Your Score · Fogo Speed Run',  ko: '내 점수 · FOGO 스피드 런' },
+  you_tapped:        { en: 'You tapped',                   ko: '탭 횟수' },
+  times_in_10:       { en: 'times in 10 seconds',          ko: '번 / 10초' },
+  punchline_pre:     { en: 'In 10 seconds · FOGO settled', ko: '10초 동안 FOGO가 처리한' },
+  punchline_unit:    { en: 'Transactions · 100k TPS · 25 blocks · 4k tx each', ko: '트랜잭션 · 100k TPS · 25블록 · 블록당 4k tx' },
+  tagline:           { en: 'While you tapped {clicks}x, FOGO settled {fogo} transactions without breaking a sweat.', ko: '{clicks}번 탭하는 동안 FOGO는 {fogo}건의 트랜잭션을 처리했습니다.' },
+  stat_all_time:     { en: 'All-Time Taps',                ko: '누적 탭' },
+  stat_rank:         { en: 'Rank',                         ko: '순위' },
+  stat_rate:         { en: 'Taps / sec',                   ko: '탭/초' },
+  pts_earned:        { en: 'pts earned this play',         ko: '이번 플레이 획득 포인트' },
+  share_x:           { en: 'Share your score on X',        ko: 'X에 점수 공유하기' },
+  play_again:        { en: 'Play Again',                   ko: '다시 플레이' },
+  view_lb:           { en: 'View Leaderboard',             ko: '리더보드 보기' },
+  best_session:      { en: 'Best session:',                ko: '최고 기록:' },
+  taps_unit:         { en: 'taps',                         ko: '탭' },
+  lb_title:          { en: 'Leaderboard',                  ko: '리더보드' },
+  lb_sub:            { en: 'Every tap counts. 10 taps = 1 Spark. Ranked by all-time cumulative taps.', ko: '모든 탭이 기록됩니다. 10탭 = 1포인트. 누적 탭 기준 순위.' },
+  lb_record_label:   { en: 'Record Single Session',        ko: '최고 단일 세션' },
+  lb_back:           { en: '← Back',                       ko: '← 뒤로' },
+  lb_loading:        { en: 'Loading...',                   ko: '로딩 중...' },
+  lb_error:          { en: 'Could not load leaderboard.',  ko: '리더보드를 불러올 수 없습니다.' },
+  lb_offline:        { en: '(offline)',                    ko: '(오프라인)' },
+  th_handle:         { en: 'Handle',                       ko: '핸들' },
+  th_all_time:       { en: 'All-Time Taps',                ko: '누적 탭' },
+  th_best:           { en: 'Best Session',                 ko: '최고 세션' },
+  th_plays:          { en: 'Plays',                        ko: '플레이' },
+  th_session_taps:   { en: 'Taps (session)',               ko: '세션 탭' },
+  th_fogo_txs:       { en: 'Fogo Txs',                    ko: 'FOGO Txs' },
+  th_date:           { en: 'Date',                         ko: '날짜' },
+  tab_cumulative:    { en: 'All-Time',                     ko: '누적' },
+  tab_sessions:      { en: 'Sessions',                     ko: '세션' },
+};
+function t(key, subs) {
+  let s = (TR[key] && (TR[key][LANG] || TR[key].en)) || key;
+  if (subs) Object.keys(subs).forEach(k => { s = s.split('{' + k + '}').join(subs[k]); });
+  return s;
+}
+
+/* Apply static translations to HTML elements on load */
+function applyTranslations() {
+  const q  = s => document.querySelector(s);
+  const id = s => document.getElementById(s);
+  const set = (sel, text, isId) => { const el = isId ? id(sel) : q(sel); if (el) el.textContent = text; };
+
+  set('.nav-tag',        t('nav_tag'));
+  const navLb = q('.nav-ghost'); if (navLb) navLb.innerHTML = '&#9776; ' + t('nav_leaderboard');
+  const liveDot = q('.live-badge'); if (liveDot) liveDot.innerHTML = '<span class="live-dot"></span>' + t('nav_live');
+  set('.entry-eyebrow',  t('eyebrow'));
+  const sub = q('.entry-sub'); if (sub) sub.innerHTML = t('entry_sub').replace('. Every', '.<br>Every');
+  set('wallet-status-txt',  t('wallet_off'), true);
+  set('btn-wallet-connect', t('wallet_btn'), true);
+  const lbl = q('.flabel'); if (lbl) lbl.textContent = t('handle_label');
+  const inp = id('x-handle-input'); if (inp) inp.placeholder = t('handle_ph');
+  set('start-btn-text', t('start_no_wallet'), true);
+  const ssls = document.querySelectorAll('.ssc-l');
+  const sslKeys = ['stat_tps','stat_blocks','stat_plays'];
+  ssls.forEach((el, i) => { if (sslKeys[i]) el.textContent = t(sslKeys[i]); });
+  set('cd-label', t('cd_ready'), true);
+  set('.clabel',       t('game_your_taps'));
+  const clabels = document.querySelectorAll('.clabel'); if (clabels[1]) clabels[1].textContent = t('game_fogo_txs');
+  set('.block-ticker', ''); const bt = q('.block-ticker'); if (bt) bt.innerHTML = `<span class="block-pip"></span>${t('game_block_ticker')}`;
+  set('.tlabel', t('seconds_left'));
+  set('.result-eyebrow', t('result_eyebrow'));
+  set('.your-taps-label', t('you_tapped'));
+  set('r-taps-unit', t('times_in_10'), true);
+  set('r-punchline-pre', t('punchline_pre'), true);
+  set('.punchline-unit', t('punchline_unit'));
+  set('.rstat:nth-child(1) .l', t('stat_all_time'));
+  set('.rstat:nth-child(2) .l', t('stat_rank'));
+  set('.rstat:nth-child(3) .l', t('stat_rate'));
+  set('pts-earned-txt', '', true);
+  const pts = q('.pts-earned-badge'); if (pts) { const span = id('pts-earned-txt'); if (span) span.nextSibling && (span.parentNode.lastChild.textContent = ' ' + t('pts_earned')); }
+  const shareBtnText = q('.btn-share'); if (shareBtnText) shareBtnText.innerHTML = '<span class="x-mark">𝕏</span> ' + t('share_x');
+  const playAgainBtnEl = id('play-again-btn'); if (playAgainBtnEl) playAgainBtnEl.textContent = '↻ ' + t('play_again');
+  const viewLbBtn = document.querySelectorAll('.btn-ghost'); viewLbBtn.forEach(b => { b.textContent = t('view_lb'); });
+  const bestWrap = id('r-best-wrap');
+  if (bestWrap) bestWrap.innerHTML = `<span>${t('best_session')}</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--lime);" id="r-best">0</span><span>${t('taps_unit')}</span>`;
+  set('lb-title', t('lb_title'), true);
+  set('lb-sub',   t('lb_sub'), true);
+  set('lb-record-label', t('lb_record_label'), true);
+  set('lb-loading', t('lb_loading'), true);
+  set('tab-cumulative', t('tab_cumulative') || t('th_all_time'), true);
+  set('tab-sessions',   t('tab_sessions')   || t('th_session_taps'), true);
+  const lbBack = q('.lb-back'); if (lbBack) lbBack.textContent = t('lb_back');
+}
+document.addEventListener('DOMContentLoaded', applyTranslations);
 
 // Supabase anon client (read-only leaderboard fetches only)
 const db = supabase.createClient(SB_URL, SB_ANON);
@@ -638,14 +763,14 @@ function setWalletRow(connected, address) {
     dot.classList.add('on');
     txt.textContent = address.slice(0,4) + '…' + address.slice(-4);
     txt.classList.add('on');
-    btn.textContent = '✓ Connected';
+    btn.textContent = '✓ ' + t('wallet_on');
     btn.classList.add('on');
   } else {
     row.classList.remove('connected');
     dot.classList.remove('on');
-    txt.textContent = 'Wallet not connected';
+    txt.textContent = t('wallet_off');
     txt.classList.remove('on');
-    btn.textContent = 'Connect';
+    btn.textContent = t('wallet_btn');
     btn.classList.remove('on');
   }
 }
@@ -681,11 +806,11 @@ function updateStartBtn() {
   const ready   = !!walletAddress && handle.length > 0;
   btn.disabled  = !ready;
   if (!walletAddress) {
-    if (txt) txt.textContent = 'Connect wallet to play';
+    if (txt) txt.textContent = t('start_no_wallet');
   } else if (!handle) {
-    if (txt) txt.textContent = 'Enter X handle to play';
+    if (txt) txt.textContent = t('start_no_handle');
   } else {
-    if (txt) txt.textContent = 'Start Playing';
+    if (txt) txt.textContent = t('start_ready');
   }
 }
 
@@ -713,14 +838,14 @@ function runCountdown(n) {
   if (n > 0) {
     el.className = 'cd-number';
     el.textContent = n;
-    lb.textContent = 'GET READY';
+    lb.textContent = t('cd_ready');
     void el.offsetWidth; // reflow to re-trigger animation
     el.className = 'cd-number';
     setTimeout(() => runCountdown(n - 1), 900);
   } else {
     el.className = 'cd-number go';
     el.textContent = 'GO!';
-    lb.textContent = 'TAP AS FAST AS YOU CAN';
+    lb.textContent = t('cd_go_label');
     setTimeout(beginGame, 700);
   }
 }
@@ -783,7 +908,7 @@ function onTap(e) {
   else           haloSpeed = Math.min(10, haloSpeed + 0.5);
   document.getElementById('tap-halo').style.animationDuration = haloSpeed + 's';
   const flashEl = document.getElementById('tps-flash');
-  flashEl.textContent = '+' + TPS.toLocaleString() + ' TXs per tap';
+  flashEl.textContent = t('tps_flash', { n: TPS.toLocaleString() });
   flashEl.style.opacity = '1';
   clearTimeout(flashEl._t);
   flashEl._t = setTimeout(() => { flashEl.style.opacity = '0'; }, 700);
@@ -829,8 +954,7 @@ async function showResultAndSubmit() {
   document.getElementById('r-total-taps').textContent = '…';
   document.getElementById('r-rank').textContent       = '…';
   document.getElementById('r-tagline').textContent =
-    'While you tapped ' + clicks.toLocaleString() + 'x, FOGO settled ' +
-    fogoActual.toLocaleString() + ' transactions — without breaking a sweat.';
+    t('tagline', { clicks: clicks.toLocaleString(), fogo: fogoActual.toLocaleString() });
 
   const badge = document.getElementById('pts-earned-badge');
   if (badge) badge.classList.add('hidden');
@@ -841,8 +965,8 @@ async function showResultAndSubmit() {
   // Submit score to server
   if (!walletAddress) {
     // Wallet disconnected mid-session — show local values
-    document.getElementById('r-total-taps').textContent = '—';
-    document.getElementById('r-rank').textContent       = '—';
+    document.getElementById('r-total-taps').textContent = '';
+    document.getElementById('r-rank').textContent       = '';
     return;
   }
 
@@ -864,7 +988,7 @@ async function showResultAndSubmit() {
       S.totalTaps = data.total_taps || (S.totalTaps + clicks);
       S.bestScore = data.best_session || S.bestScore;
       document.getElementById('r-total-taps').textContent = S.totalTaps.toLocaleString();
-      document.getElementById('r-rank').textContent = data.rank ? '#' + data.rank : '—';
+      document.getElementById('r-rank').textContent = data.rank ? '#' + data.rank : '';
       document.getElementById('r-best').textContent = S.bestScore;
 
       if (!data.flagged && data.tap_pts > 0) {
@@ -880,13 +1004,13 @@ async function showResultAndSubmit() {
       }
     } else {
       // Server returned an error (rate limit etc.)
-      document.getElementById('r-total-taps').textContent = '—';
-      document.getElementById('r-rank').textContent       = data.error || '—';
+      document.getElementById('r-total-taps').textContent = '';
+      document.getElementById('r-rank').textContent       = data.error || '';
     }
   } catch (err) {
     console.error('[FOGO] submit failed', err);
-    document.getElementById('r-total-taps').textContent = '— (offline)';
-    document.getElementById('r-rank').textContent       = '—';
+    document.getElementById('r-total-taps').textContent = t('lb_offline');
+    document.getElementById('r-rank').textContent       = '';
   }
 }
 
@@ -929,7 +1053,7 @@ async function loadLeaderboard() {
     lbData = await res.json();
     renderLeaderboard(lbData);
   } catch (err) {
-    document.getElementById('lb-loading').textContent = 'Could not load leaderboard.';
+    document.getElementById('lb-loading').textContent = t('lb_error');
   }
 }
 
@@ -940,9 +1064,9 @@ function renderLeaderboard(data) {
     const box = document.getElementById('lb-record-box');
     if (box) {
       box.style.display = 'flex';
-      document.getElementById('lb-record-val').textContent  = top.clicks.toLocaleString() + ' taps';
+      document.getElementById('lb-record-val').textContent  = top.clicks.toLocaleString() + ' ' + t('taps_unit');
       document.getElementById('lb-record-meta').textContent =
-        (top.x_handle || '—') + '  ·  ' + new Date(top.played_at).toLocaleDateString();
+        (top.x_handle || '') + '  ·  ' + new Date(top.played_at).toLocaleDateString();
     }
   }
 
@@ -955,10 +1079,10 @@ function renderLeaderboard(data) {
   // Headers
   if (lbMode === 'cumulative') {
     document.getElementById('lb-thead').innerHTML =
-      '<tr><th>#</th><th>Handle</th><th>All-Time Taps</th><th>Best Session</th><th>Plays</th></tr>';
+      `<tr><th>#</th><th>${t('th_handle')}</th><th>${t('th_all_time')}</th><th>${t('th_best')}</th><th>${t('th_plays')}</th></tr>`;
   } else {
     document.getElementById('lb-thead').innerHTML =
-      '<tr><th>#</th><th>Handle</th><th>Taps (session)</th><th>Fogo Txs</th><th>Date</th></tr>';
+      `<tr><th>#</th><th>${t('th_handle')}</th><th>${t('th_session_taps')}</th><th>${t('th_fogo_txs')}</th><th>${t('th_date')}</th></tr>`;
   }
 
   const rankIcons = ['①','②','③'];
@@ -966,7 +1090,7 @@ function renderLeaderboard(data) {
 
   const tbody = document.getElementById('lb-tbody');
   tbody.innerHTML = (rows || []).map((r, i) => {
-    const handle = r.x_handle || r.handle || '—';
+    const handle = r.x_handle || r.handle || '';
     const isYou  = walletAddress && r.wallet_address === walletAddress;
     const rankEl = i < 3
       ? `<span class="rank ${rankCls[i]}">${rankIcons[i]}</span>`
@@ -975,7 +1099,7 @@ function renderLeaderboard(data) {
     if (lbMode === 'cumulative') {
       const taps    = (r.total_taps || 0).toLocaleString();
       const best    = (r.best_session || 0).toLocaleString();
-      const plays   = r.total_plays || '—';
+      const plays   = r.total_plays || '';
       return `<tr${isYou ? ' class="you"' : ''}>
         <td>${rankEl}</td>
         <td>${esc(handle)}</td>
@@ -986,7 +1110,7 @@ function renderLeaderboard(data) {
     } else {
       const clicks = (r.clicks || 0).toLocaleString();
       const fogo   = ((r.clicks || 0) * TPS).toLocaleString();
-      const date   = r.played_at ? new Date(r.played_at).toLocaleDateString() : '—';
+      const date   = r.played_at ? new Date(r.played_at).toLocaleDateString() : '';
       return `<tr${isYou ? ' class="you"' : ''}>
         <td>${rankEl}</td>
         <td>${esc(handle)}</td>
@@ -1000,14 +1124,14 @@ function renderLeaderboard(data) {
   // Pin caller at bottom if outside top 25
   if (data.caller) {
     const r = data.caller;
-    const rank = r.rank ? `#${r.rank}` : '—';
+    const rank = r.rank ? `#${r.rank}` : '';
     if (lbMode === 'cumulative') {
       tbody.innerHTML += `<tr class="you">
         <td><span class="rank">${rank}</span></td>
-        <td>${esc(r.x_handle || S.handle || '—')}</td>
+        <td>${esc(r.x_handle || S.handle || '')}</td>
         <td class="hi">${(r.total_taps || 0).toLocaleString()}</td>
         <td class="fire">${(r.best_session || 0).toLocaleString()}</td>
-        <td>${r.total_plays || '—'}</td>
+        <td>${r.total_plays || ''}</td>
       </tr>`;
     }
   }
