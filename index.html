@@ -6887,7 +6887,7 @@ async function runHolderSnapshot() {
     const batchResults = await Promise.all(batch.map(async entry => {
       const holdings = await fetchWalletHoldings(entry.wallet_address);
       const prevHolderPts = entry.points_breakdown?.holder_pts || 0;
-      const delta = holdings.totalPts - prevHolderPts;
+      const delta = holdings.totalPts;  // always additive — this week's contribution only
       const currentPts = entry.total_points || 0;
       const newTotalPts = currentPts + delta;
       return {
@@ -6988,7 +6988,8 @@ async function applyHolderPoints() {
         }
         const dedupedSnaps = prevSnaps.filter(s => s.date !== snapDate);
         const newSnaps = [...dedupedSnaps, { date: snapDate, pts: r.newHolderPts }];
-        const newBrk = { ...r.breakdown, holder_pts: r.newHolderPts, holder_snapshots: newSnaps };
+        const cumulativeHolderPts = r.prevHolderPts + r.newHolderPts;  // accumulate across weeks
+        const newBrk = { ...r.breakdown, holder_pts: cumulativeHolderPts, holder_snapshots: newSnaps };
         const { error } = await db.from('card_submissions').update({
           total_points:     r.newTotalPts,
           entry_count:      r.newTotalPts,
