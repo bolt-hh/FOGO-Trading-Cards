@@ -3397,7 +3397,7 @@ async function checkExistingSubmission(walletAddr) {
   if (!db) return;
   const { data } = await db
     .from('card_submissions')
-    .select('id,tier_name,total_volume_usd,power_score,tx_count,protocols,created_at,ugc_points,total_points,x_share_link,social_link')
+    .select('id,tier_name,total_volume_usd,power_score,tx_count,protocols,created_at,ugc_points,tap_points,total_points,points_breakdown,x_share_link,social_link')
     .eq('wallet_address', walletAddr)
     .maybeSingle();
 
