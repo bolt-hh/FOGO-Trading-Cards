@@ -6,7 +6,8 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/fogoscan/(.*)", "destination": "/api/fogoscan" }
+    { "source": "/api/fogoscan/(.*)", "destination": "/api/fogoscan" },
+    { "source": "/play", "destination": "/play.html" }
   ],
   "headers": [
     {
