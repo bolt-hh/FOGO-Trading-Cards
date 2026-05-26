@@ -127,12 +127,9 @@
     // No wallet link
     var nw = document.getElementById('t-no-wallet');
     if (nw) nw.innerHTML = '지갑이 없으신가요? <a href="https://www.nightly.app/" target="_blank" style="color:var(--lime);">Nightly</a>, <a href="https://phantom.app" target="_blank">Phantom</a>, <a href="https://solflare.com" target="_blank">Solflare</a>, 또는 <a href="https://backpack.app" target="_blank">Backpack</a> — 모두 무료.';
-    // Speed Run header button
+    // Speed Run header button (coming soon — no href to update)
     var srBtn = document.getElementById('speed-run-header-btn');
-    if (srBtn) {
-      srBtn.textContent = '▶ 포고 스피드 런 · 무제한 포인트';
-      srBtn.href = '/play?lang=ko';
-    }
+    if (srBtn) srBtn.textContent = '🔒 게임 출시 예정';
   }
 
   // Run at 4 different moments to beat all overwrites
@@ -2315,11 +2312,11 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
             <div class="tasks-section-title" id="t-tasks-heading">Your Tasks</div>
           </span>
           <div style="display:flex;align-items:center;gap:8px;">
-            <a id="speed-run-header-btn" href="/play"
+            <span id="speed-run-header-btn"
               class="speed-run-header-btn"
-              target="_blank" rel="noopener noreferrer">
-              ▶ Play Fogo Speed Run · Unlimited Points
-            </a>
+              style="opacity:0.45;cursor:not-allowed;pointer-events:none;">
+              🔒 Game Coming Soon
+            </span>
             <button class="rescan-btn" id="rescan-btn" onclick="rescanWallet()">↻ Rescan Wallet</button>
           </div>
         </div>
@@ -6077,11 +6074,10 @@ function renderNewTasksTab() {
       </div>
       ${ptsEarned}
       <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
-        <a href="${'/play' + (lang === 'ko' ? '?lang=ko' : '')}" target="_blank" rel="noopener noreferrer"
-          style="display:inline-flex;align-items:center;gap:6px;background:var(--fire);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:9px 18px;border-radius:5px;text-decoration:none;border:none;cursor:pointer;transition:opacity 0.15s;"
-          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-          ▶ ${lang === 'ko' ? '게임 시작' : 'Play Now'}
-        </a>
+        <span
+          style="display:inline-flex;align-items:center;gap:6px;background:var(--fire);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:9px 18px;border-radius:5px;text-decoration:none;border:none;opacity:0.45;cursor:not-allowed;pointer-events:none;">
+          🔒 ${lang === 'ko' ? '게임 출시 예정' : 'Game Coming Soon'}
+        </span>
         <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.08em;">${lang === 'ko' ? '지갑 자동 연결됨' : 'Wallet auto-connects'}</span>
       </div>
     </div>
