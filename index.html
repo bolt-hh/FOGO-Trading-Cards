@@ -127,6 +127,9 @@
     // No wallet link
     var nw = document.getElementById('t-no-wallet');
     if (nw) nw.innerHTML = '지갑이 없으신가요? <a href="https://www.nightly.app/" target="_blank" style="color:var(--lime);">Nightly</a>, <a href="https://phantom.app" target="_blank">Phantom</a>, <a href="https://solflare.com" target="_blank">Solflare</a>, 또는 <a href="https://backpack.app" target="_blank">Backpack</a> — 모두 무료.';
+    // Speed Run header button (coming soon — no href to update)
+    var srBtn = document.getElementById('speed-run-header-btn');
+    if (srBtn) srBtn.textContent = '🔒 게임 출시 예정';
   }
 
   // Run at 4 different moments to beat all overwrites
@@ -357,8 +360,8 @@ body::before{
 .gate-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px var(--lime);animation:pulse-live 2s infinite;}
 .gate-headline{
   font-family:'Clash Display',sans-serif;
-  font-size:clamp(40px,5.5vw,72px);font-weight:700;
-  color:var(--text);line-height:0.95;letter-spacing:-0.025em;margin-bottom:22px;
+  font-size:clamp(44px,8vw,70px);font-weight:700;
+  color:var(--text);line-height:0.92;letter-spacing:-0.03em;margin-bottom:22px;
 }
 .gate-headline span{
   background:linear-gradient(90deg,var(--fire),var(--ember) 40%,var(--lime) 100%);
@@ -1527,6 +1530,18 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
   color:var(--dim);padding:7px 14px;cursor:pointer;border-radius:4px;transition:all 0.15s;
 }
 .rescan-btn:hover{border-color:var(--border-hi);color:var(--text);}
+.speed-run-header-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.08em;
+  text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  background:var(--fire);color:#fff;
+  padding:7px 14px;border-radius:4px;
+  border:1px solid transparent;
+  box-shadow:0 0 14px rgba(255,61,0,0.35);
+  transition:opacity 0.15s,box-shadow 0.15s;flex-shrink:0;
+}
+.speed-run-header-btn:hover{opacity:0.88;box-shadow:0 0 22px rgba(255,61,0,0.55);}
+@media(max-width:560px){.speed-run-header-btn{display:none;}}
 
 /* ================================================================
    POINTS BREAKDOWN PANEL
@@ -2296,7 +2311,14 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
           <span>
             <div class="tasks-section-title" id="t-tasks-heading">Your Tasks</div>
           </span>
-          <button class="rescan-btn" id="rescan-btn" onclick="rescanWallet()">↻ Rescan Wallet</button>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="speed-run-header-btn"
+              class="speed-run-header-btn"
+              style="opacity:0.45;cursor:not-allowed;pointer-events:none;">
+              🔒 Game Coming Soon
+            </span>
+            <button class="rescan-btn" id="rescan-btn" onclick="rescanWallet()">↻ Rescan Wallet</button>
+          </div>
         </div>
         <!-- Task tab row — tabs rendered by renderTaskTabsUI() -->
         <div class="task-tab-row" id="task-tab-row"></div>
@@ -2644,6 +2666,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
                 <th>Volume</th>
                 <th>Tier</th>
                 <th>Points</th>
+                <th>Tap Pts</th>
                 <th>X Share</th>
                 <th>Valiant</th>
                 <th>Pyron</th>
@@ -2657,7 +2680,7 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
               </tr>
             </thead>
             <tbody id="submissions-body">
-              <tr><td colspan="11"><div class="empty-state">No entries yet.</div></td></tr>
+              <tr><td colspan="20"><div class="empty-state">No entries yet.</div></td></tr>
             </tbody>
           </table>
         </div>
@@ -3396,7 +3419,7 @@ async function checkExistingSubmission(walletAddr) {
   if (!db) return;
   const { data } = await db
     .from('card_submissions')
-    .select('id,tier_name,total_volume_usd,power_score,tx_count,protocols,created_at,ugc_points,total_points,x_share_link,social_link')
+    .select('id,tier_name,total_volume_usd,power_score,tx_count,protocols,created_at,ugc_points,tap_points,total_points,points_breakdown,x_share_link,social_link')
     .eq('wallet_address', walletAddr)
     .maybeSingle();
 
@@ -3725,6 +3748,22 @@ async function generateCard() {
     // Restore holder points from DB breakdown
     STATE.holderPts       = (d.points_breakdown?.holder_pts) || 0;
     STATE.holderSnapshots = (d.points_breakdown?.holder_snapshots) || [];
+    // Restore tap/Speed Run points from DB
+    STATE.tapPoints = d.tap_points || (d.points_breakdown?.tap) || 0;
+
+    // Fallback: if holder_pts not in breakdown but total_points > what we can calculate,
+    // derive the difference as holder_pts so the task card and breakdown always show correctly
+    if (!STATE.holderPts && d.total_points) {
+      const { total: basePts } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
+      const implied = (d.total_points || 0) - basePts;
+      if (implied > 0) STATE.holderPts = implied;
+    }
+
+    // If holder_pts > 0 but no snapshot history yet (pre-history data from old snapshot code),
+    // synthesise a single history entry so the task card shows something meaningful
+    if (STATE.holderPts > 0 && STATE.holderSnapshots.length === 0) {
+      STATE.holderSnapshots = [{ date: d.updated_at ? d.updated_at.slice(0, 10) : new Date().toISOString().slice(0, 10), pts: STATE.holderPts }];
+    }
 
     // Pre-load total_points from DB into STATE so the raffle success screen shows correct count
     const { total: dbPts, breakdown: dbBreakdown } = calculatePoints(STATE.cardData, !!(d.x_share_link || d.social_link));
@@ -4727,7 +4766,7 @@ function renderSubmissionsTable(data) {
   const tbody = document.getElementById('submissions-body');
 
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="18"><div class="empty-state">No entries yet.</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="20"><div class="empty-state">No entries yet.</div></td></tr>';
     return;
   }
 
@@ -4758,6 +4797,7 @@ function renderSubmissionsTable(data) {
       <td class="hi">${esc(fmtUsd(r.total_volume_usd || 0))}</td>
       <td>${r.tier_name || '—'}</td>
       <td class="hi">${r.total_points ?? r.entry_count ?? '—'}</td>
+      <td class="hi">${(r.tap_points || 0) > 0 ? (r.tap_points).toLocaleString() : '—'}</td>
       <td>${xShareCell}</td>
       <td>${valiantCell}</td>
       <td>${pyronCell}</td>
@@ -5893,6 +5933,10 @@ function calculatePoints(cardData, hasXShare) {
   const holderPts = STATE.holderPts || 0;
   if (holderPts > 0) { breakdown.holder_pts = holderPts; total += holderPts; }
 
+  // Tap / Speed Run points (10 taps = 1 pt, awarded by api/tap-score)
+  const tapPts = STATE.tapPoints || 0;
+  if (tapPts > 0) { breakdown.tap = tapPts; total += tapPts; }
+
   return { total, breakdown };
 }
 
@@ -5918,6 +5962,7 @@ function updatePointsDisplay() {
     ignition:       'Ignition',
     ugc:            'UGC Content',
     holder_pts:     'Asset Holder',
+    tap:            'Speed Run',
   };
   const taskNamesKo = {
     card_generated: '카드 생성',
@@ -5929,11 +5974,12 @@ function updatePointsDisplay() {
     ignition:       'Ignition 거래',
     ugc:            'UGC 콘텐츠',
     holder_pts:     '자산 보유',
+    tap:            '스피드 런',
   };
   const names = CURRENT_LANG === 'ko' ? taskNamesKo : taskNames;
 
   // All possible tasks
-  const allKeys = ['card_generated','x_share','volume','valiant','pyron','brasa','ignition','ugc','holder_pts'];
+  const allKeys = ['card_generated','x_share','volume','valiant','pyron','brasa','ignition','ugc','holder_pts','tap'];
   let html = '';
   allKeys.forEach(key => {
     const pts = breakdown[key] || 0;
@@ -5990,6 +6036,66 @@ async function loadTasks() {
   updatePointsDisplay();
 }
 
+/* Speed Run task card — shown when "New Tasks" tab (tab 4) is active */
+function renderNewTasksTab() {
+  const grid = document.getElementById('task-grid');
+  if (!grid) return;
+  const tapPts   = STATE.tapPoints || 0;
+  const hasPlayed = tapPts > 0;
+  const lang = CURRENT_LANG;
+
+  const statusBadge = hasPlayed
+    ? `<span class="task-status-badge done">${lang === 'ko' ? '진행 중' : 'In Progress'}</span>`
+    : `<span class="task-status-badge pending">${lang === 'ko' ? '시작 안 함' : 'Not Started'}</span>`;
+  const cardClass = hasPlayed ? 'done manual-type' : 'manual-type';
+
+  const ptsEarned = hasPlayed
+    ? `<div style="background:rgba(195,251,165,0.07);border:1px solid rgba(195,251,165,0.18);border-radius:6px;padding:8px 12px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(213,235,213,0.45);">${lang === 'ko' ? '획득한 탭 포인트' : 'Tap Pts Earned'}</span>
+        <span style="font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;color:var(--lime);">+${tapPts}</span>
+      </div>`
+    : '';
+
+  const desc = lang === 'ko'
+    ? '10초 안에 최대한 많이 탭하세요. 10탭 = 포인트 1점. 누적 탭 기준 리더보드 순위.'
+    : 'Tap as fast as you can in 10 seconds. Every 10 taps = 1 point. Leaderboard ranked by total cumulative taps.';
+
+  grid.innerHTML = `
+    <div class="task-card ugc-expanded ${cardClass}">
+      <div class="task-card-top">
+        <div class="task-card-info">
+          <div class="task-card-name">⚡ ${lang === 'ko' ? 'FOGO 스피드 런' : 'FOGO Speed Run'}</div>
+          <div class="task-card-desc">${desc}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+          <span class="task-points-badge">${lang === 'ko' ? '10탭 = 1pt' : '10 taps = 1pt'}</span>
+          ${statusBadge}
+        </div>
+      </div>
+      ${ptsEarned}
+      <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+        <span
+          style="display:inline-flex;align-items:center;gap:6px;background:var(--fire);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:9px 18px;border-radius:5px;text-decoration:none;border:none;opacity:0.45;cursor:not-allowed;pointer-events:none;">
+          🔒 ${lang === 'ko' ? '게임 출시 예정' : 'Game Coming Soon'}
+        </span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.08em;">${lang === 'ko' ? '지갑 자동 연결됨' : 'Wallet auto-connects'}</span>
+      </div>
+    </div>
+
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:4px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;">
+        ${lang === 'ko' ? '⚡ 스피드 런 규칙' : '⚡ Speed Run Rules'}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--sub);line-height:1.5;">
+        <div>• ${lang === 'ko' ? '10초 타이머 — 가능한 한 빠르게 탭하세요' : '10-second timer — tap as fast as possible'}</div>
+        <div>• ${lang === 'ko' ? '10탭 = 1 래플 포인트 (무제한 축적)' : '10 taps = 1 raffle point (accumulates forever)'}</div>
+        <div>• ${lang === 'ko' ? '리더보드는 누적 탭 총합 기준' : 'Leaderboard ranked by cumulative total taps'}</div>
+        <div>• ${lang === 'ko' ? '하루 최대 200번 플레이 가능' : 'Up to 200 plays per day'}</div>
+        <div>• ${lang === 'ko' ? '봇/오토클리커는 플래그 처리 → 포인트 0' : 'Bots/autoclickers are flagged → 0 points'}</div>
+      </div>
+    </div>`;
+}
+
 /* Render the tab pill row above the task grid */
 function renderTaskTabsUI() {
   const row = document.getElementById('task-tab-row');
@@ -6021,6 +6127,7 @@ function renderTasksUI(tasks) {
 
   // Filter to active tab only
   const activeTab = STATE.activeTaskTab || 1;
+
   const filtered = tasks.filter(t => (t.tab_group || 1) === activeTab);
 
   const proto     = STATE.cardData?.data?.protocols || {};
@@ -6029,7 +6136,8 @@ function renderTasksUI(tasks) {
   const t         = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
   if (!filtered.length) {
-    grid.innerHTML = '<div class="empty-state" style="padding:20px;">No tasks in this tab yet.</div>';
+    // Empty tab — render the Speed Run game card as the default content
+    renderNewTasksTab();
     return;
   }
 
@@ -6133,12 +6241,21 @@ function renderTasksUI(tasks) {
 
     // Asset Holder snapshot task — expanded card showing per-snapshot history
     if (key === 'holder') {
-      const snaps = (STATE.holderSnapshots || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+      const snaps = (STATE.holderSnapshots || []).slice().sort((a, b) => {
+        if (a.date === 'prior') return 1;
+        if (b.date === 'prior') return -1;
+        return b.date.localeCompare(a.date);
+      });
       const totalHolderPts = STATE.holderPts || 0;
       const historyHtml = snaps.length > 0
         ? snaps.map(s => {
-            const d = new Date(s.date + 'T00:00:00');
-            const label = d.toLocaleDateString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            let label;
+            if (!s.date || s.date === 'prior') {
+              label = CURRENT_LANG === 'ko' ? '이전 스냅샷' : 'Prior snapshot';
+            } else {
+              const sd = new Date(s.date + 'T00:00:00');
+              label = sd.toLocaleDateString(CURRENT_LANG === 'ko' ? 'ko-KR' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            }
             return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(213,235,213,0.05);">
               <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(213,235,213,0.4);letter-spacing:0.05em;">${label}</span>
               <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--lime);">+${s.pts} pts</span>
@@ -6791,7 +6908,7 @@ async function runHolderSnapshot() {
     const batchResults = await Promise.all(batch.map(async entry => {
       const holdings = await fetchWalletHoldings(entry.wallet_address);
       const prevHolderPts = entry.points_breakdown?.holder_pts || 0;
-      const delta = holdings.totalPts - prevHolderPts;
+      const delta = holdings.totalPts;  // always additive — this week's contribution only
       const currentPts = entry.total_points || 0;
       const newTotalPts = currentPts + delta;
       return {
@@ -6884,10 +7001,16 @@ async function applyHolderPoints() {
     await Promise.all(batch.map(async r => {
       try {
         const snapDate = new Date().toISOString().slice(0, 10);
-        const prevSnaps = r.breakdown.holder_snapshots || [];
+        let prevSnaps = r.breakdown.holder_snapshots || [];
+        // Backfill: if wallet had holder_pts from old snapshot code but no history yet,
+        // synthesise a prior entry so history doesn't start blank
+        if (prevSnaps.length === 0 && r.prevHolderPts > 0) {
+          prevSnaps = [{ date: 'prior', pts: r.prevHolderPts }];
+        }
         const dedupedSnaps = prevSnaps.filter(s => s.date !== snapDate);
         const newSnaps = [...dedupedSnaps, { date: snapDate, pts: r.newHolderPts }];
-        const newBrk = { ...r.breakdown, holder_pts: r.newHolderPts, holder_snapshots: newSnaps };
+        const cumulativeHolderPts = r.prevHolderPts + r.newHolderPts;  // accumulate across weeks
+        const newBrk = { ...r.breakdown, holder_pts: cumulativeHolderPts, holder_snapshots: newSnaps };
         const { error } = await db.from('card_submissions').update({
           total_points:     r.newTotalPts,
           entry_count:      r.newTotalPts,
