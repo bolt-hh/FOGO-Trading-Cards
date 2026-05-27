@@ -55,6 +55,44 @@ function hashIP(ip) {
   return h.toString(16).padStart(8, '0');
 }
 
+// ── Tap point helpers (not exposed to client) ────────────────────
+
+// Diminishing returns: first 1,000 taps in 24hrs → 1pt/10 taps
+// Beyond 1,000 taps → 1pt/20 taps. Threshold is invisible to users.
+const TAP_DIM_THRESHOLD = 1000;
+const TAP_RATE_NORMAL   = 10;   // taps per point (standard)
+const TAP_RATE_DIM      = 20;   // taps per point (diminished)
+
+async function calcTapPts(walletAddress, newClicks) {
+  const dayAgo = new Date(Date.now() - 86400000);
+  try {
+    const recent = await sbGet(
+      `/tap_scores?wallet_address=eq.${encodeURIComponent(walletAddress)}&played_at=gte.${dayAgo.toISOString()}&flagged=eq.false&select=clicks`
+    );
+    const tapsSoFar = Array.isArray(recent)
+      ? recent.reduce((s, r) => s + (r.clicks || 0), 0)
+      : 0;
+
+    if (tapsSoFar >= TAP_DIM_THRESHOLD) {
+      // Entire session at diminished rate
+      return Math.floor(newClicks / TAP_RATE_DIM);
+    }
+    const normalTaps = Math.min(newClicks, TAP_DIM_THRESHOLD - tapsSoFar);
+    const dimTaps    = newClicks - normalTaps;
+    return Math.floor(normalTaps / TAP_RATE_NORMAL) + Math.floor(dimTaps / TAP_RATE_DIM);
+  } catch (_) {
+    // Fallback to standard rate if DB lookup fails
+    return Math.floor(newClicks / TAP_RATE_NORMAL);
+  }
+}
+
+// On-chain volume multiplier (applied on top of diminishing returns)
+function volMultiplier(volUsd) {
+  if (!volUsd || volUsd < 100)  return 1.0;   // no meaningful on-chain activity
+  if (volUsd < 1000)            return 1.5;   // Spot Accumulator tier
+  return 2.0;                                  // Tactical Trader and above
+}
+
 // ── Anti-abuse checks ─────────────────────────────────────────────
 function analyseTimestamps(ts, clicks) {
   if (!Array.isArray(ts) || ts.length < 3) return { flagged: false };
@@ -91,8 +129,10 @@ function analyseTimestamps(ts, clicks) {
     for (let i = 1; i < aboveMean.length; i++) {
       if (aboveMean[i] !== aboveMean[i - 1]) runCount++;
     }
-    // More than 85% of transitions alternating = machine-like jitter
-    if (runCount > intervals.length * 0.85) {
+    // More than 95% of transitions alternating = machine-like jitter
+    // (85% was too aggressive — real humans self-correct their pace, naturally
+    //  producing above/below-mean alternations that easily exceeded the old threshold)
+    if (runCount > intervals.length * 0.95) {
       return { flagged: true, reason: 'artificial_jitter' };
     }
   }
@@ -182,15 +222,19 @@ export default async function handler(req, res) {
   });
 
   // ── Award points to card_submissions (only if clean play) ──
-  const tapPts = Math.floor(clicks / 10);
+  // Compute tap points with diminishing returns + on-chain volume multiplier
+  const basePts = await calcTapPts(wallet_address, clicks);
+  let   tapPts  = basePts; // will be adjusted by multiplier after fetching vol
 
-  if (!flagged && tapPts > 0) {
+  if (!flagged && basePts > 0) {
     const subs = await sbGet(
-      `/card_submissions?wallet_address=eq.${encodeURIComponent(wallet_address)}&select=total_points,tap_points,entry_count,points_breakdown`
+      `/card_submissions?wallet_address=eq.${encodeURIComponent(wallet_address)}&select=total_points,tap_points,entry_count,points_breakdown,total_volume_usd`
     );
 
     if (Array.isArray(subs) && subs.length > 0) {
       const sub        = subs[0];
+      const multi      = volMultiplier(sub.total_volume_usd || 0);
+      tapPts           = Math.round(basePts * multi);
       const newTapPts  = (sub.tap_points   || 0) + tapPts;
       const newTotal   = (sub.total_points || 0) + tapPts;
       const newBrk     = {
