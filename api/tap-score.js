@@ -4,7 +4,7 @@
 
 const SUPABASE_URL   = 'https://nhdktvsllunlgdsaninx.supabase.co';
 const TPS            = 100000;    // Fogo TPS used in punchline calc
-const MAX_CPS        = 22;        // clicks/sec above this = flagged
+const MAX_CPS        = 15;        // clicks/sec above this = flagged (human physiological ceiling ~16 CPS)
 const MIN_STD_DEV_MS = 8;         // below this = suspiciously robotic cadence
 const MAX_PLAYS_DAY  = 200;       // hard ceiling per wallet per calendar day
 const MAX_PLAYS_HOUR = 30;        // IP-level rate limit
@@ -82,6 +82,21 @@ function analyseTimestamps(ts, clicks) {
     return { flagged: true, reason: 'low_variance' };
   }
 
+  // Runs test — detects artificial jitter (bots that add ±Nms noise to fake randomness)
+  // Real humans have genuinely messy cadence; bots that randomise intervals tend to
+  // alternate above/below the mean in a perfectly regular pattern.
+  if (intervals.length >= 12) {
+    const aboveMean = intervals.map(v => v >= mean ? 1 : -1);
+    let runCount = 1;
+    for (let i = 1; i < aboveMean.length; i++) {
+      if (aboveMean[i] !== aboveMean[i - 1]) runCount++;
+    }
+    // More than 85% of transitions alternating = machine-like jitter
+    if (runCount > intervals.length * 0.85) {
+      return { flagged: true, reason: 'artificial_jitter' };
+    }
+  }
+
   return { flagged: false };
 }
 
@@ -91,7 +106,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { wallet_address, x_handle, clicks, duration_ms, click_timestamps } = req.body || {};
+  const { wallet_address, x_handle, clicks, duration_ms, click_timestamps,
+          page_load_ts, play_pressed_ts } = req.body || {};
 
   // ── Input validation ──
   if (!wallet_address || typeof wallet_address !== 'string') {
@@ -135,6 +151,15 @@ export default async function handler(req, res) {
   const cps = clicks / (duration_ms / 1000);
   let flagged    = cps > MAX_CPS;
   let flagReason = flagged ? 'rate_exceeded' : null;
+
+  // Layer 4 — page load honeypot: bot scripts fire almost instantly after load
+  if (!flagged && page_load_ts && play_pressed_ts) {
+    const prePlayMs = play_pressed_ts - page_load_ts;
+    if (prePlayMs < 1500) {
+      flagged    = true;
+      flagReason = 'instant_play';
+    }
+  }
 
   if (!flagged && click_timestamps) {
     const check = analyseTimestamps(click_timestamps, clicks);
