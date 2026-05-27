@@ -401,10 +401,13 @@ body::after{
 
 .powerup-badge{
   font-family:'Clash Display',sans-serif;font-size:clamp(22px,6vw,38px);font-weight:700;
-  letter-spacing:-0.01em;text-align:center;line-height:1.1;
+  letter-spacing:-0.01em;line-height:1.1;
   padding:14px 28px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;gap:12px;
   animation:badgePop 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards;
 }
+.powerup-badge-icon{display:flex;align-items:center;flex-shrink:0;}
+.powerup-badge-icon svg{filter:drop-shadow(0 0 8px currentColor);}
 .powerup-sub{
   font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.22em;
   text-transform:uppercase;margin-top:6px;text-align:center;
@@ -456,9 +459,10 @@ body::after{
 
 /* Airdrop token rain */
 .airdrop-token{
-  position:fixed;top:-30px;font-size:18px;pointer-events:none;z-index:8900;
+  position:fixed;top:-30px;width:20px;height:20px;pointer-events:none;z-index:8900;
   animation:tokenFall linear forwards;
 }
+.airdrop-token svg{display:block;width:100%;height:100%;}
 @keyframes tokenFall{0%{opacity:1;transform:translateY(0) rotate(0deg);}100%{opacity:0;transform:translateY(110vh) rotate(720deg);}}
 
 /* Power-up multiplier banner (persistent during active surge) */
@@ -489,7 +493,8 @@ body::after{
 }
 .drop-row:last-child{border-bottom:none;}
 .drop-left{display:flex;align-items:center;gap:8px;}
-.drop-icon{font-size:14px;width:20px;text-align:center;}
+.drop-icon{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.drop-icon svg{display:block;}
 .drop-name{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--text);}
 .drop-effect{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--sub);}
 .drop-rarity{
@@ -604,7 +609,10 @@ body::after{
 
 <!-- Power-up overlay (shared, shown during any activation) -->
 <div class="powerup-overlay" id="powerup-overlay">
-  <div class="powerup-badge" id="powerup-badge"></div>
+  <div class="powerup-badge" id="powerup-badge">
+    <span class="powerup-badge-icon" id="powerup-badge-icon"></span>
+    <span id="powerup-badge-text"></span>
+  </div>
   <div class="powerup-sub" id="powerup-sub"></div>
 </div>
 <!-- Persistent surge multiplier banner -->
@@ -665,28 +673,28 @@ body::after{
       <div class="drops-panel-title" id="drops-title">⚡ Active In-Game Drops</div>
       <div class="drop-row">
         <div class="drop-left">
-          <span class="drop-icon">⚡</span>
+          <span class="drop-icon"><svg viewBox="0 0 1024 1024" width="22" height="22"><circle cx="512" cy="512" r="512" fill="rgba(0,200,255,0.18)"/><path fill="#00CFFF" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/></svg></span>
           <div><div class="drop-name" id="drop-surge-name">Block Surge</div><div class="drop-effect" id="drop-surge-fx">2× taps for 1.5 seconds</div></div>
         </div>
         <span class="drop-rarity common" id="drop-surge-rarity">Common</span>
       </div>
       <div class="drop-row">
         <div class="drop-left">
-          <span class="drop-icon">🌩️</span>
+          <span class="drop-icon"><svg viewBox="0 0 1024 1024" width="22" height="22"><circle cx="512" cy="512" r="512" fill="rgba(195,251,165,0.12)"/><path fill="#C3FBA5" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/></svg></span>
           <div><div class="drop-name" id="drop-lightning-name">Lightning Tap</div><div class="drop-effect" id="drop-lightning-fx">Random tap gives +6 bonus</div></div>
         </div>
         <span class="drop-rarity uncommon" id="drop-lightning-rarity">Chance</span>
       </div>
       <div class="drop-row">
         <div class="drop-left">
-          <span class="drop-icon">🪂</span>
+          <span class="drop-icon"><svg viewBox="0 0 1024 1024" width="22" height="22"><circle cx="512" cy="512" r="512" fill="rgba(255,140,0,0.18)"/><path fill="#FF8C00" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/></svg></span>
           <div><div class="drop-name" id="drop-airdrop-name">Airdrop</div><div class="drop-effect" id="drop-airdrop-fx">+20 bonus taps instantly</div></div>
         </div>
         <span class="drop-rarity rare" id="drop-airdrop-rarity">Rare</span>
       </div>
       <div class="drop-row">
         <div class="drop-left">
-          <span class="drop-icon">🧬</span>
+          <span class="drop-icon"><svg viewBox="0 0 1024 1024" width="22" height="22"><circle cx="512" cy="512" r="512" fill="rgba(255,215,0,0.20)"/><path fill="#FFD700" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/></svg></span>
           <div><div class="drop-name" id="drop-genesis-name">Genesis Block</div><div class="drop-effect" id="drop-genesis-fx">5× taps for 2 seconds</div></div>
         </div>
         <span class="drop-rarity legendary" id="drop-genesis-rarity">Legendary</span>
@@ -907,20 +915,20 @@ const TR = {
   drop_surge_rar:    { en: 'Common',                       ko: '일반' },
   drop_lightning_name:{ en: 'Lightning Tap',               ko: '번개 탭' },
   drop_lightning_fx: { en: 'Random tap gives +6 bonus',   ko: '랜덤 탭에서 +6 보너스' },
-  drop_lightning_rar:{ en: 'Chance',                       ko: '확률' },
+  drop_lightning_rar:{ en: 'Uncommon',                     ko: '언커먼' },
   drop_airdrop_name: { en: 'Airdrop',                      ko: '에어드롭' },
   drop_airdrop_fx:   { en: '+20 bonus taps instantly',     ko: '+20 보너스 탭 즉시 지급' },
   drop_airdrop_rar:  { en: 'Rare',                         ko: '희귀' },
   drop_genesis_name: { en: 'Genesis Block',                ko: '제네시스 블록' },
   drop_genesis_fx:   { en: '5× taps for 2 seconds',       ko: '2초 동안 탭 5배' },
   drop_genesis_rar:  { en: 'Legendary',                    ko: '전설' },
-  pu_surge_badge:    { en: '⚡ BLOCK SURGE · 2×',          ko: '⚡ 블록 서지 · 2배' },
+  pu_surge_badge:    { en: 'BLOCK SURGE · 2×',             ko: '블록 서지 · 2배' },
   pu_surge_sub:      { en: 'All taps count double for 1.5s', ko: '1.5초 동안 모든 탭 2배' },
-  pu_genesis_badge:  { en: '🧬 GENESIS BLOCK · 5×',       ko: '🧬 제네시스 블록 · 5배' },
+  pu_genesis_badge:  { en: 'GENESIS BLOCK · 5×',          ko: '제네시스 블록 · 5배' },
   pu_genesis_sub:    { en: '5× taps — the rarest drop!',  ko: '탭 5배 — 가장 희귀한 드롭!' },
-  pu_airdrop_badge:  { en: '🪂 AIRDROP  +20',             ko: '🪂 에어드롭  +20' },
+  pu_airdrop_badge:  { en: 'AIRDROP  +20',                ko: '에어드롭  +20' },
   pu_airdrop_sub:    { en: '+20 bonus taps credited!',     ko: '+20 보너스 탭 지급!' },
-  pu_lightning_sub:  { en: 'Lightning tap!  +6',          ko: '번개 탭!  +6' },
+  pu_lightning_sub:  { en: '+6',                          ko: '+6' },
 };
 function t(key, subs) {
   let s = (TR[key] && (TR[key][LANG] || TR[key].en)) || key;
@@ -1173,6 +1181,22 @@ const PU = {
   genesisFired:  false,
 };
 
+// FOGO bolt SVG icon helper — used in overlays, banners, token rain
+const FOGO_BOLT_PATH = 'M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z';
+function puIcon(fill, bgFill, size) {
+  const s = size || 36;
+  return `<svg viewBox="0 0 1024 1024" width="${s}" height="${s}" style="display:block;"><circle cx="512" cy="512" r="512" fill="${bgFill}"/><path fill="${fill}" d="${FOGO_BOLT_PATH}"/></svg>`;
+}
+// Colour map per power-up type
+const PU_COLORS = {
+  surge:    { fill: '#00CFFF', bg: 'rgba(0,200,255,0.18)'   },  // Common — cyan
+  lightning:{ fill: '#C3FBA5', bg: 'rgba(195,251,165,0.12)' },  // Uncommon — lime
+  airdrop:  { fill: '#FF8C00', bg: 'rgba(255,140,0,0.18)'   },  // Rare — orange
+  genesis:  { fill: '#FFD700', bg: 'rgba(255,215,0,0.20)'   },  // Legendary — gold
+  fire:     { fill: '#FF3D00', bg: 'rgba(255,61,0,0.20)'    },
+  ember:    { fill: '#FF8C00', bg: 'rgba(255,140,0,0.18)'   },
+};
+
 // How many real taps to register per onTap call (affected by multiplier)
 function tapMultiplier() {
   if (PU.genesisActive) return 5;
@@ -1234,30 +1258,36 @@ function checkPowerUps(elapsed) {
 }
 
 function activatePowerUp(type) {
-  const overlay = document.getElementById('powerup-overlay');
-  const badge   = document.getElementById('powerup-badge');
-  const sub     = document.getElementById('powerup-sub');
-  const btn     = document.getElementById('tap-btn');
-  const banner  = document.getElementById('surge-banner');
+  const overlay   = document.getElementById('powerup-overlay');
+  const badge     = document.getElementById('powerup-badge');
+  const badgeIcon = document.getElementById('powerup-badge-icon');
+  const badgeText = document.getElementById('powerup-badge-text');
+  const sub       = document.getElementById('powerup-sub');
+  const btn       = document.getElementById('tap-btn');
+  const banner    = document.getElementById('surge-banner');
 
   // Clear previous type classes
   overlay.classList.remove('surge','airdrop','genesis');
   badge.classList.remove('surge','airdrop','genesis');
   sub.classList.remove('surge','airdrop','genesis');
-  if (btn) { btn.classList.remove('surge-active','genesis-active'); }
+  if (btn) btn.classList.remove('surge-active','genesis-active');
 
   if (type === 'surge') {
-    badge.textContent = t('pu_surge_badge');
-    sub.textContent   = t('pu_surge_sub');
+    const c = PU_COLORS.surge;
+    if (badgeIcon) badgeIcon.innerHTML = puIcon(c.fill, c.bg, 40);
+    if (badgeText) badgeText.textContent = t('pu_surge_badge');
+    sub.textContent = t('pu_surge_sub');
     overlay.classList.add('surge'); badge.classList.add('surge'); sub.classList.add('surge');
     if (btn) btn.classList.add('surge-active');
-    if (banner) { banner.textContent = '⚡ 2×'; banner.className = 'surge-banner visible surge'; }
+    if (banner) { banner.innerHTML = puIcon(c.fill, c.bg, 16) + ' 2×'; banner.className = 'surge-banner visible surge'; }
   } else if (type === 'genesis') {
-    badge.textContent = t('pu_genesis_badge');
-    sub.textContent   = t('pu_genesis_sub');
+    const c = PU_COLORS.genesis;
+    if (badgeIcon) badgeIcon.innerHTML = puIcon(c.fill, c.bg, 40);
+    if (badgeText) badgeText.textContent = t('pu_genesis_badge');
+    sub.textContent = t('pu_genesis_sub');
     overlay.classList.add('genesis'); badge.classList.add('genesis'); sub.classList.add('genesis');
     if (btn) btn.classList.add('genesis-active');
-    if (banner) { banner.textContent = '🧬 5×'; banner.className = 'surge-banner visible genesis'; }
+    if (banner) { banner.innerHTML = puIcon(c.fill, c.bg, 16) + ' 5×'; banner.className = 'surge-banner visible genesis'; }
   }
 
   overlay.classList.add('active');
@@ -1288,7 +1318,11 @@ function triggerAirdrop() {
   overlay.classList.remove('surge','genesis');
   badge.classList.remove('surge','genesis');
   sub.classList.remove('surge','genesis');
-  badge.textContent = t('pu_airdrop_badge');
+  const c = PU_COLORS.airdrop;
+  const badgeIcon = document.getElementById('powerup-badge-icon');
+  const badgeText = document.getElementById('powerup-badge-text');
+  if (badgeIcon) badgeIcon.innerHTML = puIcon(c.fill, c.bg, 40);
+  if (badgeText) badgeText.textContent = t('pu_airdrop_badge');
   sub.textContent   = t('pu_airdrop_sub');
   overlay.classList.add('airdrop'); badge.classList.add('airdrop'); sub.classList.add('airdrop');
   overlay.classList.add('active');
@@ -1300,12 +1334,13 @@ function triggerAirdrop() {
 }
 
 function spawnAirdropTokens() {
-  const tokens = ['⚡','🔥','💎','🪙','✨'];
+  const tokenColors = [PU_COLORS.fire, PU_COLORS.airdrop, PU_COLORS.surge, PU_COLORS.genesis, PU_COLORS.lightning];
   for (let i = 0; i < 22; i++) {
     setTimeout(() => {
       const el = document.createElement('div');
       el.className = 'airdrop-token';
-      el.textContent = tokens[Math.floor(Math.random() * tokens.length)];
+      const c = tokenColors[Math.floor(Math.random() * tokenColors.length)];
+      el.innerHTML = puIcon(c.fill, c.bg, 20);
       el.style.left = Math.random() * 100 + 'vw';
       el.style.animationDuration = (0.9 + Math.random() * 0.8) + 's';
       el.style.animationDelay = '0s';
