@@ -394,6 +394,89 @@ body::after{
   .your-taps-num{font-size:46px;}
 }
 #fx-canvas{position:fixed;inset:0;pointer-events:none;z-index:8000;}
+
+/* ================================================================
+   ENGAGEMENT FEATURES — A. PB  B. Streak  C. Rank Nudge  D. Intensity
+================================================================ */
+
+/* A — New Personal Best badge */
+.pb-new-badge{
+  display:none;align-items:center;justify-content:center;gap:8px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
+  letter-spacing:0.16em;text-transform:uppercase;
+  background:linear-gradient(135deg,rgba(255,215,0,0.14),rgba(255,165,0,0.06));
+  border:1px solid rgba(255,215,0,0.45);border-radius:100px;
+  color:#FFD700;padding:7px 16px;margin-bottom:12px;
+  animation:pbPulse 1.4s ease-in-out 3;
+}
+.pb-new-badge.visible{display:inline-flex;}
+@keyframes pbPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,0);}
+  50%{box-shadow:0 0 18px 4px rgba(255,215,0,0.35);}
+}
+
+/* B — Streak pill on entry screen */
+.streak-pill{
+  display:none;align-items:center;gap:6px;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--ember);margin-top:12px;
+}
+.streak-pill.visible{display:flex;}
+.streak-pill-flame{font-size:14px;}
+.streak-count{font-size:13px;font-weight:700;color:#FF8C00;}
+
+/* Streak on result screen */
+.result-streak{
+  display:none;align-items:center;gap:6px;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--ember);margin-bottom:10px;
+}
+.result-streak.visible{display:flex;}
+
+/* C — Rank nudge below rank stat */
+.rank-nudge{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--ember);margin-top:3px;line-height:1.3;
+  min-height:12px;
+}
+
+/* D — Session intensity escalation */
+/* Time progress bar at top of game screen */
+.game-progress-bar-wrap{
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:rgba(255,255,255,0.05);overflow:hidden;pointer-events:none;
+  z-index:10;
+}
+.game-progress-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--lime),var(--fire));
+  transition:width 0.1s linear;
+}
+#screen-game{position:relative;}
+
+/* Intensity at ≤3s */
+#screen-game.intense .game-wrap{
+  background:radial-gradient(ellipse at center bottom, rgba(255,61,0,0.12) 0%, transparent 70%);
+}
+/* Final burst at ≤1.5s */
+#screen-game.final-push .game-wrap{
+  animation:screenPulse 0.4s ease-in-out infinite;
+}
+@keyframes screenPulse{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.003);}
+}
+/* Final push label */
+.final-push-label{
+  display:none;
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+  letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--fire);text-align:center;margin-top:6px;
+  animation:labelBlink 0.3s ease-in-out infinite;
+}
+#screen-game.final-push .final-push-label{display:block;}
+@keyframes labelBlink{0%,100%{opacity:1;}50%{opacity:0.4;}}
 </style>
 </head>
 <body>
@@ -450,6 +533,12 @@ body::after{
       <div class="ssc"><span class="ssc-v">40ms</span><span class="ssc-l">Blocks</span></div>
       <div class="ssc"><span class="ssc-v">∞</span><span class="ssc-l">Plays</span></div>
     </div>
+    <!-- B: Daily streak pill -->
+    <div class="streak-pill" id="entry-streak-pill">
+      <span class="streak-pill-flame">🔥</span>
+      <span id="entry-streak-count" class="streak-count">0</span>
+      <span id="entry-streak-label">day streak — keep it going!</span>
+    </div>
   </div>
 </section>
 
@@ -463,6 +552,8 @@ body::after{
 
 <!-- Game screen -->
 <section id="screen-game" class="screen">
+  <!-- D: Time progress bar -->
+  <div class="game-progress-bar-wrap"><div class="game-progress-bar" id="game-progress-bar"></div></div>
   <div class="game-wrap">
     <div class="game-counters">
       <div class="game-counter-wrap yours">
@@ -491,6 +582,8 @@ body::after{
     <div class="game-timer-wrap">
       <div class="game-timer" id="game-timer">10.0</div>
       <div class="tlabel">SECONDS LEFT</div>
+      <!-- D: Final push label -->
+      <div class="final-push-label" id="final-push-label">⚡ FINAL PUSH ⚡</div>
     </div>
     <div class="tps-flash" id="tps-flash"></div>
   </div>
@@ -503,6 +596,12 @@ body::after{
     <div class="result-card">
       <div class="result-topbar"></div>
       <div class="result-body">
+        <!-- A: New PB badge -->
+        <div class="pb-new-badge" id="pb-new-badge">🏆 New Personal Best!</div>
+        <!-- B: Streak on result -->
+        <div class="result-streak" id="result-streak">
+          <span>🔥</span><span id="result-streak-txt"></span>
+        </div>
         <div class="your-taps-block">
           <span class="your-taps-label">You tapped</span>
           <span class="your-taps-num" id="r-taps">0</span>
@@ -516,7 +615,7 @@ body::after{
         </div>
         <div class="result-stats">
           <div class="rstat"><span class="v lime" id="r-total-taps">0</span><span class="l">All-Time Taps</span></div>
-          <div class="rstat"><span class="v fire" id="r-rank">0</span><span class="l">Rank</span></div>
+          <div class="rstat"><span class="v fire" id="r-rank">0</span><span class="l">Rank</span><div class="rank-nudge" id="rank-nudge"></div></div>
           <div class="rstat"><span class="v" id="r-rate">0</span><span class="l">Taps / sec</span></div>
         </div>
         <!-- Points earned badge — shown after server confirms -->
@@ -696,7 +795,10 @@ function applyTranslations() {
   set('tab-sessions',   t('tab_sessions')   || t('th_session_taps'), true);
   const lbBack = q('.lb-back'); if (lbBack) lbBack.textContent = t('lb_back');
 }
-document.addEventListener('DOMContentLoaded', applyTranslations);
+document.addEventListener('DOMContentLoaded', () => {
+  applyTranslations();
+  showStreakPill(); // B: show streak on entry screen
+});
 
 // Supabase anon client (read-only leaderboard fetches only)
 const db = supabase.createClient(SB_URL, SB_ANON);
@@ -711,11 +813,50 @@ const S = {
   totalTaps:   0,   // cumulative all-time (populated from server after submit)
   clickTs:     [],
   bestScore:   0,   // best single session
+  prevBest:    0,   // best before this session (for PB detection)
   fogoTx:      0,
   startTime:   0,
   gameActive:  false,
   currentScreen: 'entry',
 };
+
+/* ================================================================
+   ENGAGEMENT — B: Streak helpers
+================================================================ */
+function _streakKey(k) { return 'fogo_' + k; }
+function getStreak() {
+  return parseInt(localStorage.getItem(_streakKey('streak_count')) || '0');
+}
+function updateStreak() {
+  const today = new Date().toDateString();
+  const lastDate = localStorage.getItem(_streakKey('streak_date'));
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  let count = parseInt(localStorage.getItem(_streakKey('streak_count')) || '0');
+  if (lastDate === today) {
+    return count; // already played today
+  } else if (lastDate === yesterday) {
+    count++;      // continuing streak
+  } else {
+    count = 1;    // new or broken streak
+  }
+  try {
+    localStorage.setItem(_streakKey('streak_count'), count);
+    localStorage.setItem(_streakKey('streak_date'), today);
+  } catch(_) {}
+  return count;
+}
+function showStreakPill() {
+  const count = getStreak();
+  const pill  = document.getElementById('entry-streak-pill');
+  const num   = document.getElementById('entry-streak-count');
+  const lbl   = document.getElementById('entry-streak-label');
+  if (!pill || count < 1) return;
+  num.textContent = count;
+  lbl.textContent = LANG === 'ko'
+    ? (count === 1 ? '일 연속 — 계속하세요!' : '일 연속 스트릭 — 유지하세요! 🔥')
+    : (count === 1 ? 'day streak — keep it going!' : 'day streak — don\'t break it! 🔥');
+  pill.classList.add('visible');
+}
 
 /* ── Screen nav ── */
 function showScreen(id) {
@@ -821,6 +962,7 @@ function onStartClick() { startRun(); }
    GAME LOOP
 ================================================================ */
 function startRun() {
+  S.prevBest = S.bestScore; // A: capture pre-session best for PB detection
   S.clicks  = 0;
   S.clickTs = [];
   S.fogoTx  = 0;
@@ -829,6 +971,11 @@ function startRun() {
   document.getElementById('game-fogo-counter').textContent = '0';
   document.getElementById('game-timer').textContent        = (GAME_DURATION / 1000).toFixed(1);
   document.getElementById('tps-flash').textContent         = '';
+  // D: reset intensity classes
+  const gs = document.getElementById('screen-game');
+  if (gs) { gs.classList.remove('intense','final-push'); }
+  const pb = document.getElementById('game-progress-bar');
+  if (pb) pb.style.width = '0%';
   showScreen('countdown');
   runCountdown(3);
 }
@@ -870,13 +1017,29 @@ function gameLoop() {
   S.fogoTx = Math.floor((elapsed / 1000) * TPS);
   const fogoEl = document.getElementById('game-fogo-counter');
   if (fogoEl) fogoEl.textContent = S.fogoTx.toLocaleString();
+
+  // D: Progress bar (shows elapsed, not remaining — fills left→right)
+  const pb = document.getElementById('game-progress-bar');
+  if (pb) pb.style.width = Math.min(100, (elapsed / GAME_DURATION) * 100).toFixed(1) + '%';
+
+  // D: Intensity escalation
+  const gs = document.getElementById('screen-game');
+  if (gs) {
+    if (sec <= 3)   gs.classList.add('intense');    else gs.classList.remove('intense');
+    if (sec <= 1.5) gs.classList.add('final-push'); else gs.classList.remove('final-push');
+  }
+
   if (remaining <= 0) { endGame(); return; }
   requestAnimationFrame(gameLoop);
 }
 
 function endGame() {
   S.gameActive = false;
+  // D: remove intensity classes
+  const gs = document.getElementById('screen-game');
+  if (gs) { gs.classList.remove('intense','final-push'); }
   if (S.clicks > S.bestScore) S.bestScore = S.clicks;
+  updateStreak(); // B: record play for streak
   showResultAndSubmit();
 }
 
@@ -960,6 +1123,39 @@ async function showResultAndSubmit() {
   const badge = document.getElementById('pts-earned-badge');
   if (badge) badge.classList.add('hidden');
 
+  // A: Personal Best detection
+  const pbBadge = document.getElementById('pb-new-badge');
+  if (pbBadge) {
+    const isNewPB = clicks > S.prevBest && S.prevBest >= 0;
+    if (isNewPB && clicks > 0) {
+      pbBadge.textContent = LANG === 'ko' ? '🏆 새로운 개인 기록!' : '🏆 New Personal Best!';
+      pbBadge.classList.add('visible');
+      // Restart animation
+      pbBadge.style.animation = 'none';
+      void pbBadge.offsetWidth;
+      pbBadge.style.animation = '';
+    } else {
+      pbBadge.classList.remove('visible');
+    }
+  }
+
+  // B: Show streak on result screen
+  const streakCount = getStreak();
+  const resSt = document.getElementById('result-streak');
+  const resStTxt = document.getElementById('result-streak-txt');
+  if (resSt && resStTxt && streakCount >= 1) {
+    resStTxt.textContent = streakCount === 1
+      ? (LANG === 'ko' ? '1일 연속 플레이!' : '1 day streak — come back tomorrow!')
+      : (LANG === 'ko' ? streakCount + '일 연속 스트릭 🔥' : streakCount + ' day streak 🔥 — don\'t break it!');
+    resSt.classList.add('visible');
+  } else if (resSt) {
+    resSt.classList.remove('visible');
+  }
+
+  // C: Reset rank nudge until server responds
+  const nudge = document.getElementById('rank-nudge');
+  if (nudge) nudge.textContent = '';
+
   showScreen('result');
   fireConfetti();
 
@@ -991,6 +1187,21 @@ async function showResultAndSubmit() {
       document.getElementById('r-total-taps').textContent = S.totalTaps.toLocaleString();
       document.getElementById('r-rank').textContent = data.rank ? '#' + data.rank : '';
       document.getElementById('r-best').textContent = S.bestScore;
+
+      // C: Rank proximity nudge
+      const nudge = document.getElementById('rank-nudge');
+      if (nudge && data.rank) {
+        if (data.rank === 1) {
+          nudge.textContent = LANG === 'ko' ? '👑 1위!' : '👑 #1!';
+        } else if (data.rank <= 10) {
+          nudge.textContent = LANG === 'ko' ? '🔥 상위 10위 진입!' : '🔥 Top 10!';
+        } else {
+          const playsToClimb = 1;
+          nudge.textContent = LANG === 'ko'
+            ? '한 번 더 플레이하면 순위 상승!'
+            : 'Play again to climb higher!';
+        }
+      }
 
       if (!data.flagged && data.tap_pts > 0) {
         const badge = document.getElementById('pts-earned-badge');
