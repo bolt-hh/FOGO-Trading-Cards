@@ -277,6 +277,31 @@ body::after{
 .tps-flash{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.10em;text-transform:uppercase;color:rgba(255,107,0,0.65);min-height:16px;text-align:center;transition:opacity 0.18s;}
 .theme-terminal .tps-flash{color:rgba(195,251,165,0.50);}
 
+/* Volume tip bar — shown on result screen for sub-2× users */
+.vol-tip-bar{
+  display:none;width:100%;margin-top:14px;
+  background:rgba(195,251,165,0.04);
+  border:1px solid rgba(195,251,165,0.14);
+  border-radius:10px;padding:11px 14px;
+  box-sizing:border-box;
+}
+.vol-tip-bar.visible{display:block;}
+.vol-tip-top{
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  letter-spacing:0.10em;text-transform:uppercase;color:var(--lime);margin-bottom:6px;
+}
+.vol-tip-body{font-family:'Inter',sans-serif;font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.5;}
+.vol-tip-dapps{display:flex;flex-wrap:wrap;gap:6px;}
+.vol-tip-dapp{
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  letter-spacing:0.06em;text-decoration:none;
+  padding:3px 8px;border-radius:6px;
+  background:rgba(195,251,165,0.08);color:var(--lime);
+  border:1px solid rgba(195,251,165,0.22);
+  transition:background 0.15s,border-color 0.15s;
+}
+.vol-tip-dapp:hover{background:rgba(195,251,165,0.15);border-color:rgba(195,251,165,0.40);}
+
 /* ── Result screen ── */
 .result-wrap{width:100%;max-width:540px;display:flex;flex-direction:column;align-items:center;gap:0;}
 .result-eyebrow{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:var(--dim);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
@@ -816,6 +841,17 @@ body::after{
         <div class="pts-earned-badge hidden" id="pts-earned-badge">
           <span id="pts-earned-txt"></span> pts earned this play
         </div>
+        <!-- Volume tip bar — hidden for 2× users, shown otherwise -->
+        <div class="vol-tip-bar" id="vol-tip-bar">
+          <div class="vol-tip-top" id="vol-tip-top">💡 Unlock a Point Multiplier</div>
+          <div class="vol-tip-body" id="vol-tip-body">Build your onchain volume to earn more points per tap. Trade, stake, or bridge on FOGO ecosystem DApps:</div>
+          <div class="vol-tip-dapps">
+            <a class="vol-tip-dapp" href="https://valiant.trade"   target="_blank" rel="noopener">Valiant</a>
+            <a class="vol-tip-dapp" href="https://ignitionfi.xyz"  target="_blank" rel="noopener">Ignition</a>
+            <a class="vol-tip-dapp" href="https://brasa.finance"   target="_blank" rel="noopener">Brasa</a>
+            <a class="vol-tip-dapp" href="https://pyron.fi"        target="_blank" rel="noopener">Pyron</a>
+          </div>
+        </div>
         <div class="result-actions">
           <button class="btn-share" onclick="shareOnX()">
             <span class="x-mark">𝕏</span> Share your score on X
@@ -1034,6 +1070,7 @@ const db = supabase.createClient(SB_URL, SB_ANON);
 
 // ── Wallet state ─────────────────────────────────────────────────
 let walletAddress = null;
+let userVolUsd    = 0;   // cached after wallet connect — drives tip bar + multiplier display
 
 // ── Game state ───────────────────────────────────────────────────
 const S = {
@@ -1164,8 +1201,9 @@ async function prefillHandle(address) {
         updateStartBtn();
       }
     }
-    // Show volume multiplier badge
-    updateVolBonus(data?.total_volume_usd || 0);
+    // Cache vol and show multiplier badge
+    userVolUsd = data?.total_volume_usd || 0;
+    updateVolBonus(userVolUsd);
   } catch (_) { /* non-critical */ }
 }
 
@@ -1198,6 +1236,36 @@ function updateVolBonus(volUsd) {
     if (hint) hint.innerHTML = ko
       ? `${tradeLink}에서 $100+ 거래하면 1.5× 잠금 해제`
       : `Trade $100+ on ${tradeLink} to unlock 1.5×`;
+  }
+}
+
+function updateVolTipBar() {
+  const bar  = document.getElementById('vol-tip-bar');
+  const top  = document.getElementById('vol-tip-top');
+  const body = document.getElementById('vol-tip-body');
+  if (!bar) return;
+
+  if (userVolUsd >= 1000) {
+    // Already at max — hide the tip
+    bar.classList.remove('visible');
+    return;
+  }
+
+  bar.classList.add('visible');
+  const ko = (typeof PLAY_LANG !== 'undefined' && PLAY_LANG === 'ko');
+
+  if (userVolUsd >= 100) {
+    // 1.5× user — nudge toward 2×
+    if (top)  top.textContent  = ko ? '💡 2× 포인트 잠금 해제하기'          : '💡 Unlock 2× Points';
+    if (body) body.textContent = ko
+      ? 'FOGO 생태계 DApp에서 $1,000+ 온체인 볼륨을 달성하면 2× 배율이 적용됩니다:'
+      : 'Reach $1,000+ in onchain volume on FOGO ecosystem DApps to unlock your 2× multiplier:';
+  } else {
+    // 1× user — nudge toward first unlock
+    if (top)  top.textContent  = ko ? '💡 포인트 배율 잠금 해제하기'              : '💡 Unlock a Point Multiplier';
+    if (body) body.textContent = ko
+      ? 'FOGO 생태계 DApp에서 온체인 볼륨을 쌓으면 탭당 포인트가 늘어납니다:'
+      : 'Build your onchain volume on FOGO ecosystem DApps to earn more points per tap:';
   }
 }
 
@@ -1668,6 +1736,9 @@ async function showResultAndSubmit() {
   // C: Reset rank nudge until server responds
   const nudge = document.getElementById('rank-nudge');
   if (nudge) nudge.textContent = '';
+
+  // Vol tip bar — show for sub-2× users, hide for max multiplier
+  updateVolTipBar();
 
   showScreen('result');
   fireConfetti();
