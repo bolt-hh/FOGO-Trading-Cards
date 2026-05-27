@@ -383,6 +383,125 @@ body::after{
 .lb-back{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.10em;color:var(--dim);background:transparent;border:1px solid var(--border);padding:9px 16px;border-radius:6px;cursor:pointer;transition:all 0.15s;margin-bottom:18px;}
 .lb-back:hover{border-color:var(--border-hi);color:var(--text);}
 
+/* ================================================================
+   POWER-UP SYSTEM — Block Surge · Lightning Tap · Airdrop · Genesis Block
+================================================================ */
+
+/* Full-screen power-up announcement overlay */
+.powerup-overlay{
+  position:fixed;inset:0;z-index:9000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;
+  opacity:0;transition:opacity 0.12s ease;
+}
+.powerup-overlay.active{opacity:1;}
+.powerup-overlay.genesis{background:radial-gradient(ellipse at center,rgba(255,215,0,0.18) 0%,transparent 70%);}
+.powerup-overlay.surge{background:radial-gradient(ellipse at center,rgba(0,180,255,0.14) 0%,transparent 70%);}
+.powerup-overlay.airdrop{background:radial-gradient(ellipse at center,rgba(195,251,165,0.12) 0%,transparent 65%);}
+
+.powerup-badge{
+  font-family:'Clash Display',sans-serif;font-size:clamp(22px,6vw,38px);font-weight:700;
+  letter-spacing:-0.01em;text-align:center;line-height:1.1;
+  padding:14px 28px;border-radius:14px;
+  animation:badgePop 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+.powerup-sub{
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.22em;
+  text-transform:uppercase;margin-top:6px;text-align:center;
+}
+/* Per-type colours */
+.powerup-badge.surge{
+  color:#00CFFF;
+  background:linear-gradient(135deg,rgba(0,180,255,0.15),rgba(0,100,200,0.08));
+  border:1px solid rgba(0,200,255,0.45);
+  text-shadow:0 0 24px rgba(0,200,255,0.8);
+}
+.powerup-sub.surge{color:rgba(0,200,255,0.75);}
+.powerup-badge.airdrop{
+  color:var(--lime);
+  background:linear-gradient(135deg,rgba(195,251,165,0.12),rgba(100,220,80,0.06));
+  border:1px solid rgba(195,251,165,0.40);
+  text-shadow:0 0 22px rgba(195,251,165,0.7);
+}
+.powerup-sub.airdrop{color:rgba(195,251,165,0.65);}
+.powerup-badge.genesis{
+  color:#FFD700;
+  background:linear-gradient(135deg,rgba(255,215,0,0.18),rgba(255,140,0,0.08));
+  border:1px solid rgba(255,215,0,0.55);
+  text-shadow:0 0 30px rgba(255,215,0,0.9);
+  animation:badgePop 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards, genesisGlow 0.8s ease-in-out infinite alternate;
+}
+.powerup-sub.genesis{color:rgba(255,215,0,0.70);}
+@keyframes badgePop{from{transform:scale(0.7);opacity:0;}to{transform:scale(1);opacity:1;}}
+@keyframes genesisGlow{from{box-shadow:0 0 20px rgba(255,215,0,0.4);}to{box-shadow:0 0 50px rgba(255,215,0,0.85),0 0 80px rgba(255,140,0,0.40);}}
+
+/* Tap button theme during power-ups */
+.tap-btn.surge-active{box-shadow:0 0 40px rgba(0,200,255,0.6),0 0 0 3px rgba(0,200,255,0.35)!important;filter:hue-rotate(180deg);}
+.tap-btn.genesis-active{box-shadow:0 0 60px rgba(255,215,0,0.8),0 0 0 4px rgba(255,215,0,0.55)!important;filter:sepia(1) saturate(3) hue-rotate(5deg);}
+.tap-btn.surge-active .tap-inner-glow,.tap-btn.genesis-active .tap-inner-glow{opacity:1;}
+
+/* Lightning tap flash on counter */
+.game-counter.lightning-flash{color:#FFE44D!important;text-shadow:0 0 28px rgba(255,230,0,0.9);transition:none;}
+
+/* Floating bonus number */
+.float-bonus{
+  position:fixed;font-family:'Clash Display',sans-serif;font-size:28px;font-weight:700;
+  pointer-events:none;z-index:9500;
+  animation:floatUp 0.9s ease-out forwards;
+}
+.float-bonus.lightning{color:#FFE44D;text-shadow:0 0 16px rgba(255,230,0,0.9);}
+.float-bonus.airdrop{color:var(--lime);text-shadow:0 0 16px rgba(195,251,165,0.8);}
+.float-bonus.genesis{color:#FFD700;text-shadow:0 0 20px rgba(255,215,0,1);}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-90px) scale(0.7);}}
+
+/* Airdrop token rain */
+.airdrop-token{
+  position:fixed;top:-30px;font-size:18px;pointer-events:none;z-index:8900;
+  animation:tokenFall linear forwards;
+}
+@keyframes tokenFall{0%{opacity:1;transform:translateY(0) rotate(0deg);}100%{opacity:0;transform:translateY(110vh) rotate(720deg);}}
+
+/* Power-up multiplier banner (persistent during active surge) */
+.surge-banner{
+  position:fixed;top:70px;left:50%;transform:translateX(-50%);
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
+  letter-spacing:0.20em;text-transform:uppercase;
+  padding:5px 16px;border-radius:100px;pointer-events:none;z-index:8800;
+  opacity:0;transition:opacity 0.2s;
+}
+.surge-banner.visible{opacity:1;}
+.surge-banner.surge{background:rgba(0,200,255,0.12);border:1px solid rgba(0,200,255,0.40);color:#00CFFF;}
+.surge-banner.genesis{background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.55);color:#FFD700;animation:genesisGlow 0.6s ease-in-out infinite alternate;}
+
+/* Entry screen: Active Drops panel */
+.drops-panel{
+  margin-top:16px;
+  background:var(--panel2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;width:100%;
+}
+.drops-panel-title{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.26em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:10px;
+}
+.drop-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.drop-row:last-child{border-bottom:none;}
+.drop-left{display:flex;align-items:center;gap:8px;}
+.drop-icon{font-size:14px;width:20px;text-align:center;}
+.drop-name{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--text);}
+.drop-effect{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--sub);}
+.drop-rarity{
+  font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
+  letter-spacing:0.16em;text-transform:uppercase;
+  padding:2px 7px;border-radius:100px;
+}
+.drop-rarity.common{background:rgba(0,200,255,0.10);color:#00CFFF;border:1px solid rgba(0,200,255,0.28);}
+.drop-rarity.uncommon{background:rgba(195,251,165,0.08);color:var(--lime);border:1px solid rgba(195,251,165,0.25);}
+.drop-rarity.rare{background:rgba(255,140,0,0.10);color:var(--orange);border:1px solid rgba(255,140,0,0.28);}
+.drop-rarity.legendary{background:rgba(255,215,0,0.12);color:#FFD700;border:1px solid rgba(255,215,0,0.40);}
+
 /* ── Responsive ── */
 @media(max-width:480px){
   .result-body{padding:18px 14px;}
@@ -483,6 +602,14 @@ body::after{
 <div class="fire-bg"></div>
 <canvas id="fx-canvas"></canvas>
 
+<!-- Power-up overlay (shared, shown during any activation) -->
+<div class="powerup-overlay" id="powerup-overlay">
+  <div class="powerup-badge" id="powerup-badge"></div>
+  <div class="powerup-sub" id="powerup-sub"></div>
+</div>
+<!-- Persistent surge multiplier banner -->
+<div class="surge-banner" id="surge-banner"></div>
+
 <!-- Nav -->
 <nav class="nav">
   <div class="nav-inner">
@@ -533,6 +660,39 @@ body::after{
       <div class="ssc"><span class="ssc-v">40ms</span><span class="ssc-l">Blocks</span></div>
       <div class="ssc"><span class="ssc-v">∞</span><span class="ssc-l">Plays</span></div>
     </div>
+    <!-- Power-ups: Active Drops panel -->
+    <div class="drops-panel">
+      <div class="drops-panel-title" id="drops-title">⚡ Active In-Game Drops</div>
+      <div class="drop-row">
+        <div class="drop-left">
+          <span class="drop-icon">⚡</span>
+          <div><div class="drop-name" id="drop-surge-name">Block Surge</div><div class="drop-effect" id="drop-surge-fx">2× taps for 1.5 seconds</div></div>
+        </div>
+        <span class="drop-rarity common" id="drop-surge-rarity">Common</span>
+      </div>
+      <div class="drop-row">
+        <div class="drop-left">
+          <span class="drop-icon">🌩️</span>
+          <div><div class="drop-name" id="drop-lightning-name">Lightning Tap</div><div class="drop-effect" id="drop-lightning-fx">Random tap gives +6 bonus</div></div>
+        </div>
+        <span class="drop-rarity uncommon" id="drop-lightning-rarity">Chance</span>
+      </div>
+      <div class="drop-row">
+        <div class="drop-left">
+          <span class="drop-icon">🪂</span>
+          <div><div class="drop-name" id="drop-airdrop-name">Airdrop</div><div class="drop-effect" id="drop-airdrop-fx">+20 bonus taps instantly</div></div>
+        </div>
+        <span class="drop-rarity rare" id="drop-airdrop-rarity">Rare</span>
+      </div>
+      <div class="drop-row">
+        <div class="drop-left">
+          <span class="drop-icon">🧬</span>
+          <div><div class="drop-name" id="drop-genesis-name">Genesis Block</div><div class="drop-effect" id="drop-genesis-fx">5× taps for 2 seconds</div></div>
+        </div>
+        <span class="drop-rarity legendary" id="drop-genesis-rarity">Legendary</span>
+      </div>
+    </div>
+
     <!-- B: Daily streak pill -->
     <div class="streak-pill" id="entry-streak-pill">
       <span class="streak-pill-flame">🔥</span>
@@ -741,6 +901,26 @@ const TR = {
   th_date:           { en: 'Date',                         ko: '날짜' },
   tab_cumulative:    { en: 'All-Time',                     ko: '누적' },
   tab_sessions:      { en: 'Sessions',                     ko: '세션' },
+  drops_title:       { en: '⚡ Active In-Game Drops',      ko: '⚡ 인게임 드롭 목록' },
+  drop_surge_name:   { en: 'Block Surge',                  ko: '블록 서지' },
+  drop_surge_fx:     { en: '2× taps for 1.5 seconds',     ko: '1.5초 동안 탭 2배' },
+  drop_surge_rar:    { en: 'Common',                       ko: '일반' },
+  drop_lightning_name:{ en: 'Lightning Tap',               ko: '번개 탭' },
+  drop_lightning_fx: { en: 'Random tap gives +6 bonus',   ko: '랜덤 탭에서 +6 보너스' },
+  drop_lightning_rar:{ en: 'Chance',                       ko: '확률' },
+  drop_airdrop_name: { en: 'Airdrop',                      ko: '에어드롭' },
+  drop_airdrop_fx:   { en: '+20 bonus taps instantly',     ko: '+20 보너스 탭 즉시 지급' },
+  drop_airdrop_rar:  { en: 'Rare',                         ko: '희귀' },
+  drop_genesis_name: { en: 'Genesis Block',                ko: '제네시스 블록' },
+  drop_genesis_fx:   { en: '5× taps for 2 seconds',       ko: '2초 동안 탭 5배' },
+  drop_genesis_rar:  { en: 'Legendary',                    ko: '전설' },
+  pu_surge_badge:    { en: '⚡ BLOCK SURGE · 2×',          ko: '⚡ 블록 서지 · 2배' },
+  pu_surge_sub:      { en: 'All taps count double for 1.5s', ko: '1.5초 동안 모든 탭 2배' },
+  pu_genesis_badge:  { en: '🧬 GENESIS BLOCK · 5×',       ko: '🧬 제네시스 블록 · 5배' },
+  pu_genesis_sub:    { en: '5× taps — the rarest drop!',  ko: '탭 5배 — 가장 희귀한 드롭!' },
+  pu_airdrop_badge:  { en: '🪂 AIRDROP  +20',             ko: '🪂 에어드롭  +20' },
+  pu_airdrop_sub:    { en: '+20 bonus taps credited!',     ko: '+20 보너스 탭 지급!' },
+  pu_lightning_sub:  { en: 'Lightning tap!  +6',          ko: '번개 탭!  +6' },
 };
 function t(key, subs) {
   let s = (TR[key] && (TR[key][LANG] || TR[key].en)) || key;
@@ -794,6 +974,20 @@ function applyTranslations() {
   set('tab-cumulative', t('tab_cumulative') || t('th_all_time'), true);
   set('tab-sessions',   t('tab_sessions')   || t('th_session_taps'), true);
   const lbBack = q('.lb-back'); if (lbBack) lbBack.textContent = t('lb_back');
+  // Drops panel
+  set('drops-title',          t('drops_title'),         true);
+  set('drop-surge-name',      t('drop_surge_name'),     true);
+  set('drop-surge-fx',        t('drop_surge_fx'),       true);
+  set('drop-surge-rarity',    t('drop_surge_rar'),      true);
+  set('drop-lightning-name',  t('drop_lightning_name'), true);
+  set('drop-lightning-fx',    t('drop_lightning_fx'),   true);
+  set('drop-lightning-rarity',t('drop_lightning_rar'),  true);
+  set('drop-airdrop-name',    t('drop_airdrop_name'),   true);
+  set('drop-airdrop-fx',      t('drop_airdrop_fx'),     true);
+  set('drop-airdrop-rarity',  t('drop_airdrop_rar'),    true);
+  set('drop-genesis-name',    t('drop_genesis_name'),   true);
+  set('drop-genesis-fx',      t('drop_genesis_fx'),     true);
+  set('drop-genesis-rarity',  t('drop_genesis_rar'),    true);
 }
 document.addEventListener('DOMContentLoaded', () => {
   applyTranslations();
@@ -959,6 +1153,212 @@ function updateStartBtn() {
 function onStartClick() { startRun(); }
 
 /* ================================================================
+   POWER-UP ENGINE
+   E. Block Surge (~55%), F. Lightning Tap (per-tap 1/45),
+      Airdrop (~8%), Genesis Block (~4%)
+================================================================ */
+const PU = {
+  surgeActive:   false,
+  surgeMulti:    1,
+  surgeEnd:      0,
+  genesisActive: false,
+  genesisMulti:  1,
+  genesisEnd:    0,
+  // Scheduled fire times (ms from game start)
+  surgeAt:       null,
+  airdropAt:     null,
+  genesisAt:     null,
+  // Track if airdrop/genesis fired this session
+  airdropFired:  false,
+  genesisFired:  false,
+};
+
+// How many real taps to register per onTap call (affected by multiplier)
+function tapMultiplier() {
+  if (PU.genesisActive) return 5;
+  if (PU.surgeActive)   return 2;
+  return 1;
+}
+
+function schedulePowerUps() {
+  // Block Surge: 55% chance, fires between 3s–8s (not first 3s or last 2s)
+  PU.surgeAt      = Math.random() < 0.55 ? 3000 + Math.random() * 5000 : null;
+  // Airdrop: 8% chance, fires between 2s–8s
+  PU.airdropAt    = Math.random() < 0.08 ? 2000 + Math.random() * 6000 : null;
+  // Genesis Block: 4% chance, fires between 2s–7s (mutually exclusive with Surge)
+  // If surge is scheduled, replace it with genesis on this rare roll
+  PU.genesisAt    = (!PU.surgeAt && Math.random() < 0.04) ? 2000 + Math.random() * 5000 : null;
+  // If genesis fires, cancel surge
+  if (PU.genesisAt) PU.surgeAt = null;
+  PU.surgeActive   = false; PU.surgeMulti   = 1; PU.surgeEnd   = 0;
+  PU.genesisActive = false; PU.genesisMulti = 1; PU.genesisEnd = 0;
+  PU.airdropFired  = false;
+  PU.genesisFired  = false;
+}
+
+function checkPowerUps(elapsed) {
+  const now = S.startTime + elapsed;
+
+  // Block Surge activation
+  if (PU.surgeAt !== null && elapsed >= PU.surgeAt && !PU.surgeActive && !PU.surgeEnd) {
+    PU.surgeAt      = null;
+    PU.surgeActive  = true;
+    PU.surgeMulti   = 2;
+    PU.surgeEnd     = now + 1500;
+    activatePowerUp('surge');
+  }
+  // Genesis Block activation
+  if (PU.genesisAt !== null && elapsed >= PU.genesisAt && !PU.genesisActive && !PU.genesisEnd) {
+    PU.genesisAt     = null;
+    PU.genesisActive = true;
+    PU.genesisMulti  = 5;
+    PU.genesisEnd    = now + 2000;
+    activatePowerUp('genesis');
+  }
+  // Airdrop
+  if (PU.airdropAt !== null && elapsed >= PU.airdropAt && !PU.airdropFired) {
+    PU.airdropAt    = null;
+    PU.airdropFired = true;
+    triggerAirdrop();
+  }
+
+  // Deactivate expired power-ups
+  if (PU.surgeActive && now >= PU.surgeEnd) {
+    PU.surgeActive = false; PU.surgeMulti = 1;
+    deactivatePowerUpVisuals('surge');
+  }
+  if (PU.genesisActive && now >= PU.genesisEnd) {
+    PU.genesisActive = false; PU.genesisMulti = 1;
+    deactivatePowerUpVisuals('genesis');
+  }
+}
+
+function activatePowerUp(type) {
+  const overlay = document.getElementById('powerup-overlay');
+  const badge   = document.getElementById('powerup-badge');
+  const sub     = document.getElementById('powerup-sub');
+  const btn     = document.getElementById('tap-btn');
+  const banner  = document.getElementById('surge-banner');
+
+  // Clear previous type classes
+  overlay.classList.remove('surge','airdrop','genesis');
+  badge.classList.remove('surge','airdrop','genesis');
+  sub.classList.remove('surge','airdrop','genesis');
+  if (btn) { btn.classList.remove('surge-active','genesis-active'); }
+
+  if (type === 'surge') {
+    badge.textContent = t('pu_surge_badge');
+    sub.textContent   = t('pu_surge_sub');
+    overlay.classList.add('surge'); badge.classList.add('surge'); sub.classList.add('surge');
+    if (btn) btn.classList.add('surge-active');
+    if (banner) { banner.textContent = '⚡ 2×'; banner.className = 'surge-banner visible surge'; }
+  } else if (type === 'genesis') {
+    badge.textContent = t('pu_genesis_badge');
+    sub.textContent   = t('pu_genesis_sub');
+    overlay.classList.add('genesis'); badge.classList.add('genesis'); sub.classList.add('genesis');
+    if (btn) btn.classList.add('genesis-active');
+    if (banner) { banner.textContent = '🧬 5×'; banner.className = 'surge-banner visible genesis'; }
+  }
+
+  overlay.classList.add('active');
+  setTimeout(() => { overlay.classList.remove('active'); }, 1400);
+}
+
+function deactivatePowerUpVisuals(type) {
+  const btn    = document.getElementById('tap-btn');
+  const banner = document.getElementById('surge-banner');
+  if (btn) btn.classList.remove('surge-active','genesis-active');
+  if (banner) banner.classList.remove('visible');
+}
+
+function triggerAirdrop() {
+  // Add 20 virtual taps to S.clicks
+  const bonus = 20;
+  S.clicks += bonus;
+  // Also push fake timestamps so anti-abuse check doesn't reject
+  const now = Date.now();
+  for (let i = 0; i < bonus; i++) S.clickTs.push(now);
+  // Update counter
+  const cEl = document.getElementById('game-counter');
+  if (cEl) { cEl.textContent = S.clicks; }
+  // Overlay
+  const overlay = document.getElementById('powerup-overlay');
+  const badge   = document.getElementById('powerup-badge');
+  const sub     = document.getElementById('powerup-sub');
+  overlay.classList.remove('surge','genesis');
+  badge.classList.remove('surge','genesis');
+  sub.classList.remove('surge','genesis');
+  badge.textContent = t('pu_airdrop_badge');
+  sub.textContent   = t('pu_airdrop_sub');
+  overlay.classList.add('airdrop'); badge.classList.add('airdrop'); sub.classList.add('airdrop');
+  overlay.classList.add('active');
+  setTimeout(() => { overlay.classList.remove('active'); }, 1600);
+  // Token rain
+  spawnAirdropTokens();
+  // Floating +20
+  spawnFloatBonus('+20', 'airdrop', window.innerWidth / 2, window.innerHeight / 2);
+}
+
+function spawnAirdropTokens() {
+  const tokens = ['⚡','🔥','💎','🪙','✨'];
+  for (let i = 0; i < 22; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'airdrop-token';
+      el.textContent = tokens[Math.floor(Math.random() * tokens.length)];
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.animationDuration = (0.9 + Math.random() * 0.8) + 's';
+      el.style.animationDelay = '0s';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2000);
+    }, i * 55);
+  }
+}
+
+// Lightning tap — called from onTap when random check passes
+function triggerLightning(tapBtnEl) {
+  const bonus = 6;
+  S.clicks += bonus;
+  for (let i = 0; i < bonus; i++) S.clickTs.push(Date.now());
+  const cEl = document.getElementById('game-counter');
+  if (cEl) {
+    cEl.textContent = S.clicks;
+    cEl.classList.add('lightning-flash');
+    setTimeout(() => cEl.classList.remove('lightning-flash'), 300);
+  }
+  if (tapBtnEl) {
+    tapBtnEl.style.filter = 'brightness(2.5) saturate(0.3)';
+    setTimeout(() => { tapBtnEl.style.filter = ''; }, 120);
+  }
+  // Floating sub-text near button
+  const rect = tapBtnEl ? tapBtnEl.getBoundingClientRect() : { left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 };
+  spawnFloatBonus(t('pu_lightning_sub'), 'lightning', rect.left + rect.width/2, rect.top);
+}
+
+function spawnFloatBonus(text, type, x, y) {
+  const el = document.createElement('div');
+  el.className = 'float-bonus ' + type;
+  el.textContent = text;
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  el.style.transform = 'translateX(-50%)';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+
+function resetPowerUps() {
+  PU.surgeActive   = false; PU.surgeMulti   = 1; PU.surgeEnd   = 0; PU.surgeAt   = null;
+  PU.genesisActive = false; PU.genesisMulti = 1; PU.genesisEnd = 0; PU.genesisAt = null;
+  PU.airdropAt     = null;  PU.airdropFired = false; PU.genesisFired = false;
+  const btn = document.getElementById('tap-btn');
+  if (btn) btn.classList.remove('surge-active','genesis-active');
+  const banner = document.getElementById('surge-banner');
+  if (banner) banner.classList.remove('visible');
+  const overlay = document.getElementById('powerup-overlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+/* ================================================================
    GAME LOOP
 ================================================================ */
 function startRun() {
@@ -976,6 +1376,8 @@ function startRun() {
   if (gs) { gs.classList.remove('intense','final-push'); }
   const pb = document.getElementById('game-progress-bar');
   if (pb) pb.style.width = '0%';
+  resetPowerUps();       // E/F: reset all power-up state
+  schedulePowerUps();    // E/F: roll this session's power-ups
   showScreen('countdown');
   runCountdown(3);
 }
@@ -1029,6 +1431,9 @@ function gameLoop() {
     if (sec <= 1.5) gs.classList.add('final-push'); else gs.classList.remove('final-push');
   }
 
+  // E/F: Check and fire scheduled power-ups
+  checkPowerUps(elapsed);
+
   if (remaining <= 0) { endGame(); return; }
   requestAnimationFrame(gameLoop);
 }
@@ -1038,6 +1443,7 @@ function endGame() {
   // D: remove intensity classes
   const gs = document.getElementById('screen-game');
   if (gs) { gs.classList.remove('intense','final-push'); }
+  resetPowerUps(); // E/F: clean up visuals
   if (S.clicks > S.bestScore) S.bestScore = S.clicks;
   updateStreak(); // B: record play for streak
   showResultAndSubmit();
@@ -1052,14 +1458,21 @@ function onTap(e) {
   e.preventDefault();
   if (!S.gameActive) return;
   const now = Date.now();
-  S.clicks++;
-  S.clickTs.push(now);
+  // E/F: apply multiplier — each tap registers 1, 2, or 5 depending on active power-up
+  const multi = tapMultiplier();
+  S.clicks += multi;
+  for (let _i = 0; _i < multi; _i++) S.clickTs.push(now);
   const cEl = document.getElementById('game-counter');
   cEl.textContent = S.clicks;
   cEl.classList.remove('bump');
   void cEl.offsetWidth;
   cEl.classList.add('bump');
   setTimeout(() => cEl.classList.remove('bump'), 60);
+
+  // F: Lightning Tap — 1 in 45 chance per physical tap (only when no surge/genesis active)
+  if (!PU.surgeActive && !PU.genesisActive && Math.random() < 1/45) {
+    triggerLightning(document.getElementById('tap-btn'));
+  }
   const btn = document.getElementById('tap-btn');
   btn.classList.add('flash');
   setTimeout(() => btn.classList.remove('flash'), 80);
