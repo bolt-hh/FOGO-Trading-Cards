@@ -492,6 +492,21 @@ body::after{
   padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);
 }
 .drop-row:last-child{border-bottom:none;}
+/* Volume multiplier row */
+.vol-bonus-row{
+  display:none;align-items:center;justify-content:space-between;
+  margin-top:10px;padding-top:10px;
+  border-top:1px solid rgba(255,255,255,0.07);
+}
+.vol-bonus-row.visible{display:flex;}
+.vol-bonus-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--sub);letter-spacing:0.08em;}
+.vol-bonus-badge{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  padding:3px 9px;border-radius:100px;letter-spacing:0.06em;transition:all 0.3s;
+}
+.vol-bonus-badge.x1{background:rgba(213,235,213,0.07);color:var(--dim);border:1px solid rgba(213,235,213,0.15);}
+.vol-bonus-badge.x1-5{background:rgba(195,251,165,0.10);color:var(--lime);border:1px solid rgba(195,251,165,0.30);}
+.vol-bonus-badge.x2{background:rgba(255,215,0,0.12);color:#FFD700;border:1px solid rgba(255,215,0,0.40);}
 .drop-left{display:flex;align-items:center;gap:8px;}
 .drop-icon{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .drop-icon svg{display:block;}
@@ -698,6 +713,11 @@ body::after{
           <div><div class="drop-name" id="drop-genesis-name">Genesis Block</div><div class="drop-effect" id="drop-genesis-fx">5× taps for 2 seconds</div></div>
         </div>
         <span class="drop-rarity legendary" id="drop-genesis-rarity">Legendary</span>
+      </div>
+      <!-- Volume point multiplier — shown after wallet connects -->
+      <div class="vol-bonus-row" id="vol-bonus-row">
+        <span class="vol-bonus-label" id="vol-bonus-label">⚡ Your Point Multiplier</span>
+        <span class="vol-bonus-badge x1" id="vol-bonus-badge">1×</span>
       </div>
     </div>
 
@@ -1095,6 +1115,9 @@ function onWalletDisconnected() {
   updateStartBtn();
   const chip = document.getElementById('nav-wallet-chip');
   if (chip) chip.style.display = 'none';
+  // Hide vol multiplier badge
+  const row = document.getElementById('vol-bonus-row');
+  if (row) row.classList.remove('visible');
 }
 
 function setWalletRow(connected, address) {
@@ -1124,7 +1147,7 @@ async function prefillHandle(address) {
   try {
     const { data } = await db
       .from('card_submissions')
-      .select('twitter_handle')
+      .select('twitter_handle,total_volume_usd')
       .eq('wallet_address', address)
       .maybeSingle();
     if (data?.twitter_handle) {
@@ -1135,7 +1158,27 @@ async function prefillHandle(address) {
         updateStartBtn();
       }
     }
+    // Show volume multiplier badge
+    updateVolBonus(data?.total_volume_usd || 0);
   } catch (_) { /* non-critical */ }
+}
+
+function updateVolBonus(volUsd) {
+  const row   = document.getElementById('vol-bonus-row');
+  const badge = document.getElementById('vol-bonus-badge');
+  if (!row || !badge) return;
+  row.classList.add('visible');
+  badge.classList.remove('x1','x1-5','x2');
+  if (volUsd >= 1000) {
+    badge.textContent = '2×';
+    badge.classList.add('x2');
+  } else if (volUsd >= 100) {
+    badge.textContent = '1.5×';
+    badge.classList.add('x1-5');
+  } else {
+    badge.textContent = '1×';
+    badge.classList.add('x1');
+  }
 }
 
 /* ── Start button gating ── */
