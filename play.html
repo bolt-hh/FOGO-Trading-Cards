@@ -998,6 +998,7 @@ function applyTranslations() {
   set('drop-genesis-rarity',  t('drop_genesis_rar'),    true);
 }
 document.addEventListener('DOMContentLoaded', () => {
+  window._pageLoadTs = Date.now(); // Layer 4 honeypot: record page load time
   applyTranslations();
   showStreakPill(); // B: show streak on entry screen
 });
@@ -1397,6 +1398,7 @@ function resetPowerUps() {
    GAME LOOP
 ================================================================ */
 function startRun() {
+  S.playPressedTs = Date.now(); // Layer 4 honeypot: record when play was pressed
   S.prevBest = S.bestScore; // A: capture pre-session best for PB detection
   S.clicks  = 0;
   S.clickTs = [];
@@ -1625,6 +1627,8 @@ async function showResultAndSubmit() {
         clicks,
         duration_ms:      durMs,
         click_timestamps: tsPayload,
+        page_load_ts:     window._pageLoadTs || null,
+        play_pressed_ts:  S.playPressedTs    || null,
       }),
     });
     const data = await res.json();
