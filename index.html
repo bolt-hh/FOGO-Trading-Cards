@@ -3470,6 +3470,7 @@ function resetAndGoHome() {
   STATE.ugcPoints       = 0;
   STATE.holderPts       = 0;
   STATE.holderSnapshots = [];
+  STATE.socialFollows   = [];
   STATE.currentPoints   = 0;
   _kolsLoaded = false;
   // Reset KOL selector UI
@@ -3750,6 +3751,8 @@ async function generateCard() {
     STATE.holderSnapshots = (d.points_breakdown?.holder_snapshots) || [];
     // Restore tap/Speed Run points from DB
     STATE.tapPoints = d.tap_points || (d.points_breakdown?.tap) || 0;
+    // Restore social follow completions from DB
+    STATE.socialFollows = d.points_breakdown?.social_follows || [];
 
     // Fallback: if holder_pts not in breakdown but total_points > what we can calculate,
     // derive the difference as holder_pts so the task card and breakdown always show correctly
@@ -5937,6 +5940,10 @@ function calculatePoints(cardData, hasXShare) {
   const tapPts = STATE.tapPoints || 0;
   if (tapPts > 0) { breakdown.tap = tapPts; total += tapPts; }
 
+  // Social follow points (200 pts per follow, self-reported, one-time)
+  const followPts = (STATE.socialFollows || []).length * 200;
+  if (followPts > 0) { breakdown.social_follows = followPts; total += followPts; }
+
   return { total, breakdown };
 }
 
@@ -5963,6 +5970,7 @@ function updatePointsDisplay() {
     ugc:            'UGC Content',
     holder_pts:     'Asset Holder',
     tap:            'Speed Run',
+    social_follows: 'Follow Tasks',
   };
   const taskNamesKo = {
     card_generated: '카드 생성',
@@ -5975,11 +5983,12 @@ function updatePointsDisplay() {
     ugc:            'UGC 콘텐츠',
     holder_pts:     '자산 보유',
     tap:            '스피드 런',
+    social_follows: '팔로우 태스크',
   };
   const names = CURRENT_LANG === 'ko' ? taskNamesKo : taskNames;
 
   // All possible tasks
-  const allKeys = ['card_generated','x_share','volume','valiant','pyron','brasa','ignition','ugc','holder_pts','tap'];
+  const allKeys = ['card_generated','x_share','volume','valiant','pyron','brasa','ignition','ugc','holder_pts','tap','social_follows'];
   let html = '';
   allKeys.forEach(key => {
     const pts = breakdown[key] || 0;
@@ -6094,6 +6103,90 @@ function renderNewTasksTab() {
         <div>• ${lang === 'ko' ? '봇/오토클리커는 플래그 처리 → 포인트 0' : 'Bots/autoclickers are flagged → 0 points'}</div>
       </div>
     </div>`;
+
+  // ── Follow task cards ─────────────────────────────────────────
+  const FOLLOW_TASKS = [
+    { id: 'follow_fogo',      handle: 'FogoChain',      label: 'FOGO',     emoji: '⚡' },
+    { id: 'follow_valiant',   handle: 'valianttrade',   label: 'Valiant',  emoji: '🏹' },
+    { id: 'follow_ignition',  handle: 'ignitionfi',     label: 'Ignition', emoji: '🔥' },
+    { id: 'follow_brasa',     handle: 'brasafinance',   label: 'Brasa',    emoji: '🌊' },
+    { id: 'follow_pyron',     handle: 'pyronfi',        label: 'Pyron',    emoji: '🔮' },
+  ];
+
+  const follows = STATE.socialFollows || [];
+
+  grid.innerHTML += `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:var(--dim);padding:18px 0 10px 0;">
+      ${lang === 'ko' ? '📣 팔로우 태스크 — 각 +200pt' : '📣 Follow Tasks — +200 pts each'}
+    </div>
+    ${FOLLOW_TASKS.map(ft => {
+      const done = follows.includes(ft.id);
+      const cardClass = done ? 'task-card done' : 'task-card link-type';
+      const intentUrl = `https://twitter.com/intent/follow?screen_name=${ft.handle}`;
+      const nameLabel = lang === 'ko' ? `${ft.label} 팔로우` : `Follow ${ft.label}`;
+      const descLabel = lang === 'ko'
+        ? `X에서 @${ft.handle} 팔로우 후 완료 버튼을 누르세요`
+        : `Follow @${ft.handle} on X, then tap Done`;
+
+      const rightSide = done
+        ? `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--lime);background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);padding:5px 12px;border-radius:4px;">✓ ${lang === 'ko' ? '완료' : 'Done'}</span>`
+        : `<div style="display:flex;gap:7px;align-items:center;">
+            <a href="${intentUrl}" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:5px;background:rgba(29,161,242,0.15);border:1px solid rgba(29,161,242,0.35);color:rgba(29,161,242,1);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 13px;border-radius:4px;text-decoration:none;"
+               onclick="document.getElementById('follow-done-${ft.id}').style.display='inline-flex'">
+              𝕏 ${lang === 'ko' ? '팔로우' : 'Follow'}
+            </a>
+            <button id="follow-done-${ft.id}"
+              style="display:none;align-items:center;gap:5px;background:rgba(195,251,165,0.10);border:1px solid rgba(195,251,165,0.30);color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 13px;border-radius:4px;cursor:pointer;"
+              onclick="doFollowTask('${ft.id}')">
+              ✓ ${lang === 'ko' ? '완료' : 'Done'}
+            </button>
+          </div>`;
+
+      return `
+        <div class="${cardClass}" style="flex-wrap:wrap;gap:10px;">
+          <div style="font-size:18px;flex-shrink:0;">${ft.emoji}</div>
+          <div class="task-card-info">
+            <div class="task-card-name">${nameLabel}</div>
+            <div class="task-card-desc">${descLabel}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+            <span class="task-points-badge">+200 pts</span>
+            ${rightSide}
+          </div>
+        </div>`;
+    }).join('')}`;
+}
+
+/* Handle follow task completion */
+async function doFollowTask(taskId) {
+  if (!STATE.wallet) return;
+  if (!STATE.socialFollows) STATE.socialFollows = [];
+  if (STATE.socialFollows.includes(taskId)) return;
+
+  // Optimistically mark done and re-render
+  STATE.socialFollows.push(taskId);
+  renderNewTasksTab();
+  updatePointsDisplay();
+
+  // Persist to backend
+  try {
+    const res = await fetch('/api/social-task', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet_address: STATE.wallet, task_id: taskId }),
+    });
+    if (!res.ok) {
+      // Rollback on failure
+      STATE.socialFollows = STATE.socialFollows.filter(id => id !== taskId);
+      renderNewTasksTab();
+      updatePointsDisplay();
+    }
+  } catch(_) {
+    STATE.socialFollows = STATE.socialFollows.filter(id => id !== taskId);
+    renderNewTasksTab();
+    updatePointsDisplay();
+  }
 }
 
 /* Render the tab pill row above the task grid */
