@@ -961,7 +961,7 @@ body::after{
     <button class="lb-back" onclick="goBack()">← Back</button>
     <div class="lb-hdr">
       <div class="lb-title">Leaderboard</div>
-      <div class="lb-sub">Every tap counts. 10 taps = 1 Spark. Ranked by all-time cumulative taps.</div>
+      <div class="lb-sub">Every tap counts. 10 taps = 1 Point. Ranked by all-time cumulative taps.</div>
     </div>
     <!-- Record session box -->
     <div class="lb-record-box" id="lb-record-box" style="display:none;">
@@ -1022,7 +1022,7 @@ const TR = {
   game_fogo_txs:     { en: 'FOGO TXs',                    ko: 'FOGO 트랜잭션' },
   game_block_ticker: { en: '25 blocks/sec · 4k tx each',  ko: '초당 25블록 · 블록당 4k tx' },
   seconds_left:      { en: 'SECONDS LEFT',                 ko: '남은 시간' },
-  tps_flash:         { en: '+{n} TXs per tap',             ko: '탭당 +{n} TX' },
+  tps_flash:         { en: 'FOGO: +{n} txs',               ko: 'FOGO: +{n} tx 처리' },
   result_eyebrow:    { en: 'Your Score · Fogo Speed Run',  ko: '내 점수 · FOGO 스피드 런' },
   you_tapped:        { en: 'You tapped',                   ko: '탭 횟수' },
   times_in_10:       { en: 'times in 10 seconds',          ko: '번 / 10초' },
@@ -1039,7 +1039,7 @@ const TR = {
   best_session:      { en: 'Best session:',                ko: '최고 기록:' },
   taps_unit:         { en: 'taps',                         ko: '탭' },
   lb_title:          { en: 'Leaderboard',                  ko: '리더보드' },
-  lb_sub:            { en: 'Every tap counts. 10 taps = 1 Spark. Ranked by all-time cumulative taps.', ko: '모든 탭이 기록됩니다. 10탭 = 1포인트. 누적 탭 기준 순위.' },
+  lb_sub:            { en: 'Every tap counts. 10 taps = 1 Point. Ranked by all-time cumulative taps.', ko: '모든 탭이 기록됩니다. 10탭 = 1포인트. 누적 탭 기준 순위.' },
   lb_record_label:   { en: 'Record Single Session',        ko: '최고 단일 세션' },
   lb_back:           { en: '← Back',                       ko: '← 뒤로' },
   lb_loading:        { en: 'Loading...',                   ko: '로딩 중...' },
@@ -1737,7 +1737,14 @@ function onTap(e) {
   else           haloSpeed = Math.min(10, haloSpeed + 0.5);
   document.getElementById('tap-halo').style.animationDuration = haloSpeed + 's';
   const flashEl = document.getElementById('tps-flash');
-  flashEl.textContent = t('tps_flash', { n: TPS.toLocaleString() });
+  const secLeft = (GAME_DURATION - (now - S.startTime)) / 1000;
+  const _flashMsgs = PLAY_LANG === 'ko'
+    ? ["체인은 이미 앞서 있다", "더 빨리 탭해. 체인은 안 멈춰.", "100K TPS. 항상 켜져있어."]
+    : ["Chain's already ahead of you", "Tap faster. Chain won't.", "100K TPS. Always on."];
+  const _finalPush = PLAY_LANG === 'ko' ? "멈추지 마" : "Don't stop now";
+  flashEl.textContent = secLeft <= 3
+    ? _finalPush
+    : _flashMsgs[Math.floor(Math.random() * _flashMsgs.length)];
   flashEl.style.opacity = '1';
   clearTimeout(flashEl._t);
   flashEl._t = setTimeout(() => { flashEl.style.opacity = '0'; }, 700);
