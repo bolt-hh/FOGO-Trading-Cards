@@ -130,6 +130,10 @@ body::after{
 /* ── Screens ── */
 .screen{display:none;min-height:calc(100dvh - 62px);position:relative;z-index:1;}
 .screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px 60px;animation:screenIn 0.45s cubic-bezier(0.16,1,0.3,1) both;}
+/* Game screen: never scroll during play — fix to viewport height (mobile only) */
+@media(max-width:768px){
+  #screen-game.active{min-height:unset;height:calc(100dvh - 62px);overflow:hidden;padding:12px 16px 16px;justify-content:center;}
+}
 @keyframes screenIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
 
 /* ── Entry ── */
@@ -551,14 +555,94 @@ body::after{
 .drop-rarity.legendary{background:rgba(255,215,0,0.12);color:#FFD700;border:1px solid rgba(255,215,0,0.40);}
 
 /* ── Responsive ── */
+
+/* ── 480px and below ── */
 @media(max-width:480px){
+  /* Nav */
+  .nav-inner{padding:10px 16px;}
+  .nav-wordmark{font-size:16px;}
+  .nav-tag{display:none;}
+
+  /* Screens */
+  .screen.active{padding:24px 16px 48px;}
+
+  /* Entry */
+  .entry-eyebrow{font-size:8px;letter-spacing:0.18em;padding:5px 12px;}
+  .entry-sub{font-size:13px;margin-bottom:22px;}
+  .entry-card{padding:18px;}
+
+  /* Game */
+  .game-wrap{gap:10px;}
+  .tap-outer,.tap-btn{width:180px;height:180px;}
+  .tap-flame{width:56px;height:56px;}
+  .game-counter{font-size:clamp(52px,18vw,76px);}
+  .game-timer{font-size:34px;}
+
+  /* Result */
   .result-body{padding:18px 14px;}
-  .tap-outer,.tap-btn{width:170px;height:170px;}
-  .tap-flame{width:54px;height:54px;}
-  .game-counter{font-size:76px;}
-  .game-timer{font-size:36px;}
+  .result-stats{gap:6px;}
+  .rstat{padding:10px 6px;}
+  .rstat .v{font-size:13px;}
   .punchline-num{font-size:36px;}
   .your-taps-num{font-size:46px;}
+
+  /* Vol bonus hint: allow wrap, keep readable */
+  .vol-bonus-left{max-width:calc(100% - 54px);}
+  .vol-bonus-hint{white-space:normal;font-size:8px;}
+}
+
+/* ── 380px and below (most mid-range Androids, iPhone SE 2020) ── */
+@media(max-width:380px){
+  .nav-inner{padding:9px 14px;}
+  .nav-wallet-chip{font-size:8px;padding:5px 8px;}
+  .live-badge{display:none;}
+
+  .screen.active{padding:16px 14px 36px;}
+
+  .entry-title{font-size:clamp(38px,11vw,52px);}
+  .entry-sub{font-size:12px;margin-bottom:18px;}
+  .entry-card{padding:14px;}
+
+  .game-wrap{gap:8px;}
+  .tap-outer,.tap-btn{width:160px;height:160px;}
+  .tap-flame{width:50px;height:50px;}
+  .game-counter{font-size:clamp(44px,16vw,64px);}
+  .game-fogo-counter{font-size:clamp(16px,5vw,22px);}
+  .game-timer{font-size:30px;}
+  .game-counters{gap:8px;}
+
+  .result-stats{grid-template-columns:repeat(3,1fr);gap:4px;}
+  .rstat{padding:8px 4px;}
+  .rstat .v{font-size:11px;}
+  .rstat .l{font-size:7px;}
+  .your-taps-num{font-size:38px;}
+  .punchline-num{font-size:30px;}
+}
+
+/* ── 320px (iPhone SE 1st gen, old Androids) ── */
+@media(max-width:320px){
+  .tap-outer,.tap-btn{width:140px;height:140px;}
+  .tap-flame{width:44px;height:44px;}
+  .game-counter{font-size:48px;}
+  .result-stats{grid-template-columns:repeat(3,1fr);}
+  .rstat .v{font-size:10px;}
+}
+
+/* ── Safe area insets (iPhone X/11/12/13/14/15 notch + home bar — mobile only) ── */
+@media(max-width:768px){
+  @supports(padding-bottom: env(safe-area-inset-bottom)){
+    .screen.active{
+      padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+    }
+    @media(max-width:380px){
+      .screen.active{
+        padding-bottom: calc(36px + env(safe-area-inset-bottom, 0px));
+      }
+    }
+    .nav{
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+  }
 }
 #fx-canvas{position:fixed;inset:0;pointer-events:none;z-index:8000;}
 
