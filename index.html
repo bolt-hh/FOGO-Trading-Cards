@@ -127,9 +127,9 @@
     // No wallet link
     var nw = document.getElementById('t-no-wallet');
     if (nw) nw.innerHTML = '지갑이 없으신가요? <a href="https://www.nightly.app/" target="_blank" style="color:var(--lime);">Nightly</a>, <a href="https://phantom.app" target="_blank">Phantom</a>, <a href="https://solflare.com" target="_blank">Solflare</a>, 또는 <a href="https://backpack.app" target="_blank">Backpack</a> — 모두 무료.';
-    // Speed Run header button (coming soon — no href to update)
+    // Speed Run header button — live
     var srBtn = document.getElementById('speed-run-header-btn');
-    if (srBtn) srBtn.textContent = '🔒 게임 출시 예정';
+    if (srBtn) srBtn.textContent = '▶ 스피드 런 플레이';
   }
 
   // Run at 4 different moments to beat all overwrites
@@ -2312,11 +2312,11 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
             <div class="tasks-section-title" id="t-tasks-heading">Your Tasks</div>
           </span>
           <div style="display:flex;align-items:center;gap:8px;">
-            <span id="speed-run-header-btn"
+            <a id="speed-run-header-btn"
               class="speed-run-header-btn"
-              style="opacity:0.45;cursor:not-allowed;pointer-events:none;">
-              🔒 Game Coming Soon
-            </span>
+              href="/play">
+              ▶ Play Fogo Speed Run
+            </a>
             <button class="rescan-btn" id="rescan-btn" onclick="rescanWallet()">↻ Rescan Wallet</button>
           </div>
         </div>
@@ -6083,10 +6083,10 @@ function renderNewTasksTab() {
       </div>
       ${ptsEarned}
       <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
-        <span
-          style="display:inline-flex;align-items:center;gap:6px;background:var(--fire);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:9px 18px;border-radius:5px;text-decoration:none;border:none;opacity:0.45;cursor:not-allowed;pointer-events:none;">
-          🔒 ${lang === 'ko' ? '게임 출시 예정' : 'Game Coming Soon'}
-        </span>
+        <a href="/play"
+          style="display:inline-flex;align-items:center;gap:6px;background:var(--fire);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:9px 18px;border-radius:5px;text-decoration:none;border:none;">
+          ▶ ${lang === 'ko' ? '스피드 런 플레이' : 'Play Speed Run'}
+        </a>
         <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.08em;">${lang === 'ko' ? '지갑 자동 연결됨' : 'Wallet auto-connects'}</span>
       </div>
     </div>
@@ -6096,11 +6096,10 @@ function renderNewTasksTab() {
         ${lang === 'ko' ? '⚡ 스피드 런 규칙' : '⚡ Speed Run Rules'}
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--sub);line-height:1.5;">
-        <div>• ${lang === 'ko' ? '10초 타이머 — 가능한 한 빠르게 탭하세요' : '10-second timer — tap as fast as possible'}</div>
+        <div>• ${lang === 'ko' ? '10초 타이머, 가능한 한 빠르게 탭하세요' : '10-second timer, tap as fast as possible'}</div>
         <div>• ${lang === 'ko' ? '10탭 = 1 래플 포인트 (무제한 축적)' : '10 taps = 1 raffle point (accumulates forever)'}</div>
         <div>• ${lang === 'ko' ? '리더보드는 누적 탭 총합 기준' : 'Leaderboard ranked by cumulative total taps'}</div>
-        <div>• ${lang === 'ko' ? '하루 최대 200번 플레이 가능' : 'Up to 200 plays per day'}</div>
-        <div>• ${lang === 'ko' ? '봇/오토클리커는 플래그 처리 → 포인트 0' : 'Bots/autoclickers are flagged → 0 points'}</div>
+        <div>• ${lang === 'ko' ? '무제한 플레이' : 'Unlimited plays'}</div>
       </div>
     </div>`;
 
