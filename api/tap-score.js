@@ -146,7 +146,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { wallet_address, x_handle, clicks, duration_ms, click_timestamps,
+  const { wallet_address, x_handle, kol_ref, clicks, duration_ms, click_timestamps,
           page_load_ts, play_pressed_ts } = req.body || {};
 
   // ── Input validation ──
@@ -227,9 +227,32 @@ export default async function handler(req, res) {
   let   tapPts  = basePts; // will be adjusted by multiplier after fetching vol
 
   if (!flagged && basePts > 0) {
-    const subs = await sbGet(
+    let subs = await sbGet(
       `/card_submissions?wallet_address=eq.${encodeURIComponent(wallet_address)}&select=total_points,tap_points,entry_count,points_breakdown,total_volume_usd`
     );
+
+    // ── Auto-register: new wallet arriving via play.html direct flow ──
+    if (!Array.isArray(subs) || subs.length === 0) {
+      try {
+        const handle = x_handle.startsWith('@') ? x_handle : '@' + x_handle;
+        await sbPost('/card_submissions', {
+          wallet_address,
+          x_handle:        handle,
+          kol_ref:         kol_ref || null,
+          total_points:    0,
+          tap_points:      0,
+          entry_count:     0,
+          points_breakdown: {},
+          registered_via:  'speed_run',
+        });
+        subs = [{ total_points: 0, tap_points: 0, entry_count: 0, points_breakdown: {}, total_volume_usd: 0 }];
+      } catch (_) {
+        // If insert fails (e.g. duplicate), re-fetch
+        subs = await sbGet(
+          `/card_submissions?wallet_address=eq.${encodeURIComponent(wallet_address)}&select=total_points,tap_points,entry_count,points_breakdown,total_volume_usd`
+        );
+      }
+    }
 
     if (Array.isArray(subs) && subs.length > 0) {
       const sub        = subs[0];
