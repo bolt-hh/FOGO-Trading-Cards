@@ -141,6 +141,12 @@
     // Speed Run header button — live
     var srBtn = document.getElementById('speed-run-header-btn');
     if (srBtn) srBtn.textContent = '▶ 스피드 런 플레이';
+    // Point all Speed Run links to Korean version of play
+    var srLinks = ['speed-run-header-btn','gate-speedrun-btn','wallet-speedrun-btn','sr-modal-play-btn','dual-cta-play-link'];
+    srLinks.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && el.tagName === 'A') el.href = '/play?lang=ko';
+    });
     // Speed Run modal description (contains <strong>)
     var srDesc = document.getElementById('sr-modal-desc');
     if (srDesc) srDesc.innerHTML = '10초 동안 최대한 빠르게 탭하세요. 상위 5명이 각 <strong style="color:var(--text);">10,000 $FOGO</strong>를 받습니다. 모든 탭이 래플 포인트로 쌓입니다. 지갑을 연결하고 지금 플레이하세요.';
@@ -2106,7 +2112,7 @@ function dismissSpeedRunModal() {
 
     <!-- Dual CTA: Speed Run + Get Your Card -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;" id="dual-cta-row">
-      <a href="/play" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,rgba(255,61,0,0.18),rgba(255,107,0,0.08));border:1px solid rgba(255,61,0,0.45);border-radius:12px;padding:18px 16px;text-decoration:none;transition:all 0.18s;box-shadow:0 0 24px rgba(255,61,0,0.12);" onmouseover="this.style.boxShadow='0 0 40px rgba(255,61,0,0.28)'" onmouseout="this.style.boxShadow='0 0 24px rgba(255,61,0,0.12)'">
+      <a id="dual-cta-play-link" href="/play" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,rgba(255,61,0,0.18),rgba(255,107,0,0.08));border:1px solid rgba(255,61,0,0.45);border-radius:12px;padding:18px 16px;text-decoration:none;transition:all 0.18s;box-shadow:0 0 24px rgba(255,61,0,0.12);" onmouseover="this.style.boxShadow='0 0 40px rgba(255,61,0,0.28)'" onmouseout="this.style.boxShadow='0 0 24px rgba(255,61,0,0.12)'">
         <span style="font-size:22px;">⚡</span>
         <span id="dual-cta-play-title" style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-align:center;line-height:1.2;">Play Speed Run</span>
         <span id="dual-cta-play-sub" style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--fire);">50,000 $FOGO Prize</span>
