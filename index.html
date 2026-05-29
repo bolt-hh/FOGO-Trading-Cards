@@ -72,6 +72,17 @@
     't-gate-eyebrow':      '500,000 $FOGO · 시즌 2 활성화',
     't-gate-headline-span':'500,000 $FOGO를 획득하세요.',
     't-gate-btn':          '트레이더 카드 받기 →',
+    // Speed Run modal
+    'sr-modal-eyebrow':  '🔥 지금 라이브 · 시즌 2',
+    'sr-modal-title':    'Fogo 스피드 런',
+    'sr-modal-subtitle': '50,000 $FOGO 상금',
+    'sr-modal-play-btn': '▶ 지금 스피드 런 플레이',
+    'sr-modal-card-btn': '트레이더 카드 받기 →',
+    // Dual CTA row
+    'dual-cta-play-title': '스피드 런 플레이',
+    'dual-cta-play-sub':   '50,000 $FOGO 상금',
+    'dual-cta-card-title': '카드 받기',
+    'dual-cta-card-sub':   '500K $FOGO 풀',
     // Leaderboard nav button
     't-nav-leaderboard': '리더보드',
     // Leaderboard page
@@ -130,6 +141,15 @@
     // Speed Run header button — live
     var srBtn = document.getElementById('speed-run-header-btn');
     if (srBtn) srBtn.textContent = '▶ 스피드 런 플레이';
+    // Speed Run modal description (contains <strong>)
+    var srDesc = document.getElementById('sr-modal-desc');
+    if (srDesc) srDesc.innerHTML = '10초 동안 최대한 빠르게 탭하세요. 상위 5명이 각 <strong style="color:var(--text);">10,000 $FOGO</strong>를 받습니다. 모든 탭이 래플 포인트로 쌓입니다. 지갑을 연결하고 지금 플레이하세요.';
+    // Gate view Play Speed Run button (contains inner <span>)
+    var gateBtn = document.getElementById('gate-speedrun-btn');
+    if (gateBtn) gateBtn.innerHTML = '▶ 스피드 런 플레이 &nbsp;<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);letter-spacing:0.10em;">50K $FOGO 상금</span>';
+    // Wallet section Play Speed Run button (contains inner <span>)
+    var walletBtn = document.getElementById('wallet-speedrun-btn');
+    if (walletBtn) walletBtn.innerHTML = '▶ 스피드 런 플레이 &nbsp;<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);letter-spacing:0.10em;">50K $FOGO</span>';
   }
 
   // Run at 4 different moments to beat all overwrites
@@ -322,6 +342,7 @@ body::before{
 .countdown-digits.urgent{animation:pulse-fire 0.8s ease-in-out infinite;}
 @keyframes pulse-fire{0%,100%{text-shadow:0 0 20px rgba(255,90,30,0.9),0 0 40px rgba(255,90,30,0.5),0 0 6px rgba(255,90,30,1);}50%{text-shadow:0 0 8px rgba(255,90,30,0.4),0 0 16px rgba(255,90,30,0.2);}}
 @media(max-width:640px){.prize-bar{grid-template-columns:1fr;grid-template-rows:auto auto auto;}.prize-bar-div{width:100%;height:1px;}.countdown-box{align-items:flex-start;padding:16px 20px;}.prize-pill{padding:16px 20px;}}
+@media(max-width:480px){#dual-cta-row{grid-template-columns:1fr;}}
 
 /* ---- VIEWS ---- */
 .view{display:none;position:relative;z-index:1;}
@@ -1818,6 +1839,48 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 <link rel="stylesheet" href="fogo-enhance.css">
 </head>
 <body>
+
+<!-- ── Speed Run Pop-up Modal ─────────────────────────────────── -->
+<div id="speedrun-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(8,4,32,0.80);backdrop-filter:blur(14px);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--panel);border:1px solid rgba(255,61,0,0.40);border-radius:16px;max-width:420px;width:100%;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(255,61,0,0.20),0 0 120px rgba(195,251,165,0.06);">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--fire),var(--ember),var(--lime));"></div>
+    <button onclick="dismissSpeedRunModal()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;line-height:1;padding:4px;">✕</button>
+    <div style="padding:28px 28px 24px;">
+      <div id="sr-modal-eyebrow" style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.24em;text-transform:uppercase;color:var(--fire);margin-bottom:10px;">🔥 Now Live · Season 2</div>
+      <div id="sr-modal-title" style="font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;color:var(--text);line-height:1.15;margin-bottom:6px;">Fogo Speed Run</div>
+      <div id="sr-modal-subtitle" style="font-family:'Clash Display',sans-serif;font-size:18px;font-weight:600;color:var(--fire);margin-bottom:14px;">50,000 $FOGO Prize Pool</div>
+      <div id="sr-modal-desc" style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:20px;">Tap as fast as you can for 10 seconds. Top 5 players each win <strong style="color:var(--text);">10,000 $FOGO</strong>. Every tap earns raffle points. Connect your wallet and play now.</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:20px;">
+        <div style="background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);border-radius:6px;padding:7px 3px;text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,61,0,0.7);letter-spacing:0.08em;">#1</div><div style="font-family:'Clash Display',sans-serif;font-size:12px;font-weight:700;color:var(--text);">10K</div></div>
+        <div style="background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);border-radius:6px;padding:7px 3px;text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,61,0,0.7);letter-spacing:0.08em;">#2</div><div style="font-family:'Clash Display',sans-serif;font-size:12px;font-weight:700;color:var(--text);">10K</div></div>
+        <div style="background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);border-radius:6px;padding:7px 3px;text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,61,0,0.7);letter-spacing:0.08em;">#3</div><div style="font-family:'Clash Display',sans-serif;font-size:12px;font-weight:700;color:var(--text);">10K</div></div>
+        <div style="background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);border-radius:6px;padding:7px 3px;text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,61,0,0.7);letter-spacing:0.08em;">#4</div><div style="font-family:'Clash Display',sans-serif;font-size:12px;font-weight:700;color:var(--text);">10K</div></div>
+        <div style="background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);border-radius:6px;padding:7px 3px;text-align:center;"><div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:rgba(255,61,0,0.7);letter-spacing:0.08em;">#5</div><div style="font-family:'Clash Display',sans-serif;font-size:12px;font-weight:700;color:var(--text);">10K</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <a id="sr-modal-play-btn" href="/play" onclick="dismissSpeedRunModal()" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--fire);color:#fff;font-family:'Inter',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.10em;text-transform:uppercase;padding:15px;border-radius:8px;text-decoration:none;box-shadow:0 4px 0 rgba(180,30,0,0.6),0 6px 24px rgba(255,61,0,0.35);">▶ Play Speed Run Now</a>
+        <button id="sr-modal-card-btn" onclick="dismissSpeedRunModal()" style="background:none;border:1px solid var(--border);color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.10em;padding:10px;border-radius:6px;cursor:pointer;">Get my Trader Card instead →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  try {
+    if (!localStorage.getItem('fogo_speedrun_seen')) {
+      var m = document.getElementById('speedrun-modal');
+      if (m) { m.style.display = 'flex'; }
+    }
+  } catch(e) {}
+})();
+function dismissSpeedRunModal() {
+  var m = document.getElementById('speedrun-modal');
+  if (m) m.style.display = 'none';
+  try { localStorage.setItem('fogo_speedrun_seen', '1'); } catch(e) {}
+}
+</script>
+
 <canvas id="particle-canvas"></canvas>
 <div class="bg-layer bg-mesh-fire"></div>
 <div class="bg-layer bg-mesh-lime"></div>
@@ -1888,7 +1951,10 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
       <h1 class="gate-headline" id="t-gate-headline">Stack Points.<br><span id="t-gate-headline-span">Get 500,000 $FOGO.</span></h1>
       <p class="gate-sub" id="t-gate-sub">Generate your Trader Card, share it on X, use FOGO ecosystem dApps, and climb the leaderboard for a share of 500,000 $FOGO. Every point you earn is one raffle entry.</p>
 
-      <button class="btn-gate-cta" onclick="showView('view-app')" style="margin:28px 0 0;">
+      <a id="gate-speedrun-btn" href="/play" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:28px 0 12px;background:var(--fire);color:#fff;font-family:'Inter',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:16px 20px;border-radius:8px;text-decoration:none;box-shadow:0 4px 0 rgba(180,30,0,0.6),0 6px 24px rgba(255,61,0,0.35);transition:all 0.15s;">
+        ▶ Play Speed Run &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);letter-spacing:0.10em;">50K $FOGO Prize</span>
+      </a>
+      <button class="btn-gate-cta" onclick="showView('view-app')" style="margin:0;">
         <span class="btn-sheen"></span>
         <span id="t-gate-btn">Get Your Trader Card →</span>
       </button>
@@ -2038,6 +2104,20 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
       <div class="info-chip"><span class="info-chip-icon">🎴</span><span class="info-chip-txt" id="t-chip-4" data-ko="7가지 등급">7 Trader Tiers</span></div>
     </div>
 
+    <!-- Dual CTA: Speed Run + Get Your Card -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;" id="dual-cta-row">
+      <a href="/play" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,rgba(255,61,0,0.18),rgba(255,107,0,0.08));border:1px solid rgba(255,61,0,0.45);border-radius:12px;padding:18px 16px;text-decoration:none;transition:all 0.18s;box-shadow:0 0 24px rgba(255,61,0,0.12);" onmouseover="this.style.boxShadow='0 0 40px rgba(255,61,0,0.28)'" onmouseout="this.style.boxShadow='0 0 24px rgba(255,61,0,0.12)'">
+        <span style="font-size:22px;">⚡</span>
+        <span id="dual-cta-play-title" style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-align:center;line-height:1.2;">Play Speed Run</span>
+        <span id="dual-cta-play-sub" style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--fire);">50,000 $FOGO Prize</span>
+      </a>
+      <a href="#card-section" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,rgba(195,251,165,0.08),rgba(195,251,165,0.03));border:1px solid rgba(195,251,165,0.25);border-radius:12px;padding:18px 16px;text-decoration:none;transition:all 0.18s;" onmouseover="this.style.borderColor='rgba(195,251,165,0.45)'" onmouseout="this.style.borderColor='rgba(195,251,165,0.25)'">
+        <span style="font-size:22px;">🎴</span>
+        <span id="dual-cta-card-title" style="font-family:'Clash Display',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-align:center;line-height:1.2;">Get Your Card</span>
+        <span id="dual-cta-card-sub" style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--lime);">500K $FOGO Pool</span>
+      </a>
+    </div>
+
     <!-- Prize / countdown bar -->
     <div class="prize-bar" id="prize-bar-app">
       <div class="prize-bar-prizes">
@@ -2095,6 +2175,11 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
       <!-- Wallet connect panel -->
       <div class="field">
         <label class="field-label"><span class="dot dot-sol"></span> <span id="t-sol-label" data-ko="솔라나 / FOGO 지갑">Solana / FOGO Wallet</span></label>
+
+        <!-- Speed Run CTA -->
+        <a id="wallet-speedrun-btn" href="/play" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--fire);color:#fff;font-family:'Inter',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;padding:15px 20px;border-radius:8px;text-decoration:none;box-shadow:0 4px 0 rgba(180,30,0,0.6),0 6px 24px rgba(255,61,0,0.35);margin-bottom:12px;transition:all 0.15s;">
+          ▶ Play Speed Run &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400;color:rgba(255,255,255,0.75);letter-spacing:0.10em;">50K $FOGO</span>
+        </a>
 
         <!-- Not connected -->
         <div id="wallet-not-connected">
