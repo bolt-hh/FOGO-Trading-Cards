@@ -237,13 +237,12 @@ export default async function handler(req, res) {
         const handle = x_handle.startsWith('@') ? x_handle : '@' + x_handle;
         await sbPost('/card_submissions', {
           wallet_address,
-          x_handle:        handle,
-          kol_ref:         kol_ref || null,
+          twitter_handle:  handle,
+          kol_passcode:    kol_ref || null,
           total_points:    0,
           tap_points:      0,
           entry_count:     0,
           points_breakdown: {},
-          registered_via:  'speed_run',
         });
         subs = [{ total_points: 0, tap_points: 0, entry_count: 0, points_breakdown: {}, total_volume_usd: 0 }];
       } catch (_) {
