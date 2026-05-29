@@ -785,6 +785,10 @@ body::after{
       </div>
       <label class="flabel" for="x-handle-input">Your X / Twitter Handle</label>
       <input class="finput" id="x-handle-input" type="text" placeholder="@yourhandle" oninput="onHandleInput()" autocomplete="off" autocapitalize="off">
+      <label class="flabel" for="kol-select-input" id="kol-select-label" style="margin-top:4px;">Who referred you?</label>
+      <select class="finput" id="kol-select-input" onchange="onKolInput()" style="cursor:pointer;">
+        <option value="">— Select a KOL —</option>
+      </select>
       <button class="btn-lime" id="start-btn" onclick="onStartClick()" disabled>
         <span class="btn-sheen"></span>
         <span id="start-btn-text">Connect wallet to play</span>
@@ -963,6 +967,36 @@ body::after{
       <div class="lb-title">Leaderboard</div>
       <div class="lb-sub">Every tap counts. 10 taps = 1 Point. Ranked by all-time cumulative taps.</div>
     </div>
+
+    <!-- 50K FOGO Prize Pool -->
+    <div style="background:linear-gradient(135deg,rgba(255,61,0,0.10),rgba(195,251,165,0.06));border:1px solid rgba(255,61,0,0.30);border-radius:10px;padding:14px 16px;margin-bottom:16px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--fire),var(--ember),var(--lime));"></div>
+      <div id="lb-prize-eyebrow" style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:var(--fire);margin-bottom:6px;">🏆 Season 2 Prize Pool</div>
+      <div style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;color:var(--text);letter-spacing:-0.02em;margin-bottom:10px;">50,000 <span style="color:var(--fire);">$FOGO</span></div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;">
+        <div style="background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);border-radius:6px;padding:8px 4px;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,61,0,0.7);letter-spacing:0.1em;margin-bottom:3px;">#1</div>
+          <div style="font-family:'Clash Display',sans-serif;font-size:13px;font-weight:700;color:var(--text);">10K</div>
+        </div>
+        <div style="background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);border-radius:6px;padding:8px 4px;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,61,0,0.7);letter-spacing:0.1em;margin-bottom:3px;">#2</div>
+          <div style="font-family:'Clash Display',sans-serif;font-size:13px;font-weight:700;color:var(--text);">10K</div>
+        </div>
+        <div style="background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);border-radius:6px;padding:8px 4px;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,61,0,0.7);letter-spacing:0.1em;margin-bottom:3px;">#3</div>
+          <div style="font-family:'Clash Display',sans-serif;font-size:13px;font-weight:700;color:var(--text);">10K</div>
+        </div>
+        <div style="background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);border-radius:6px;padding:8px 4px;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,61,0,0.7);letter-spacing:0.1em;margin-bottom:3px;">#4</div>
+          <div style="font-family:'Clash Display',sans-serif;font-size:13px;font-weight:700;color:var(--text);">10K</div>
+        </div>
+        <div style="background:rgba(255,61,0,0.08);border:1px solid rgba(255,61,0,0.25);border-radius:6px;padding:8px 4px;text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(255,61,0,0.7);letter-spacing:0.1em;margin-bottom:3px;">#5</div>
+          <div style="font-family:'Clash Display',sans-serif;font-size:13px;font-weight:700;color:var(--text);">10K</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Record session box -->
     <div class="lb-record-box" id="lb-record-box" style="display:none;">
       <div class="lb-record-flame">🔥</div>
@@ -1010,8 +1044,12 @@ const TR = {
   wallet_on:         { en: 'Connected',                    ko: '연결됨' },
   handle_label:      { en: 'Your X / Twitter Handle',      ko: 'X / 트위터 핸들' },
   handle_ph:         { en: '@yourhandle',                  ko: '@핸들 입력' },
+  kol_label:         { en: 'Who referred you?',            ko: '누가 추천했나요?' },
+  kol_ph:            { en: '— Select a KOL —',            ko: '— KOL 선택 —' },
+  lb_prize_eyebrow:  { en: '🏆 Season 2 Prize Pool',      ko: '🏆 시즌 2 상금 풀' },
   start_no_wallet:   { en: 'Connect wallet to play',       ko: '지갑을 연결하고 플레이하세요' },
   start_no_handle:   { en: 'Enter X handle to play',       ko: 'X 핸들을 입력하세요' },
+  start_no_kol:      { en: 'Select a KOL to continue',     ko: 'KOL을 선택하세요' },
   start_ready:       { en: 'Start Playing',                ko: '시작하기' },
   stat_tps:          { en: 'TPS',                          ko: 'TPS' },
   stat_blocks:       { en: 'Blocks',                       ko: '블록' },
@@ -1097,6 +1135,10 @@ function applyTranslations() {
   set('btn-wallet-connect', t('wallet_btn'), true);
   const lbl = q('.flabel'); if (lbl) lbl.textContent = t('handle_label');
   const inp = id('x-handle-input'); if (inp) inp.placeholder = t('handle_ph');
+  const kolLbl = id('kol-select-label'); if (kolLbl) kolLbl.textContent = t('kol_label');
+  const kolSel = id('kol-select-input');
+  if (kolSel && kolSel.options[0]) kolSel.options[0].textContent = t('kol_ph');
+  set('lb-prize-eyebrow', t('lb_prize_eyebrow'), true);
   set('start-btn-text', t('start_no_wallet'), true);
   const ssls = document.querySelectorAll('.ssc-l');
   const sslKeys = ['stat_tps','stat_blocks','stat_plays'];
@@ -1147,6 +1189,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window._pageLoadTs = Date.now(); // Layer 4 honeypot: record page load time
   applyTranslations();
   showStreakPill(); // B: show streak on entry screen
+  loadKolList();   // Populate KOL dropdown from Supabase
 });
 
 // Supabase anon client (read-only leaderboard fetches only)
@@ -1359,22 +1402,48 @@ function onHandleInput() {
   updateStartBtn();
 }
 
+function onKolInput() {
+  const sel = document.getElementById('kol-select-input');
+  S.kolRef = sel ? sel.value : '';
+  updateStartBtn();
+}
+
 function updateStartBtn() {
-  const handle  = document.getElementById('x-handle-input').value.trim();
+  const handle  = (document.getElementById('x-handle-input')?.value || '').trim();
+  const kolRef  = (document.getElementById('kol-select-input')?.value || '').trim();
   const btn     = document.getElementById('start-btn');
   const txt     = document.getElementById('start-btn-text');
-  const ready   = !!walletAddress && handle.length > 0;
+  const ready   = !!walletAddress && handle.length > 0 && kolRef.length > 0;
   btn.disabled  = !ready;
   if (!walletAddress) {
     if (txt) txt.textContent = t('start_no_wallet');
   } else if (!handle) {
     if (txt) txt.textContent = t('start_no_handle');
+  } else if (!kolRef) {
+    if (txt) txt.textContent = t('start_no_kol');
   } else {
     if (txt) txt.textContent = t('start_ready');
   }
 }
 
 function onStartClick() { startRun(); }
+
+/* ── Load KOL list from Supabase ── */
+async function loadKolList() {
+  const sel = document.getElementById('kol-select-input');
+  if (!sel) return;
+  try {
+    const { data } = await db.from('kols').select('id,name,handle').eq('active', true).order('name');
+    if (data && data.length) {
+      data.forEach(k => {
+        const opt = document.createElement('option');
+        opt.value = k.handle || k.name;
+        opt.textContent = k.name + (k.handle ? ' (@' + k.handle.replace('@','') + ')' : '');
+        sel.appendChild(opt);
+      });
+    }
+  } catch (_) { /* fail silently — field still usable as freetext fallback */ }
+}
 
 /* ================================================================
    POWER-UP ENGINE
@@ -1619,6 +1688,7 @@ function startRun() {
   S.clickTs = [];
   S.fogoTx  = 0;
   S.handle  = document.getElementById('x-handle-input').value.trim();
+  S.kolRef  = document.getElementById('kol-select-input')?.value || '';
   document.getElementById('game-counter').textContent      = '0';
   document.getElementById('game-fogo-counter').textContent = '0';
   document.getElementById('game-timer').textContent        = (GAME_DURATION / 1000).toFixed(1);
@@ -1849,6 +1919,7 @@ async function showResultAndSubmit() {
       body: JSON.stringify({
         wallet_address:   walletAddress,
         x_handle:         S.handle.startsWith('@') ? S.handle : '@' + S.handle,
+        kol_ref:          S.kolRef || null,
         clicks,
         duration_ms:      durMs,
         click_timestamps: tsPayload,
