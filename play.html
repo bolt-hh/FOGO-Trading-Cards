@@ -925,6 +925,11 @@ body::after{
           <div class="rstat"><span class="v fire" id="r-rank">0</span><span class="l">Rank</span><div class="rank-nudge" id="rank-nudge"></div></div>
           <div class="rstat"><span class="v" id="r-rate">0</span><span class="l">Taps / sec</span></div>
         </div>
+        <!-- Score saving indicator -->
+        <div id="score-saving" style="display:none;align-items:center;justify-content:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin:6px 0 2px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:reownSpin 0.9s linear infinite;flex-shrink:0;"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+          <span id="score-saving-txt">Saving score…</span>
+        </div>
         <!-- Points earned badge — shown after server confirms -->
         <div class="pts-earned-badge hidden" id="pts-earned-badge">
           <span id="pts-earned-txt"></span> pts earned this play
@@ -1413,8 +1418,10 @@ function updateStartBtn() {
   const kolRef  = (document.getElementById('kol-select-input')?.value || '').trim();
   const btn     = document.getElementById('start-btn');
   const txt     = document.getElementById('start-btn-text');
+  // When no wallet: keep enabled so clicking triggers wallet connect
+  // When wallet connected but form incomplete: disable
   const ready   = !!walletAddress && handle.length > 0 && kolRef.length > 0;
-  btn.disabled  = !ready;
+  btn.disabled  = !!walletAddress && !ready;
   if (!walletAddress) {
     if (txt) txt.textContent = t('start_no_wallet');
   } else if (!handle) {
@@ -1426,7 +1433,10 @@ function updateStartBtn() {
   }
 }
 
-function onStartClick() { startRun(); }
+function onStartClick() {
+  if (!walletAddress) { openWallet(); return; }
+  startRun();
+}
 
 /* ── Load KOL list from Supabase ── */
 async function loadKolList() {
@@ -1904,11 +1914,20 @@ async function showResultAndSubmit() {
   showScreen('result');
   fireConfetti();
 
+  // Show saving indicator immediately
+  const savingEl = document.getElementById('score-saving');
+  const savingTxt = document.getElementById('score-saving-txt');
+  if (savingEl) {
+    savingEl.style.display = 'flex';
+    if (savingTxt) savingTxt.textContent = LANG === 'ko' ? '점수 저장 중…' : 'Saving score…';
+  }
+
   // Submit score to server
   if (!walletAddress) {
     // Wallet disconnected mid-session — show local values
     document.getElementById('r-total-taps').textContent = '';
     document.getElementById('r-rank').textContent       = '';
+    if (savingEl) savingEl.style.display = 'none';
     return;
   }
 
@@ -1928,6 +1947,12 @@ async function showResultAndSubmit() {
       }),
     });
     const data = await res.json();
+
+    if (savingEl) {
+      savingEl.style.display = 'flex';
+      if (savingTxt) savingTxt.textContent = LANG === 'ko' ? '저장됨 ✓' : 'Score saved ✓';
+      setTimeout(() => { if (savingEl) savingEl.style.display = 'none'; }, 2000);
+    }
 
     if (data.ok) {
       S.totalTaps = data.total_taps || (S.totalTaps + clicks);
@@ -1964,11 +1989,15 @@ async function showResultAndSubmit() {
       }
     } else {
       // Server returned an error (rate limit etc.)
+      if (savingEl) savingEl.style.display = 'none';
       document.getElementById('r-total-taps').textContent = '';
       document.getElementById('r-rank').textContent       = data.error || '';
     }
   } catch (err) {
     console.error('[FOGO] submit failed', err);
+    if (savingEl) {
+      if (savingTxt) savingTxt.textContent = LANG === 'ko' ? '저장 실패 — 재시도 중…' : 'Save failed — retrying…';
+    }
     document.getElementById('r-total-taps').textContent = t('lb_offline');
     document.getElementById('r-rank').textContent       = '';
   }
