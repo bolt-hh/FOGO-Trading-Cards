@@ -163,26 +163,22 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'duration_ms out of range' });
   }
 
-  // ── Rate limiting: wallet-level (plays per day) ──
+  // ── Rate limiting: wallet + IP in parallel ──
   const dayStart = new Date();
   dayStart.setUTCHours(0, 0, 0, 0);
+  const hourAgo = new Date(Date.now() - 3600_000);
+  const rawIP   = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+               || req.headers['x-real-ip'] || '';
+  const ipHash  = hashIP(rawIP);
 
-  const todayPlays = await sbGet(
-    `/tap_scores?wallet_address=eq.${encodeURIComponent(wallet_address)}&played_at=gte.${dayStart.toISOString()}&select=id`
-  );
+  const [todayPlays, recentByIP] = await Promise.all([
+    sbGet(`/tap_scores?wallet_address=eq.${encodeURIComponent(wallet_address)}&played_at=gte.${dayStart.toISOString()}&select=id`),
+    sbGet(`/tap_scores?ip_hash=eq.${ipHash}&played_at=gte.${hourAgo.toISOString()}&select=id`),
+  ]);
+
   if (Array.isArray(todayPlays) && todayPlays.length >= MAX_PLAYS_DAY) {
     return res.status(429).json({ error: 'daily_limit_reached' });
   }
-
-  // ── Rate limiting: IP-level (plays per hour) ──
-  const rawIP = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
-             || req.headers['x-real-ip'] || '';
-  const ipHash = hashIP(rawIP);
-
-  const hourAgo = new Date(Date.now() - 3600_000);
-  const recentByIP = await sbGet(
-    `/tap_scores?ip_hash=eq.${ipHash}&played_at=gte.${hourAgo.toISOString()}&select=id`
-  );
   if (Array.isArray(recentByIP) && recentByIP.length >= MAX_PLAYS_HOUR) {
     return res.status(429).json({ error: 'ip_rate_limit' });
   }
@@ -221,15 +217,15 @@ export default async function handler(req, res) {
     flag_reason:      flagReason,
   });
 
-  // ── Award points to card_submissions (only if clean play) ──
-  // Compute tap points with diminishing returns + on-chain volume multiplier
-  const basePts = await calcTapPts(wallet_address, clicks);
-  let   tapPts  = basePts; // will be adjusted by multiplier after fetching vol
+  // ── Award points: calcTapPts + card_submissions fetch in parallel ──
+  const [basePts, subsInit] = await Promise.all([
+    calcTapPts(wallet_address, clicks),
+    sbGet(`/card_submissions?wallet_address=eq.${encodeURIComponent(wallet_address)}&select=total_points,tap_points,entry_count,points_breakdown,total_volume_usd`),
+  ]);
+  let tapPts = basePts;
 
   if (!flagged && basePts > 0) {
-    let subs = await sbGet(
-      `/card_submissions?wallet_address=eq.${encodeURIComponent(wallet_address)}&select=total_points,tap_points,entry_count,points_breakdown,total_volume_usd`
-    );
+    let subs = subsInit;
 
     // ── Auto-register: new wallet arriving via play.html direct flow ──
     if (!Array.isArray(subs) || subs.length === 0) {
@@ -275,10 +271,11 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── Build cumulative stats for the response ──
-  const allPlays = await sbGet(
-    `/tap_scores?wallet_address=eq.${encodeURIComponent(wallet_address)}&flagged=eq.false&select=clicks&order=clicks.desc`
-  );
+  // ── Build cumulative stats + rank in parallel ──
+  const [allPlays, lbData] = await Promise.all([
+    sbGet(`/tap_scores?wallet_address=eq.${encodeURIComponent(wallet_address)}&flagged=eq.false&select=clicks&order=clicks.desc`),
+    sbGet('/tap_leaderboard?select=wallet_address,total_taps&order=total_taps.desc&limit=500').catch(() => null),
+  ]);
 
   const totalTaps   = Array.isArray(allPlays)
     ? allPlays.reduce((s, r) => s + (r.clicks || 0), 0)
@@ -287,14 +284,11 @@ export default async function handler(req, res) {
     ? allPlays[0].clicks
     : clicks;
 
-  // Approximate rank: count wallets with higher total than this one
-  // Uses the leaderboard view (created by migration)
   let rank = null;
   try {
-    const lb = await sbGet('/tap_leaderboard?select=wallet_address,total_taps&order=total_taps.desc&limit=500');
-    if (Array.isArray(lb)) {
-      const idx = lb.findIndex(r => r.wallet_address === wallet_address);
-      rank = idx >= 0 ? idx + 1 : lb.length + 1;
+    if (Array.isArray(lbData)) {
+      const idx = lbData.findIndex(r => r.wallet_address === wallet_address);
+      rank = idx >= 0 ? idx + 1 : lbData.length + 1;
     }
   } catch (_) { /* rank stays null — non-critical */ }
 
