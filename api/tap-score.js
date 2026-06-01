@@ -4,11 +4,16 @@
 
 const SUPABASE_URL   = 'https://nhdktvsllunlgdsaninx.supabase.co';
 const TPS            = 100000;    // Fogo TPS used in punchline calc
-const MAX_CPS        = 25;        // raised from 15 — power-ups (Surge 2×, Genesis +20) inflate click count
-                                  // without changing physical tapping speed; 25 CPS gives headroom
+const MAX_CPS        = 25;        // raised from 15 — power-ups inflate click count without changing physical speed
 const MIN_STD_DEV_MS = 8;         // below this = suspiciously robotic cadence (applied to physical taps only)
-const MAX_PLAYS_DAY  = 200;       // hard ceiling per wallet per calendar day
-const MAX_PLAYS_HOUR = 30;        // IP-level rate limit
+const MAX_PLAYS_HOUR = 30;        // IP-level rate limit (no daily wallet cap — unlimited plays)
+
+// Dynamic click ceiling: physical taps × max power-up multiplier factor + flat bonus
+// Genesis (5× for ~half game ≈ 3× session avg) + Surge + Lightning overhead = 4.5×
+// Airdrop (+20) + Lightning total bonus ≈ 50 flat
+// A macro targeting 499 with low physical clicks will exceed this and get flagged.
+const MAX_VIRTUAL_FACTOR  = 4.5;
+const MAX_VIRTUAL_ADDITIVE = 50;
 
 // ── Supabase helpers (service role) ──────────────────────────────
 function sbHeaders() {
@@ -169,29 +174,22 @@ export default async function handler(req, res) {
   if (!x_handle || typeof x_handle !== 'string') {
     return res.status(400).json({ error: 'x_handle required' });
   }
-  if (typeof clicks !== 'number' || clicks < 0 || clicks > 500) {
+  if (typeof clicks !== 'number' || clicks < 0 || clicks > 2000) {
     return res.status(400).json({ error: 'clicks out of range' });
   }
   if (typeof duration_ms !== 'number' || duration_ms < 8000 || duration_ms > 13000) {
     return res.status(400).json({ error: 'duration_ms out of range' });
   }
 
-  // ── Rate limiting: wallet + IP in parallel ──
-  const dayStart = new Date();
-  dayStart.setUTCHours(0, 0, 0, 0);
+  // ── Rate limiting: IP-level only (no daily wallet cap — unlimited plays) ──
   const hourAgo = new Date(Date.now() - 3600_000);
   const rawIP   = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
                || req.headers['x-real-ip'] || '';
   const ipHash  = hashIP(rawIP);
 
-  const [todayPlays, recentByIP] = await Promise.all([
-    sbGet(`/tap_scores?wallet_address=eq.${encodeURIComponent(wallet_address)}&played_at=gte.${dayStart.toISOString()}&select=id`),
-    sbGet(`/tap_scores?ip_hash=eq.${ipHash}&played_at=gte.${hourAgo.toISOString()}&select=id`),
-  ]);
-
-  if (Array.isArray(todayPlays) && todayPlays.length >= MAX_PLAYS_DAY) {
-    return res.status(429).json({ error: 'daily_limit_reached' });
-  }
+  const recentByIP = await sbGet(
+    `/tap_scores?ip_hash=eq.${ipHash}&played_at=gte.${hourAgo.toISOString()}&select=id`
+  );
   if (Array.isArray(recentByIP) && recentByIP.length >= MAX_PLAYS_HOUR) {
     return res.status(429).json({ error: 'ip_rate_limit' });
   }
@@ -224,26 +222,36 @@ export default async function handler(req, res) {
     flagReason = check.reason || null;
   }
 
-  // ── Virtual click inflation guard ──
-  // Max legitimate power-up stack: Surge ×2 + Lightning +6 + Airdrop +20 ≈ 6× physical
-  // If total clicks wildly exceeds physical, the client is spoofing virtual clicks.
-  if (!flagged && physical_clicks && clicks > physical_clicks * 6) {
-    flagged    = true;
-    flagReason = 'virtual_click_inflation';
+  // ── Dynamic virtual click ceiling ──
+  // Max legitimate = physical × 4.5 + 50
+  // (Genesis 5× for ~half game ≈ 3× session + Surge + Lightning overhead = 4.5×;
+  //  Airdrop +20 + Lightning total bonus ≈ 50 flat)
+  // A macro targeting 499 with low physical taps will exceed this and get flagged.
+  if (!flagged && physical_clicks) {
+    const maxLegitimate = Math.ceil(physical_clicks * MAX_VIRTUAL_FACTOR) + MAX_VIRTUAL_ADDITIVE;
+    if (clicks > maxLegitimate) {
+      flagged    = true;
+      flagReason = 'virtual_click_inflation';
+    }
   }
+
+  // leaderboard_eligible: false if flagged (still records + earns raffle points, just off leaderboard)
+  const leaderboardEligible = !flagged;
 
   // ── Insert into tap_scores ──
   const handle = x_handle.startsWith('@') ? x_handle : '@' + x_handle;
   await sbPost('/tap_scores', {
     wallet_address,
-    x_handle:         handle,
+    x_handle:             handle,
     clicks,
+    physical_clicks:      physical_clicks || null,
     duration_ms,
-    fogo_equivalent:  Math.floor(clicks * TPS / (duration_ms / 10000)),
-    click_timestamps: click_timestamps || null,
-    ip_hash:          ipHash,
+    fogo_equivalent:      Math.floor(clicks * TPS / (duration_ms / 10000)),
+    click_timestamps:     click_timestamps || null,
+    ip_hash:              ipHash,
     flagged,
-    flag_reason:      flagReason,
+    flag_reason:          flagReason,
+    leaderboard_eligible: leaderboardEligible,
   });
 
   // ── Award points: calcTapPts + card_submissions fetch in parallel ──
