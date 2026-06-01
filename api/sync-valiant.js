@@ -71,14 +71,16 @@ export default async function handler(req, res) {
     '/card_submissions?select=wallet_address,total_points,points_breakdown,total_volume_usd,entry_count'
   );
 
-  // Filter: only frozen-model wallets with real Fuul-tracked Valiant pts
-  // Frozen wallets have _frozen_base_pts in their breakdown
+  // Two wallet models are synced:
+  // 1. Frozen-model (pre-migration): identified by _frozen_base_pts, use 'valiant' key for vol pts
+  // 2. Live-model (post-migration): no _frozen_base_pts, use 'volume' key for vol pts
+  //    These wallets generated cards via the normal flow — we track their Fuul vol and update 'volume'.
   const targets = allWallets.filter(w => {
     const brk = w.points_breakdown;
     if (!brk) return false;
-    const hasFrozenBase = brk._frozen_base_pts !== undefined;
-    const hasValiantPts = (brk.valiant || 0) > 0;
-    return hasFrozenBase && hasValiantPts;
+    const isFrozen = brk._frozen_base_pts !== undefined;
+    if (isFrozen) return (brk.valiant || 0) > 0;          // frozen: must have valiant pts
+    return (w.total_volume_usd || 0) > 0;                  // live: has any on-chain volume
   });
 
   const updated = [];
@@ -86,20 +88,19 @@ export default async function handler(req, res) {
   const errors  = [];
 
   for (const wallet of targets) {
-    const addr = wallet.wallet_address;
-    const brk  = wallet.points_breakdown;
+    const addr    = wallet.wallet_address;
+    const brk     = wallet.points_breakdown;
+    const isFrozen = brk._frozen_base_pts !== undefined;
 
     try {
-      const storedValiantPts = brk.valiant        || 0;
-      const frozenVol        = brk._frozen_vol    || 0;
-      const frozenBase       = brk._frozen_base_pts || 0;
-      const holderPts        = brk.holder_pts     || 0;
-      const ugcPts           = brk.ugc            || 0;
+      // Frozen model uses 'valiant' key; live model uses 'volume' key
+      const storedVolPts = isFrozen ? (brk.valiant || 0) : (brk.volume || 0);
+      const frozenVol    = brk._frozen_vol || 0;
 
       // Query live Fuul volume
-      const fuulVol      = await getFuulVolume(addr);
-      const newValiantPts = Math.floor(fuulVol / 50) * 25;
-      const deltaPts      = newValiantPts - storedValiantPts;
+      const fuulVol     = await getFuulVolume(addr);
+      const newVolPts   = Math.floor(fuulVol / 50) * 25;
+      const deltaPts    = newVolPts - storedVolPts;
 
       if (deltaPts < MIN_DELTA_PTS) {
         skipped.push({ addr: addr.slice(0, 8), delta: deltaPts });
@@ -108,9 +109,12 @@ export default async function handler(req, res) {
       }
 
       const newTotalPts = wallet.total_points + deltaPts;
-      const newBrk      = { ...brk, valiant: newValiantPts };
+      // Update the correct breakdown key for each model
+      const newBrk = isFrozen
+        ? { ...brk, valiant: newVolPts }
+        : { ...brk, volume:  newVolPts };
       // total_volume_usd = frozen vol (pre-migration) + live Fuul vol
-      const newVolUsd   = frozenVol + fuulVol;
+      const newVolUsd = isFrozen ? (frozenVol + fuulVol) : fuulVol;
 
       await sbPatch(`/card_submissions?wallet_address=eq.${addr}`, {
         total_points:     newTotalPts,
