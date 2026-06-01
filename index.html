@@ -2617,6 +2617,7 @@ function dismissSpeedRunModal() {
         <button class="admin-tab" id="tab-tester" onclick="switchAdminTab('tester')">Card Tester</button>
         <button class="admin-tab" id="tab-config" onclick="switchAdminTab('config')">Config</button>
         <button class="admin-tab" id="tab-snapshot" onclick="switchAdminTab('snapshot')">📸 Snapshot</button>
+        <button class="admin-tab" id="tab-players" onclick="switchAdminTab('players')">🎮 Players</button>
       </div>
 
       <!-- ── DASHBOARD TAB ───────────────────────────────────────── -->
@@ -3012,6 +3013,53 @@ function dismissSpeedRunModal() {
           </div>
         </div>
       </div><!-- /#admin-panel-snapshot -->
+
+      <!-- ── PLAYERS TAB ───────────────────────────────────────── -->
+      <div id="admin-panel-players" class="admin-panel-section" style="display:none;">
+        <div class="admin-section-full">
+          <div class="admin-section-head" style="margin-bottom:4px;">🎮 Player Management</div>
+          <p style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);margin:0 0 16px;line-height:1.7;">
+            Leaderboard players ranked by total taps. Flag or remove suspected macro/bot users.<br>
+            <span style="color:rgba(255,61,0,0.7);">🔴 High suspicion</span> &nbsp;
+            <span style="color:rgba(255,200,0,0.7);">🟡 Watch</span> &nbsp;
+            <span style="color:rgba(195,251,165,0.7);">✅ Clean</span>
+          </p>
+
+          <!-- Filter bar -->
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+            <button onclick="loadPlayers('all')" id="pf-all" class="admin-tab active" style="font-size:9px;padding:6px 12px;">All</button>
+            <button onclick="loadPlayers('suspicious')" id="pf-sus" class="admin-tab" style="font-size:9px;padding:6px 12px;">🔴 Suspicious</button>
+            <button onclick="loadPlayers('flagged')" id="pf-flag" class="admin-tab" style="font-size:9px;padding:6px 12px;">Flagged</button>
+            <button onclick="loadPlayers('removed')" id="pf-rem" class="admin-tab" style="font-size:9px;padding:6px 12px;">Removed</button>
+            <button onclick="loadPlayers('all')" style="margin-left:auto;background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.1em;padding:6px 12px;border-radius:4px;cursor:pointer;">↻ Refresh</button>
+          </div>
+
+          <!-- Table -->
+          <div style="overflow-x:auto;">
+            <table class="admin-entry-table" id="players-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Handle</th>
+                  <th>Total Taps</th>
+                  <th>Physical</th>
+                  <th>Bonus</th>
+                  <th>Sessions</th>
+                  <th>Best</th>
+                  <th>Points</th>
+                  <th>Signals</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="players-tbody">
+                <tr><td colspan="11" style="text-align:center;color:var(--dim);padding:24px;font-family:'JetBrains Mono',monospace;font-size:10px;">Click a filter to load players</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="players-loading" style="display:none;text-align:center;padding:24px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:0.12em;">LOADING PLAYERS…</div>
+        </div>
+      </div><!-- /#admin-panel-players -->
 
     </div><!-- /#admin-dashboard -->
   </div>
@@ -4513,7 +4561,7 @@ function showAdminDashboard() {
 }
 
 function switchAdminTab(tab) {
-  const tabs = ['dashboard','entries','ugc','kols','tasks','tester','config','snapshot'];
+  const tabs = ['dashboard','entries','ugc','kols','tasks','tester','config','snapshot','players'];
   tabs.forEach(t => {
     const panel = document.getElementById('admin-panel-' + t);
     const btn   = document.getElementById('tab-' + t);
@@ -4525,6 +4573,142 @@ function switchAdminTab(tab) {
   if (tab === 'ugc')         refreshAdminUgc();
   if (tab === 'link-clicks') loadLinkClickStats();
   if (tab === 'snapshot')    initSnapshotTab();
+  if (tab === 'players')     loadPlayers('all');
+}
+
+/* ================================================================
+   ADMIN — PLAYERS MANAGEMENT
+================================================================ */
+let _playersCache = null;
+
+async function loadPlayers(filter) {
+  // Update active filter button
+  ['all','sus','flag','rem'].forEach(f => {
+    const btn = document.getElementById('pf-' + f);
+    if (btn) btn.classList.remove('active');
+  });
+  const filterMap = { all:'all', suspicious:'sus', flagged:'flag', removed:'rem' };
+  const activeBtn = document.getElementById('pf-' + (filterMap[filter] || 'all'));
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const loading = document.getElementById('players-loading');
+  const tbody   = document.getElementById('players-tbody');
+  if (loading) loading.style.display = 'block';
+  if (tbody) tbody.innerHTML = '';
+
+  try {
+    if (!db) throw new Error('Supabase not initialised');
+
+    // Fetch leaderboard stats + admin flags in parallel
+    const [lbResult, csResult] = await Promise.all([
+      db.from('tap_leaderboard')
+        .select('wallet_address,x_handle,total_taps,physical_taps,bonus_taps,best_session,total_plays,flagged_plays,last_played')
+        .order('total_taps', { ascending: false })
+        .limit(200),
+      db.from('card_submissions')
+        .select('wallet_address,total_points,admin_flagged,admin_notes')
+        .limit(500),
+    ]);
+
+    const lbData = lbResult.data || [];
+    const csData = csResult.data || [];
+    const csMap = {};
+    if (Array.isArray(csData)) csData.forEach(r => { csMap[r.wallet_address] = r; });
+
+    _playersCache = (Array.isArray(lbData) ? lbData : []).map((r, i) => ({
+      ...r,
+      rank:          i + 1,
+      total_points:  csMap[r.wallet_address]?.total_points || 0,
+      admin_flagged: csMap[r.wallet_address]?.admin_flagged || false,
+      admin_notes:   csMap[r.wallet_address]?.admin_notes || '',
+    }));
+
+    renderPlayersTable(filter);
+  } catch(e) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="11" style="color:var(--fire);padding:16px;font-family:'JetBrains Mono',monospace;font-size:10px;">Error loading players: ${e.message}</td></tr>`;
+  } finally {
+    if (loading) loading.style.display = 'none';
+  }
+}
+
+function suspicionSignals(r) {
+  const signals = [];
+  if (r.best_session > 380)                                        signals.push({ label: 'best>' + r.best_session, level: 'red' });
+  if (r.total_plays > 100)                                         signals.push({ label: r.total_plays + ' sessions', level: 'red' });
+  if (r.flagged_plays > 0 && r.total_plays > 0 &&
+      (r.flagged_plays / r.total_plays) > 0.2)                    signals.push({ label: Math.round(r.flagged_plays/r.total_plays*100) + '% flagged', level: 'yellow' });
+  if (r.physical_taps > 0 && r.total_taps > 0 &&
+      (r.total_taps / r.physical_taps) > 3.5)                     signals.push({ label: 'high bonus ratio', level: 'yellow' });
+  return signals;
+}
+
+function renderPlayersTable(filter) {
+  const tbody = document.getElementById('players-tbody');
+  if (!tbody || !_playersCache) return;
+
+  let rows = _playersCache;
+  if (filter === 'suspicious') rows = rows.filter(r => suspicionSignals(r).some(s => s.level === 'red'));
+  if (filter === 'flagged')    rows = rows.filter(r => r.admin_flagged);
+  if (filter === 'removed')    rows = rows.filter(r => r.admin_flagged);
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--dim);padding:24px;font-family:'JetBrains Mono',monospace;font-size:10px;">No players found for this filter</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const sigs    = suspicionSignals(r);
+    const topSig  = sigs.find(s => s.level === 'red') ? '🔴' : sigs.length ? '🟡' : '✅';
+    const sigHtml = sigs.map(s => `<span style="font-size:8px;padding:2px 5px;border-radius:3px;margin-right:3px;background:${s.level==='red'?'rgba(255,61,0,0.15)':'rgba(255,200,0,0.10)'};color:${s.level==='red'?'var(--fire)':'rgba(255,200,0,0.85)'}">${s.label}</span>`).join('');
+    const statusBadge = r.admin_flagged
+      ? `<span style="font-size:8px;padding:2px 6px;border-radius:3px;background:rgba(255,61,0,0.15);color:var(--fire);border:1px solid rgba(255,61,0,0.3);">REMOVED</span>`
+      : `<span style="font-size:8px;padding:2px 6px;border-radius:3px;background:rgba(195,251,165,0.08);color:var(--lime);border:1px solid rgba(195,251,165,0.2);">ACTIVE</span>`;
+    const physDisplay  = r.physical_taps > 0 ? r.physical_taps.toLocaleString() : '<span style="color:var(--dimmer)">—</span>';
+    const bonusDisplay = r.bonus_taps > 0    ? r.bonus_taps.toLocaleString()    : '<span style="color:var(--dimmer)">—</span>';
+    const actionBtn = r.admin_flagged
+      ? `<button onclick="playerAction('restore','${r.wallet_address}')" style="background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:8px;padding:4px 8px;border-radius:3px;cursor:pointer;">Restore</button>`
+      : `<button onclick="playerAction('remove','${r.wallet_address}','${(r.x_handle||'').replace(/'/g,"\'")}')" style="background:rgba(255,61,0,0.10);border:1px solid rgba(255,61,0,0.30);color:var(--fire);font-family:'JetBrains Mono',monospace;font-size:8px;padding:4px 8px;border-radius:3px;cursor:pointer;">Remove</button>`;
+    return `<tr>
+      <td style="color:var(--dim)">${r.rank}</td>
+      <td style="color:var(--text);font-weight:600">${r.x_handle || '—'}</td>
+      <td style="color:var(--lime);font-family:'JetBrains Mono',monospace">${(r.total_taps||0).toLocaleString()}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--sub)">${physDisplay}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--sub)">${bonusDisplay}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--sub)">${r.total_plays||0}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--sub)">${r.best_session||0}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--sub)">${(r.total_points||0).toLocaleString()}</td>
+      <td>${topSig} ${sigHtml}</td>
+      <td>${statusBadge}</td>
+      <td>${actionBtn}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function playerAction(action, walletAddress, handle) {
+  if (action === 'remove') {
+    const note = prompt(`Reason for removing ${handle || walletAddress}:`, 'macro_detected');
+    if (note === null) return;
+    try {
+      const res = await adminCall('flagPlayer', { wallet_address: walletAddress, admin_notes: note });
+      if (res && res.ok) {
+        alert(`✅ ${handle || walletAddress} removed from leaderboard. Points zeroed.`);
+        await loadPlayers('all');
+      } else {
+        alert('Error: ' + (res?.error || 'unknown'));
+      }
+    } catch(e) { alert('Error: ' + e.message); }
+  } else if (action === 'restore') {
+    if (!confirm(`Restore ${handle || walletAddress} to leaderboard?`)) return;
+    try {
+      const res = await adminCall('restorePlayer', { wallet_address: walletAddress });
+      if (res && res.ok) {
+        alert(`✅ ${handle || walletAddress} restored.`);
+        await loadPlayers('all');
+      } else {
+        alert('Error: ' + (res?.error || 'unknown'));
+      }
+    } catch(e) { alert('Error: ' + e.message); }
+  }
 }
 
 /* ================================================================
