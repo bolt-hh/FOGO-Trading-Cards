@@ -4,8 +4,9 @@
 
 const SUPABASE_URL   = 'https://nhdktvsllunlgdsaninx.supabase.co';
 const TPS            = 100000;    // Fogo TPS used in punchline calc
-const MAX_CPS        = 15;        // clicks/sec above this = flagged (human physiological ceiling ~16 CPS)
-const MIN_STD_DEV_MS = 8;         // below this = suspiciously robotic cadence
+const MAX_CPS        = 25;        // raised from 15 — power-ups (Surge 2×, Genesis +20) inflate click count
+                                  // without changing physical tapping speed; 25 CPS gives headroom
+const MIN_STD_DEV_MS = 8;         // below this = suspiciously robotic cadence (applied to physical taps only)
 const MAX_PLAYS_DAY  = 200;       // hard ceiling per wallet per calendar day
 const MAX_PLAYS_HOUR = 30;        // IP-level rate limit
 
@@ -102,41 +103,47 @@ function volMultiplier(volUsd) {
 function analyseTimestamps(ts, clicks) {
   if (!Array.isArray(ts) || ts.length < 3) return { flagged: false };
 
-  // Server-side recount — client click count must match timestamp array length
+  // Server-side recount — allow generous slack for power-up virtual clicks
+  // (Block Surge/Genesis/Lightning add bonus clicks with identical timestamps;
+  //  ts.length may be less than clicks if client only sends physical timestamps)
   const serverCount = ts.length;
-  if (Math.abs(serverCount - clicks) > 3) {
+  if (serverCount > clicks + 5) {
+    // More timestamps than clicks is suspicious (shouldn't happen)
     return { flagged: true, reason: 'timestamp_mismatch' };
   }
 
-  // Click rate
+  // Click rate — based on raw ts array (physical or all, whichever sent)
   const spanMs = ts[ts.length - 1] - ts[0];
   if (spanMs > 0) {
     const cps = (ts.length / spanMs) * 1000;
     if (cps > MAX_CPS) return { flagged: true, reason: 'rate_exceeded' };
   }
 
-  // Variance — robotic timing has near-zero std dev
+  // ── Deduplicate burst timestamps before statistical analysis ──────
+  // Power-ups (Surge, Genesis, Lightning) push identical timestamps for bonus
+  // clicks. Strip duplicates so variance/runs checks measure human cadence only.
+  const dedupedTs = ts.filter((v, i) => i === 0 || v !== ts[i - 1]);
+  if (dedupedTs.length < 3) return { flagged: false }; // not enough unique taps to analyse
+
+  // Variance — robotic timing has near-zero std dev (on deduped physical cadence)
   const intervals = [];
-  for (let i = 1; i < ts.length; i++) intervals.push(ts[i] - ts[i - 1]);
+  for (let i = 1; i < dedupedTs.length; i++) intervals.push(dedupedTs[i] - dedupedTs[i - 1]);
   const mean = intervals.reduce((a, b) => a + b, 0) / intervals.length;
   const variance = intervals.reduce((s, v) => s + (v - mean) ** 2, 0) / intervals.length;
   const stdDev = Math.sqrt(variance);
-  if (stdDev < MIN_STD_DEV_MS && clicks > 15) {
+  if (stdDev < MIN_STD_DEV_MS && dedupedTs.length > 15) {
     return { flagged: true, reason: 'low_variance' };
   }
 
   // Runs test — detects artificial jitter (bots that add ±Nms noise to fake randomness)
-  // Real humans have genuinely messy cadence; bots that randomise intervals tend to
-  // alternate above/below the mean in a perfectly regular pattern.
+  // Applied to deduped cadence only — power-up bursts would otherwise create
+  // long runs of 0ms intervals that look like bot patterns.
   if (intervals.length >= 12) {
     const aboveMean = intervals.map(v => v >= mean ? 1 : -1);
     let runCount = 1;
     for (let i = 1; i < aboveMean.length; i++) {
       if (aboveMean[i] !== aboveMean[i - 1]) runCount++;
     }
-    // More than 95% of transitions alternating = machine-like jitter
-    // (85% was too aggressive — real humans self-correct their pace, naturally
-    //  producing above/below-mean alternations that easily exceeded the old threshold)
     if (runCount > intervals.length * 0.95) {
       return { flagged: true, reason: 'artificial_jitter' };
     }
@@ -151,7 +158,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { wallet_address, x_handle, kol_ref, clicks, duration_ms, click_timestamps,
+  const { wallet_address, x_handle, kol_ref, clicks, physical_clicks,
+          duration_ms, click_timestamps, physical_click_timestamps,
           page_load_ts, play_pressed_ts } = req.body || {};
 
   // ── Input validation ──
@@ -189,7 +197,15 @@ export default async function handler(req, res) {
   }
 
   // ── Anti-abuse analysis ──
-  const cps = clicks / (duration_ms / 1000);
+  // Use physical_clicks/physical_click_timestamps when available —
+  // these exclude power-up virtual clicks (Surge ×2, Genesis ×5, Airdrop +20, Lightning +6)
+  // so anti-cheat measures actual human tapping speed, not inflated totals.
+  const physClicks = (typeof physical_clicks === 'number' && physical_clicks > 0)
+    ? physical_clicks : clicks;
+  const tsForAbuse = (Array.isArray(physical_click_timestamps) && physical_click_timestamps.length > 2)
+    ? physical_click_timestamps : click_timestamps;
+
+  const cps = physClicks / (duration_ms / 1000);
   let flagged    = cps > MAX_CPS;
   let flagReason = flagged ? 'rate_exceeded' : null;
 
@@ -202,10 +218,18 @@ export default async function handler(req, res) {
     }
   }
 
-  if (!flagged && click_timestamps) {
-    const check = analyseTimestamps(click_timestamps, clicks);
+  if (!flagged && tsForAbuse) {
+    const check = analyseTimestamps(tsForAbuse, physClicks);
     flagged    = check.flagged;
     flagReason = check.reason || null;
+  }
+
+  // ── Virtual click inflation guard ──
+  // Max legitimate power-up stack: Surge ×2 + Lightning +6 + Airdrop +20 ≈ 6× physical
+  // If total clicks wildly exceeds physical, the client is spoofing virtual clicks.
+  if (!flagged && physical_clicks && clicks > physical_clicks * 6) {
+    flagged    = true;
+    flagReason = 'virtual_click_inflation';
   }
 
   // ── Insert into tap_scores ──
