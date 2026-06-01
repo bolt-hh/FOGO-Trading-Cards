@@ -173,6 +173,50 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: r.ok });
       }
 
+      // ── Player moderation ─────────────────────────────────────────────────
+
+      case 'flagPlayer': {
+        // Zero tap points and admin-flag the wallet. Points are subtracted from total.
+        const sub = await sb('GET',
+          `card_submissions?wallet_address=eq.${encodeURIComponent(params.wallet_address)}&select=tap_points,total_points`,
+          null);
+        const row = Array.isArray(sub.data) ? sub.data[0] : null;
+        const tapPts = row ? (row.tap_points || 0) : 0;
+        const newTotal = row ? Math.max(0, (row.total_points || 0) - tapPts) : 0;
+
+        if (row) {
+          await sb('PATCH',
+            `card_submissions?wallet_address=eq.${encodeURIComponent(params.wallet_address)}`,
+            {
+              admin_flagged:    true,
+              admin_notes:      params.admin_notes || 'flagged_by_admin',
+              tap_points:       0,
+              total_points:     newTotal,
+              entry_count:      newTotal,
+              points_breakdown: Object.assign({}, row.points_breakdown || {}, { tap: 0 }),
+            });
+        } else {
+          // Wallet not in card_submissions yet — insert a flagged placeholder
+          await sb('POST', 'card_submissions', {
+            wallet_address:   params.wallet_address,
+            admin_flagged:    true,
+            admin_notes:      params.admin_notes || 'flagged_by_admin',
+            tap_points:       0,
+            total_points:     0,
+            entry_count:      0,
+            points_breakdown: {},
+          });
+        }
+        return res.status(200).json({ ok: true });
+      }
+
+      case 'restorePlayer': {
+        await sb('PATCH',
+          `card_submissions?wallet_address=eq.${encodeURIComponent(params.wallet_address)}`,
+          { admin_flagged: false, admin_notes: null });
+        return res.status(200).json({ ok: true });
+      }
+
       // ── Admin reads (service role — sees all columns incl. telegram_handle) ──
 
       case 'fetchSubmissions': {
