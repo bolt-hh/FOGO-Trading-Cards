@@ -4599,23 +4599,36 @@ async function loadPlayers(filter) {
   try {
     if (!db) throw new Error('Supabase not initialised');
 
-    // Fetch leaderboard stats + admin flags in parallel
+    // Admin queries tap_scores directly (NOT tap_leaderboard) so removed players are visible too
     const [lbResult, csResult] = await Promise.all([
-      db.from('tap_leaderboard')
-        .select('wallet_address,x_handle,total_taps,physical_taps,bonus_taps,best_session,total_plays,flagged_plays,last_played')
-        .order('total_taps', { ascending: false })
-        .limit(200),
+      db.from('tap_scores')
+        .select('wallet_address,x_handle,clicks,physical_clicks,flagged')
+        .eq('flagged', false)
+        .limit(5000),
       db.from('card_submissions')
         .select('wallet_address,total_points,admin_flagged,admin_notes')
         .limit(500),
     ]);
 
-    const lbData = lbResult.data || [];
+    // Aggregate tap_scores by wallet
+    const rawRows = lbResult.data || [];
+    const walletMap = {};
+    rawRows.forEach(r => {
+      const wa = r.wallet_address;
+      if (!walletMap[wa]) walletMap[wa] = { wallet_address: wa, x_handle: r.x_handle, total_taps: 0, physical_taps: 0, bonus_taps: 0, best_session: 0, total_plays: 0, flagged_plays: 0 };
+      walletMap[wa].total_taps   += r.clicks || 0;
+      walletMap[wa].physical_taps += r.physical_clicks || 0;
+      walletMap[wa].bonus_taps   += Math.max(0, (r.clicks || 0) - (r.physical_clicks || r.clicks || 0));
+      walletMap[wa].best_session  = Math.max(walletMap[wa].best_session, r.clicks || 0);
+      walletMap[wa].total_plays  += 1;
+    });
+    const lbData = Object.values(walletMap).sort((a, b) => b.total_taps - a.total_taps);
+
     const csData = csResult.data || [];
     const csMap = {};
     if (Array.isArray(csData)) csData.forEach(r => { csMap[r.wallet_address] = r; });
 
-    _playersCache = (Array.isArray(lbData) ? lbData : []).map((r, i) => ({
+    _playersCache = lbData.map((r, i) => ({
       ...r,
       rank:          i + 1,
       total_points:  csMap[r.wallet_address]?.total_points || 0,
