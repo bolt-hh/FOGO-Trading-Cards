@@ -63,6 +63,11 @@ const TAP_DIM_THRESHOLD = 1000;
 const TAP_RATE_NORMAL   = 10;   // taps per point (standard)
 const TAP_RATE_DIM      = 20;   // taps per point (diminished)
 
+// Lifetime cap: once a wallet has earned 2,000 tap points total,
+// all further tap points convert at 100:1 regardless of daily resets.
+const LIFETIME_DIM_THRESHOLD = 2000;
+const TAP_RATE_LIFETIME      = 100;  // taps per point after lifetime cap
+
 async function calcTapPts(walletAddress, newClicks) {
   const dayAgo = new Date(Date.now() - 86400000);
   try {
@@ -250,9 +255,16 @@ export default async function handler(req, res) {
     }
 
     if (Array.isArray(subs) && subs.length > 0) {
-      const sub        = subs[0];
-      const multi      = volMultiplier(sub.total_volume_usd || 0);
-      tapPts           = Math.round(basePts * multi);
+      const sub             = subs[0];
+      const multi           = volMultiplier(sub.total_volume_usd || 0);
+      const currentTapPts   = sub.tap_points || 0;
+
+      // Lifetime cap: if wallet has already earned ≥ 2,000 tap pts, switch to 100:1
+      const lifetimePts = currentTapPts >= LIFETIME_DIM_THRESHOLD
+        ? Math.floor(clicks / TAP_RATE_LIFETIME)
+        : basePts;
+
+      tapPts = Math.round(lifetimePts * multi);
       const newTapPts  = (sub.tap_points   || 0) + tapPts;
       const newTotal   = (sub.total_points || 0) + tapPts;
       const newBrk     = {
