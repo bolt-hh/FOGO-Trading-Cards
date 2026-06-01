@@ -4599,42 +4599,58 @@ async function loadPlayers(filter) {
   try {
     if (!db) throw new Error('Supabase not initialised');
 
-    // Admin queries tap_scores directly (NOT tap_leaderboard) so removed players are visible too
-    // card_submissions fetched via adminCall (service role) so admin_flagged bypasses RLS
+    // Base query on card_submissions (ALL players) + join tap_scores for game stats
+    // card_submissions via adminCall (service role) bypasses RLS so admin_flagged is visible
     const [lbResult, csResult] = await Promise.all([
       db.from('tap_scores')
         .select('wallet_address,x_handle,clicks,physical_clicks,flagged')
         .eq('flagged', false)
-        .limit(5000),
+        .limit(10000),
       adminCall('fetchSubmissions'),
     ]);
 
-    // Aggregate tap_scores by wallet
+    // Aggregate tap_scores by wallet into a lookup map
     const rawRows = lbResult.data || [];
-    const walletMap = {};
+    const tapMap = {};
     rawRows.forEach(r => {
       const wa = r.wallet_address;
-      if (!walletMap[wa]) walletMap[wa] = { wallet_address: wa, x_handle: r.x_handle, total_taps: 0, physical_taps: 0, bonus_taps: 0, best_session: 0, total_plays: 0, flagged_plays: 0 };
-      walletMap[wa].total_taps    += r.clicks || 0;
-      walletMap[wa].physical_taps += r.physical_clicks || 0;
-      walletMap[wa].bonus_taps    += Math.max(0, (r.clicks || 0) - (r.physical_clicks || r.clicks || 0));
-      walletMap[wa].best_session   = Math.max(walletMap[wa].best_session, r.clicks || 0);
-      walletMap[wa].total_plays   += 1;
+      if (!tapMap[wa]) tapMap[wa] = { total_taps: 0, physical_taps: 0, bonus_taps: 0, best_session: 0, total_plays: 0, x_handle: r.x_handle };
+      tapMap[wa].total_taps    += r.clicks || 0;
+      tapMap[wa].physical_taps += r.physical_clicks || 0;
+      tapMap[wa].bonus_taps    += Math.max(0, (r.clicks || 0) - (r.physical_clicks || r.clicks || 0));
+      tapMap[wa].best_session   = Math.max(tapMap[wa].best_session, r.clicks || 0);
+      tapMap[wa].total_plays   += 1;
+      if (r.x_handle) tapMap[wa].x_handle = r.x_handle;
     });
-    const lbData = Object.values(walletMap).sort((a, b) => b.total_taps - a.total_taps);
 
-    // csResult from adminCall returns { ok, data }
+    // Build card_submissions lookup
     const csData = (csResult && csResult.data) ? csResult.data : [];
     const csMap = {};
-    if (Array.isArray(csData)) csData.forEach(r => { csMap[r.wallet_address] = r; });
+    csData.forEach(r => { csMap[r.wallet_address] = r; });
 
-    _playersCache = lbData.map((r, i) => ({
-      ...r,
-      rank:          i + 1,
-      total_points:  csMap[r.wallet_address]?.total_points || 0,
-      admin_flagged: csMap[r.wallet_address]?.admin_flagged || false,
-      admin_notes:   csMap[r.wallet_address]?.admin_notes || '',
-    }));
+    // Merge: start with ALL unique wallets from BOTH sources
+    const allWalletSet = new Set([
+      ...Object.keys(tapMap),
+      ...Object.keys(csMap),
+    ]);
+
+    _playersCache = Array.from(allWalletSet).map(wa => {
+      const tap = tapMap[wa] || {};
+      const cs  = csMap[wa]  || {};
+      return {
+        wallet_address: wa,
+        x_handle:       cs.twitter_handle || tap.x_handle || '—',
+        total_taps:     tap.total_taps    || 0,
+        physical_taps:  tap.physical_taps || 0,
+        bonus_taps:     tap.bonus_taps    || 0,
+        best_session:   tap.best_session  || 0,
+        total_plays:    tap.total_plays   || 0,
+        total_points:   cs.total_points   || 0,
+        admin_flagged:  cs.admin_flagged  || false,
+        admin_notes:    cs.admin_notes    || '',
+      };
+    }).sort((a, b) => b.total_taps - a.total_taps)
+      .map((r, i) => ({ ...r, rank: i + 1 }));
 
     renderPlayersTable(filter);
   } catch(e) {
