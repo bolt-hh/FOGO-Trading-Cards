@@ -1206,16 +1206,18 @@ let userVolUsd    = 0;   // cached after wallet connect — drives tip bar + mul
 
 // ── Game state ───────────────────────────────────────────────────
 const S = {
-  handle:      '',
-  clicks:      0,
-  totalTaps:   0,   // cumulative all-time (populated from server after submit)
-  clickTs:     [],
-  bestScore:   0,   // best single session
-  prevBest:    0,   // best before this session (for PB detection)
-  fogoTx:      0,
-  startTime:   0,
-  gameActive:  false,
-  currentScreen: 'entry',
+  handle:           '',
+  clicks:           0,   // total clicks incl. power-up bonuses (used for scoring)
+  physicalClicks:   0,   // physical finger taps only (used for anti-cheat)
+  totalTaps:        0,   // cumulative all-time (populated from server after submit)
+  clickTs:          [],  // all timestamps incl. power-up (kept for legacy compat)
+  physicalClickTs:  [],  // physical tap timestamps only (sent to anti-cheat)
+  bestScore:        0,   // best single session
+  prevBest:         0,   // best before this session (for PB detection)
+  fogoTx:           0,
+  startTime:        0,
+  gameActive:       false,
+  currentScreen:    'entry',
 };
 
 /* ================================================================
@@ -1694,9 +1696,11 @@ function resetPowerUps() {
 function startRun() {
   S.playPressedTs = Date.now(); // Layer 4 honeypot: record when play was pressed
   S.prevBest = S.bestScore; // A: capture pre-session best for PB detection
-  S.clicks  = 0;
-  S.clickTs = [];
-  S.fogoTx  = 0;
+  S.clicks          = 0;
+  S.physicalClicks  = 0;
+  S.clickTs         = [];
+  S.physicalClickTs = [];
+  S.fogoTx          = 0;
   S.handle  = document.getElementById('x-handle-input').value.trim();
   S.kolRef  = document.getElementById('kol-select-input')?.value || '';
   document.getElementById('game-counter').textContent      = '0';
@@ -1794,6 +1798,9 @@ function onTap(e) {
   const multi = tapMultiplier();
   S.clicks += multi;
   for (let _i = 0; _i < multi; _i++) S.clickTs.push(now);
+  // Track physical tap separately (anti-cheat uses this, not power-up multiples)
+  S.physicalClicks++;
+  S.physicalClickTs.push(now);
   const cEl = document.getElementById('game-counter');
   cEl.textContent = S.clicks;
   cEl.classList.remove('bump');
@@ -1936,14 +1943,16 @@ async function showResultAndSubmit() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        wallet_address:   walletAddress,
-        x_handle:         S.handle.startsWith('@') ? S.handle : '@' + S.handle,
-        kol_ref:          S.kolRef || null,
+        wallet_address:            walletAddress,
+        x_handle:                  S.handle.startsWith('@') ? S.handle : '@' + S.handle,
+        kol_ref:                   S.kolRef || null,
         clicks,
-        duration_ms:      durMs,
-        click_timestamps: tsPayload,
-        page_load_ts:     window._pageLoadTs || null,
-        play_pressed_ts:  S.playPressedTs    || null,
+        physical_clicks:           S.physicalClicks || clicks,
+        duration_ms:               durMs,
+        click_timestamps:          tsPayload,
+        physical_click_timestamps: [...S.physicalClickTs],
+        page_load_ts:              window._pageLoadTs || null,
+        play_pressed_ts:           S.playPressedTs    || null,
       }),
     });
     const data = await res.json();
