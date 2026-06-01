@@ -34,10 +34,21 @@ export default async function handler(req, res) {
     '/tap_leaderboard?select=wallet_address,x_handle,total_taps,best_session,total_plays,last_played&order=total_taps.desc&limit=25'
   );
 
-  // ── Best single sessions (top 10) ──
-  const sessions = await sbGet(
-    '/tap_scores?flagged=eq.false&select=wallet_address,x_handle,clicks,played_at&order=clicks.desc&limit=10'
+  // ── Best single sessions (top 10) — exclude admin-flagged wallets ──
+  // Fetch top sessions then filter out admin-flagged wallets via card_submissions lookup
+  const rawSessions = await sbGet(
+    '/tap_scores?flagged=eq.false&select=wallet_address,x_handle,clicks,played_at&order=clicks.desc&limit=50'
   );
+
+  // Get list of admin-flagged wallet addresses
+  const flaggedWallets = await sbGet(
+    '/card_submissions?admin_flagged=eq.true&select=wallet_address'
+  ).catch(() => []);
+  const flaggedSet = new Set(Array.isArray(flaggedWallets) ? flaggedWallets.map(r => r.wallet_address) : []);
+
+  const sessions = Array.isArray(rawSessions)
+    ? rawSessions.filter(r => !flaggedSet.has(r.wallet_address)).slice(0, 10)
+    : [];
 
   // ── Caller's own row (if outside top 25) ──
   let callerRow = null;
