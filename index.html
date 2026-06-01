@@ -4600,14 +4600,13 @@ async function loadPlayers(filter) {
     if (!db) throw new Error('Supabase not initialised');
 
     // Admin queries tap_scores directly (NOT tap_leaderboard) so removed players are visible too
+    // card_submissions fetched via adminCall (service role) so admin_flagged bypasses RLS
     const [lbResult, csResult] = await Promise.all([
       db.from('tap_scores')
         .select('wallet_address,x_handle,clicks,physical_clicks,flagged')
         .eq('flagged', false)
         .limit(5000),
-      db.from('card_submissions')
-        .select('wallet_address,total_points,admin_flagged,admin_notes')
-        .limit(500),
+      adminCall('fetchSubmissions'),
     ]);
 
     // Aggregate tap_scores by wallet
@@ -4616,15 +4615,16 @@ async function loadPlayers(filter) {
     rawRows.forEach(r => {
       const wa = r.wallet_address;
       if (!walletMap[wa]) walletMap[wa] = { wallet_address: wa, x_handle: r.x_handle, total_taps: 0, physical_taps: 0, bonus_taps: 0, best_session: 0, total_plays: 0, flagged_plays: 0 };
-      walletMap[wa].total_taps   += r.clicks || 0;
+      walletMap[wa].total_taps    += r.clicks || 0;
       walletMap[wa].physical_taps += r.physical_clicks || 0;
-      walletMap[wa].bonus_taps   += Math.max(0, (r.clicks || 0) - (r.physical_clicks || r.clicks || 0));
-      walletMap[wa].best_session  = Math.max(walletMap[wa].best_session, r.clicks || 0);
-      walletMap[wa].total_plays  += 1;
+      walletMap[wa].bonus_taps    += Math.max(0, (r.clicks || 0) - (r.physical_clicks || r.clicks || 0));
+      walletMap[wa].best_session   = Math.max(walletMap[wa].best_session, r.clicks || 0);
+      walletMap[wa].total_plays   += 1;
     });
     const lbData = Object.values(walletMap).sort((a, b) => b.total_taps - a.total_taps);
 
-    const csData = csResult.data || [];
+    // csResult from adminCall returns { ok, data }
+    const csData = (csResult && csResult.data) ? csResult.data : [];
     const csMap = {};
     if (Array.isArray(csData)) csData.forEach(r => { csMap[r.wallet_address] = r; });
 
