@@ -6378,7 +6378,22 @@ function renderNewTasksTab() {
     ? '10초 안에 최대한 많이 탭하세요. 10탭 = 포인트 1점. 누적 탭 기준 리더보드 순위.'
     : 'Tap as fast as you can in 10 seconds. Every 10 taps = 1 point. Leaderboard ranked by total cumulative taps.';
 
-  grid.innerHTML = `
+  // ── Superluminal task card (partner — shown first) ──
+  const follows0 = STATE.socialFollows || [];
+  const slxDone0 = follows0.includes('waitlist_slx');
+  const SLX_LOGO0 = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="28" height="28">${(()=>{const cx=24,cy=24,rays=22,color='#D5F455';let m='';for(let i=0;i<rays;i++){const a=(i/rays)*Math.PI*2-Math.PI/2,c=Math.cos(a),s=Math.sin(a),r1=8.5,r2=17.5,x1=cx+c*r1,y1=cy+s*r1,x2=cx+c*r2,y2=cy+s*r2,tx=-s*2.8,ty=c*2.8;m+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${color}" stroke-width="2.4" stroke-linecap="square"/><line x1="${x2.toFixed(1)}" y1="${y2.toFixed(1)}" x2="${(x2+tx).toFixed(1)}" y2="${(y2+ty).toFixed(1)}" stroke="${color}" stroke-width="2.4" stroke-linecap="square"/>`;} return `<circle cx="24" cy="24" r="4.5" fill="${color}"/>`+m;})()}</svg>`;
+  const slxRight0 = slxDone0
+    ? `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--lime);background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);padding:5px 12px;border-radius:4px;">✓ ${lang === 'ko' ? '완료' : 'Done'}</span>`
+    : `<div style="display:flex;gap:7px;align-items:center;"><a href="https://slx.fi" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:rgba(213,244,85,0.10);border:1px solid rgba(213,244,85,0.30);color:#D5F455;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 13px;border-radius:4px;text-decoration:none;" onclick="document.getElementById('slx-done-btn').style.display='inline-flex'">${lang === 'ko' ? '대기자 등록' : 'Join Waitlist'}</a><button id="slx-done-btn" style="display:none;align-items:center;gap:5px;background:rgba(195,251,165,0.10);border:1px solid rgba(195,251,165,0.30);color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 13px;border-radius:4px;cursor:pointer;" onclick="doFollowTask('waitlist_slx')">✓ ${lang === 'ko' ? '완료' : 'Done'}</button></div>`;
+  const slxCardTop = `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(213,244,85,0.5);padding:0 0 8px 0;">⚡ ${lang === 'ko' ? '파트너 태스크' : 'Partner Task'}</div>
+    <div class="${slxDone0 ? 'task-card done' : 'task-card link-type'}" style="flex-wrap:wrap;gap:10px;border-color:rgba(213,244,85,0.20);background:linear-gradient(135deg,rgba(213,244,85,0.04),transparent);margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;">${SLX_LOGO0}</div>
+      <div class="task-card-info"><div class="task-card-name" style="color:#D5F455;">${lang === 'ko' ? 'Superluminal 대기자 등록' : 'Join Superluminal Waitlist'}</div><div class="task-card-desc">${lang === 'ko' ? 'FOGO 기반 공정한 퍼프 DEX · slx.fi에서 등록하세요' : 'Fair perps DEX built on FOGO · Sign up at slx.fi'}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;"><span class="task-points-badge">+200 pts</span>${slxRight0}</div>
+    </div>`;
+
+  grid.innerHTML = `${slxCardTop}
     <div class="task-card ugc-expanded ${cardClass}">
       <div class="task-card-top">
         <div class="task-card-info">
@@ -6471,40 +6486,7 @@ function renderNewTasksTab() {
         </div>`;
     }).join('')}
 
-    ${(() => {
-      // ── Superluminal waitlist task card ──
-      const slxDone = follows.includes('waitlist_slx');
-      const SLX_LOGO = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="28" height="28">${(()=>{const cx=24,cy=24,rays=22,color='#D5F455';let m='';for(let i=0;i<rays;i++){const a=(i/rays)*Math.PI*2-Math.PI/2,c=Math.cos(a),s=Math.sin(a),r1=8.5,r2=17.5,x1=cx+c*r1,y1=cy+s*r1,x2=cx+c*r2,y2=cy+s*r2,tx=-s*2.8,ty=c*2.8,ix=s*1.8,iy=-c*1.8;m+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${color}" stroke-width="2.4" stroke-linecap="square"/><line x1="${x2.toFixed(1)}" y1="${y2.toFixed(1)}" x2="${(x2+tx).toFixed(1)}" y2="${(y2+ty).toFixed(1)}" stroke="${color}" stroke-width="2.4" stroke-linecap="square"/>`;} return `<circle cx="24" cy="24" r="4.5" fill="${color}"/>`+m;})()}</svg>`;
-      const slxRight = slxDone
-        ? `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--lime);background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);padding:5px 12px;border-radius:4px;">✓ ${lang === 'ko' ? '완료' : 'Done'}</span>`
-        : `<div style="display:flex;gap:7px;align-items:center;">
-            <a href="https://slx.fi" target="_blank" rel="noopener"
-               style="display:inline-flex;align-items:center;gap:5px;background:rgba(213,244,85,0.10);border:1px solid rgba(213,244,85,0.30);color:#D5F455;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 13px;border-radius:4px;text-decoration:none;"
-               onclick="document.getElementById('slx-done-btn').style.display='inline-flex'">
-              ${lang === 'ko' ? '대기자 등록' : 'Join Waitlist'}
-            </a>
-            <button id="slx-done-btn"
-              style="display:none;align-items:center;gap:5px;background:rgba(195,251,165,0.10);border:1px solid rgba(195,251,165,0.30);color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 13px;border-radius:4px;cursor:pointer;"
-              onclick="doFollowTask('waitlist_slx')">
-              ✓ ${lang === 'ko' ? '완료' : 'Done'}
-            </button>
-          </div>`;
-      return `
-        <div style="margin-top:10px;padding:10px 0 6px 0;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(213,244,85,0.5);">
-          ⚡ ${lang === 'ko' ? '파트너 태스크' : 'Partner Task'}
-        </div>
-        <div class="${slxDone ? 'task-card done' : 'task-card link-type'}" style="flex-wrap:wrap;gap:10px;border-color:rgba(213,244,85,0.20);background:linear-gradient(135deg,rgba(213,244,85,0.04),transparent);">
-          <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;">${SLX_LOGO}</div>
-          <div class="task-card-info">
-            <div class="task-card-name" style="color:#D5F455;">${lang === 'ko' ? 'Superluminal 대기자 등록' : 'Join Superluminal Waitlist'}</div>
-            <div class="task-card-desc">${lang === 'ko' ? 'FOGO 기반 공정한 퍼프 DEX — slx.fi에서 등록하세요' : 'Fair perps DEX built on FOGO · Sign up at slx.fi'}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
-            <span class="task-points-badge">+200 pts</span>
-            ${slxRight}
-          </div>
-        </div>`;
-    })()}`;
+`;
 }
 
 /* Handle follow task completion */
