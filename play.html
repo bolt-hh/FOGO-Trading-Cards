@@ -2262,7 +2262,7 @@ function fireConfetti() {
   }
 </script>
 
-<!-- ── Superluminal × FOGO palette overrides ──────────────── -->
+<!-- ── Superluminal × FOGO palette + result-banner sizing ─── -->
 <style>
 #slx-lb .slx-lb-left {
   background: linear-gradient(120deg, #080420 0%, #0C0930 60%, #110D32 100%) !important;
@@ -2271,6 +2271,32 @@ function fireConfetti() {
   background: linear-gradient(160deg, #110D32 0%, #0C0930 50%, #0C0930 100%) !important;
 }
 #slx-lb { border-color: rgba(213,244,85,0.14) !important; }
+
+/* Result screen: unlock fixed height, scale down heading font */
+#slx-result-banner #slx-lb {
+  height: auto !important;
+  min-height: unset !important;
+}
+#slx-result-banner #slx-lb .slx-lb-inner {
+  min-height: 80px;
+}
+#slx-result-banner #slx-lb .slx-lb-head {
+  font-size: 16px !important;
+  line-height: 1.15 !important;
+}
+#slx-result-banner #slx-lb .slx-lb-left {
+  padding: 12px 16px !important;
+}
+#slx-result-banner #slx-lb .slx-lb-right {
+  min-width: 160px;
+}
+#slx-result-banner #slx-lb .slx-lb-top-txt {
+  font-size: 14px !important;
+}
+#slx-result-banner #slx-lb .slx-lb-bot-txt {
+  font-size: 11px !important;
+  padding: 7px 12px !important;
+}
 </style>
 
 <!-- ── Superluminal × FOGO ─────────────────────────────────── -->
