@@ -11,6 +11,7 @@ const VALID_TASKS = new Set([
   'follow_ignition',
   'follow_brasa',
   'follow_pyron',
+  'waitlist_slx',   // Superluminal waitlist — 200 pts
 ]);
 
 function sbHeaders() {
