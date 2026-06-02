@@ -51,7 +51,7 @@
     't-step-n4': '스텝 04', 't-step-t4': '$FOGO 획득',
     't-step-b4': '포인트 상위 15위가 리더보드 상금을 받습니다. 200명 럭키 드로우 당첨자 무작위 선정.',
     // Notice & back
-    't-notice':   'FOGO 네트워크(mainnet.fogo.io)의 실시간 온체인 활동을 읽습니다. 볼륨은 Ambient, Valiant, Brasa, Pyron, Ignition에서 집계됩니다. 모든 지갑은 카드를 생성하고 래플에 참가할 수 있습니다.',
+    't-notice':   'FOGO 네트워크(mainnet.fogo.io)의 실시간 온체인 활동을 읽습니다. 볼륨은 Superluminal, Valiant, Brasa, Pyron, Ignition에서 집계됩니다. 모든 지갑은 카드를 생성하고 래플에 참가할 수 있습니다.',
     't-back-btn': '← 뒤로',
     // Wallet section
     't-connect-head': '지갑 연결',
@@ -1884,6 +1884,19 @@ function dismissSpeedRunModal() {
   var m = document.getElementById('speedrun-modal');
   if (m) m.style.display = 'none';
   try { localStorage.setItem('fogo_speedrun_seen', '1'); } catch(e) {}
+  // After Speed Run modal closes, show SLX popup after a short pause
+  try {
+    var slxSeen = localStorage.getItem('fogo_slx_popup_seen');
+    var sevenDays = 7 * 24 * 60 * 60 * 1000;
+    if (!slxSeen || Date.now() - parseInt(slxSeen) > sevenDays) {
+      setTimeout(function() {
+        if (window.SLXBanner) {
+          var lang = (document.documentElement.lang === 'ko' || location.search.indexOf('lang=ko') !== -1) ? 'ko' : 'en';
+          SLXBanner.showPopup(lang);
+        }
+      }, 1000);
+    }
+  } catch(e) {}
 }
 </script>
 
@@ -1923,16 +1936,16 @@ function dismissSpeedRunModal() {
 <div class="ticker-wrap" aria-hidden="true">
   <div class="ticker-track">
     <!-- Set 1 -->
-    <div class="ticker-item"><span class="ticker-label">Ecosystem</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('valiant','https://valiant.trade','ticker')">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('brasa','https://brasa.finance','ticker')">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ignition','https://ignitionfi.xyz','ticker')">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('pyron','https://pyron.fi','ticker')">Pyron</a><div class="ticker-dot"></div><a href="https://perps.ambient.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ambient','https://perps.ambient.finance','ticker')">Ambient</a></div>
+    <div class="ticker-item"><span class="ticker-label">Ecosystem</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://slx.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('superluminal','https://slx.fi','ticker')" style="color:rgba(213,244,85,0.80);">Superluminal</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('valiant','https://valiant.trade','ticker')">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('brasa','https://brasa.finance','ticker')">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ignition','https://ignitionfi.xyz','ticker')">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('pyron','https://pyron.fi','ticker')">Pyron</a></div>
     <div class="ticker-item"><span class="ticker-label">40ms blocks</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">Firedancer · SVM L1</span></div>
     <div class="ticker-item"><span class="ticker-label">Flames Season 2</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">200M $FOGO</span></div>
-    <div class="ticker-item"><span class="ticker-label">Explore</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('valiant','https://valiant.trade','ticker')">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('brasa','https://brasa.finance','ticker')">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ignition','https://ignitionfi.xyz','ticker')">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('pyron','https://pyron.fi','ticker')">Pyron</a><div class="ticker-dot"></div><a href="https://perps.ambient.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ambient','https://perps.ambient.finance','ticker')">Ambient</a></div>
+    <div class="ticker-item"><span class="ticker-label">Explore</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://slx.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('superluminal','https://slx.fi','ticker')" style="color:rgba(213,244,85,0.80);">Superluminal</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('valiant','https://valiant.trade','ticker')">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('brasa','https://brasa.finance','ticker')">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ignition','https://ignitionfi.xyz','ticker')">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('pyron','https://pyron.fi','ticker')">Pyron</a></div>
     <div class="ticker-item"><span class="ticker-label">40ms blocks</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">Firedancer · SVM L1</span></div>
     <!-- Set 2 — exact duplicate for seamless loop -->
-    <div class="ticker-item"><span class="ticker-label">Ecosystem</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('valiant','https://valiant.trade','ticker')">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('brasa','https://brasa.finance','ticker')">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ignition','https://ignitionfi.xyz','ticker')">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('pyron','https://pyron.fi','ticker')">Pyron</a><div class="ticker-dot"></div><a href="https://perps.ambient.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ambient','https://perps.ambient.finance','ticker')">Ambient</a></div>
+    <div class="ticker-item"><span class="ticker-label">Ecosystem</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://slx.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('superluminal','https://slx.fi','ticker')" style="color:rgba(213,244,85,0.80);">Superluminal</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('valiant','https://valiant.trade','ticker')">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('brasa','https://brasa.finance','ticker')">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ignition','https://ignitionfi.xyz','ticker')">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('pyron','https://pyron.fi','ticker')">Pyron</a></div>
     <div class="ticker-item"><span class="ticker-label">40ms blocks</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">Firedancer · SVM L1</span></div>
     <div class="ticker-item"><span class="ticker-label">Flames Season 2</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">200M $FOGO</span></div>
-    <div class="ticker-item"><span class="ticker-label">Explore</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('valiant','https://valiant.trade','ticker')">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('brasa','https://brasa.finance','ticker')">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ignition','https://ignitionfi.xyz','ticker')">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('pyron','https://pyron.fi','ticker')">Pyron</a><div class="ticker-dot"></div><a href="https://perps.ambient.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ambient','https://perps.ambient.finance','ticker')">Ambient</a></div>
+    <div class="ticker-item"><span class="ticker-label">Explore</span><div class="ticker-pipe"></div><a href="https://fogo.io" class="ticker-name hl" target="_blank" rel="noopener noreferrer">fogo.io</a><div class="ticker-dot"></div><a href="https://slx.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('superluminal','https://slx.fi','ticker')" style="color:rgba(213,244,85,0.80);">Superluminal</a><div class="ticker-dot"></div><a href="https://valiant.trade" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('valiant','https://valiant.trade','ticker')">Valiant</a><div class="ticker-dot"></div><a href="https://brasa.finance" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('brasa','https://brasa.finance','ticker')">Brasa</a><div class="ticker-dot"></div><a href="https://ignitionfi.xyz" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('ignition','https://ignitionfi.xyz','ticker')">Ignition</a><div class="ticker-dot"></div><a href="https://pyron.fi" class="ticker-name" target="_blank" rel="noopener noreferrer" onclick="trackLinkClick('pyron','https://pyron.fi','ticker')">Pyron</a></div>
     <div class="ticker-item"><span class="ticker-label">40ms blocks</span><div class="ticker-pipe"></div><span class="ticker-name" style="color:var(--dim);cursor:default;">Firedancer · SVM L1</span></div>
   </div>
 </div>
@@ -2167,7 +2180,7 @@ function dismissSpeedRunModal() {
           </div>
         </div>
         <div class="notice" id="t-notice" style="margin-top:16px;" data-ko="FOGO 네트워크의 실시간 온체인 활동을 읽습니다. 모든 지갑은 카드를 생성하고 래플에 참가할 수 있습니다.">
-          This card reads your live on-chain activity from the FOGO network (mainnet.fogo.io). Volume is aggregated across Ambient, Valiant, Brasa, Pyron, and Ignition. All wallets can generate a card and enter the draw.
+          This card reads your live on-chain activity from the FOGO network (mainnet.fogo.io). Volume is aggregated across Superluminal, Valiant, Brasa, Pyron, and Ignition. All wallets can generate a card and enter the draw.
         </div>
         <div style="text-align:left;margin-top:10px;">
           <button onclick="resetAndGoHome()" style="background:none;border:none;color:var(--dim);font-size:11px;cursor:pointer;padding:0;letter-spacing:0.05em;font-family:inherit;" id="t-back-btn" data-ko="← 뒤로">← Back</button>
@@ -6456,7 +6469,42 @@ function renderNewTasksTab() {
             ${rightSide}
           </div>
         </div>`;
-    }).join('')}`;
+    }).join('')}
+
+    ${(() => {
+      // ── Superluminal waitlist task card ──
+      const slxDone = follows.includes('waitlist_slx');
+      const SLX_LOGO = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="28" height="28">${(()=>{const cx=24,cy=24,rays=22,color='#D5F455';let m='';for(let i=0;i<rays;i++){const a=(i/rays)*Math.PI*2-Math.PI/2,c=Math.cos(a),s=Math.sin(a),r1=8.5,r2=17.5,x1=cx+c*r1,y1=cy+s*r1,x2=cx+c*r2,y2=cy+s*r2,tx=-s*2.8,ty=c*2.8,ix=s*1.8,iy=-c*1.8;m+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${color}" stroke-width="2.4" stroke-linecap="square"/><line x1="${x2.toFixed(1)}" y1="${y2.toFixed(1)}" x2="${(x2+tx).toFixed(1)}" y2="${(y2+ty).toFixed(1)}" stroke="${color}" stroke-width="2.4" stroke-linecap="square"/>`;} return `<circle cx="24" cy="24" r="4.5" fill="${color}"/>`+m;})()}</svg>`;
+      const slxRight = slxDone
+        ? `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--lime);background:rgba(195,251,165,0.08);border:1px solid rgba(195,251,165,0.25);padding:5px 12px;border-radius:4px;">✓ ${lang === 'ko' ? '완료' : 'Done'}</span>`
+        : `<div style="display:flex;gap:7px;align-items:center;">
+            <a href="https://slx.fi" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:5px;background:rgba(213,244,85,0.10);border:1px solid rgba(213,244,85,0.30);color:#D5F455;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 13px;border-radius:4px;text-decoration:none;"
+               onclick="document.getElementById('slx-done-btn').style.display='inline-flex'">
+              ${lang === 'ko' ? '대기자 등록' : 'Join Waitlist'}
+            </a>
+            <button id="slx-done-btn"
+              style="display:none;align-items:center;gap:5px;background:rgba(195,251,165,0.10);border:1px solid rgba(195,251,165,0.30);color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 13px;border-radius:4px;cursor:pointer;"
+              onclick="doFollowTask('waitlist_slx')">
+              ✓ ${lang === 'ko' ? '완료' : 'Done'}
+            </button>
+          </div>`;
+      return `
+        <div style="margin-top:10px;padding:10px 0 6px 0;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(213,244,85,0.5);">
+          ⚡ ${lang === 'ko' ? '파트너 태스크' : 'Partner Task'}
+        </div>
+        <div class="${slxDone ? 'task-card done' : 'task-card link-type'}" style="flex-wrap:wrap;gap:10px;border-color:rgba(213,244,85,0.20);background:linear-gradient(135deg,rgba(213,244,85,0.04),transparent);">
+          <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;">${SLX_LOGO}</div>
+          <div class="task-card-info">
+            <div class="task-card-name" style="color:#D5F455;">${lang === 'ko' ? 'Superluminal 대기자 등록' : 'Join Superluminal Waitlist'}</div>
+            <div class="task-card-desc">${lang === 'ko' ? 'FOGO 기반 공정한 퍼프 DEX — slx.fi에서 등록하세요' : 'Fair perps DEX built on FOGO · Sign up at slx.fi'}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+            <span class="task-points-badge">+200 pts</span>
+            ${slxRight}
+          </div>
+        </div>`;
+    })()}`;
 }
 
 /* Handle follow task completion */
@@ -7724,5 +7772,81 @@ async function loadLinkClickStats() {
   </div>
 </a>
 <script src="fogo-enhance.js"></script>
+
+<!-- ── Superluminal × FOGO ─────────────────────────────────── -->
+<script>
+(function() {
+  var isKo = document.documentElement.lang === 'ko' || location.search.indexOf('lang=ko') !== -1;
+  var lang = isKo ? 'ko' : 'en';
+  // Check SLX popup cooldown (7 days)
+  var slxSeen = null;
+  try { slxSeen = localStorage.getItem('fogo_slx_popup_seen'); } catch(e) {}
+  var sevenDays = 7 * 24 * 60 * 60 * 1000;
+  var showPopupNow = !slxSeen || Date.now() - parseInt(slxSeen) > sevenDays;
+  // Only show popup immediately if Speed Run modal is already dismissed
+  var srSeen = false;
+  try { srSeen = !!localStorage.getItem('fogo_speedrun_seen'); } catch(e) {}
+
+  window.SLXBannerConfig = {
+    lang:         lang,
+    showBar:      true,
+    showPopup:    srSeen && showPopupNow,  // show immediately if SR modal already gone
+    popupDelay:   2000,
+    waitlistUrl:  'https://slx.fi',
+    dismissBar:   true,
+    dismissPopup: true,
+  };
+})();
+</script>
+<script src="/slx-banner.js"></script>
+<style>
+/* ── Override SLX banner colors to match FOGO purple/navy palette ── */
+
+/* Top bar */
+#slx-bar {
+  background: linear-gradient(90deg, #080420 0%, #0C0930 40%, #110D32 70%, #080420 100%) !important;
+  border-bottom-color: rgba(213,244,85,0.14) !important;
+}
+
+/* Popup backdrop + card */
+#slx-popup-overlay { background: rgba(8,4,32,0.85) !important; }
+#slx-popup {
+  max-width: 420px !important;
+  background: linear-gradient(160deg, #110D32 0%, #0C0930 50%, #160F38 100%) !important;
+  border-color: rgba(213,244,85,0.16) !important;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.70), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 60px rgba(213,244,85,0.05) !important;
+}
+#slx-popup::before {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(255,61,0,0.07), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 80% 10%, rgba(213,244,85,0.04), transparent 55%) !important;
+}
+.slx-stat { background: rgba(8,4,32,0.70) !important; }
+
+/* Leaderboard banner */
+#slx-lb .slx-lb-left {
+  background: linear-gradient(120deg, #080420 0%, #0C0930 60%, #110D32 100%) !important;
+}
+#slx-lb .slx-lb-right {
+  background: linear-gradient(160deg, #110D32 0%, #0C0930 50%, #0C0930 100%) !important;
+}
+</style>
+<script>
+// Patch SLX popup dismiss to save cooldown timestamp
+(function() {
+  var _origHide = null;
+  function patchHide() {
+    if (!window.SLXBanner) return;
+    _origHide = SLXBanner.hidePopup.bind(SLXBanner);
+    SLXBanner.hidePopup = function(instant) {
+      try { localStorage.setItem('fogo_slx_popup_seen', Date.now().toString()); } catch(e) {}
+      _origHide(instant);
+    };
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', patchHide);
+  else patchHide();
+})();
+</script>
+
 </body>
 </html>
