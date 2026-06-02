@@ -893,6 +893,23 @@ body::after{
       <div class="final-push-label" id="final-push-label">⚡ FINAL PUSH ⚡</div>
     </div>
     <div class="tps-flash" id="tps-flash"></div>
+
+    <!-- SLX strip — Superluminal replacing Ambient on FOGO -->
+    <a id="slx-game-strip" href="https://slx.fi" target="_blank" rel="noopener"
+       style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:9px 16px;border-radius:8px;border:1px solid rgba(213,244,85,0.22);background:linear-gradient(90deg,rgba(8,4,32,0.90),rgba(21,15,56,0.85));text-decoration:none;pointer-events:none;transition:opacity 0.2s;position:relative;overflow:hidden;animation:slxStripPulse 3s ease-in-out infinite;">
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="flex-shrink:0;"><circle cx="24" cy="24" r="4.5" fill="#D5F455"/><g id="slx-rays-game"></g></svg>
+        <span style="font-size:8px;font-weight:800;letter-spacing:0.20em;text-transform:uppercase;color:#D5F455;background:rgba(213,244,85,0.10);border:1px solid rgba(213,244,85,0.25);border-radius:3px;padding:2px 6px;flex-shrink:0;">COMING SOON</span>
+      </div>
+      <span style="font-family:'Inter',sans-serif;font-size:12px;font-weight:700;font-style:italic;color:#fff;letter-spacing:-0.01em;flex:1;text-align:center;">Superluminal</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#D5F455;flex-shrink:0;">slx.fi</span>
+    </a>
+    <style>
+      @keyframes slxStripPulse {
+        0%,100% { border-color:rgba(213,244,85,0.22); box-shadow:none; }
+        50%      { border-color:rgba(213,244,85,0.50); box-shadow:0 0 12px rgba(213,244,85,0.14); }
+      }
+    </style>
   </div>
 </section>
 
@@ -945,6 +962,9 @@ body::after{
             <a class="vol-tip-dapp" href="https://pyron.fi"        target="_blank" rel="noopener">Pyron</a>
           </div>
         </div>
+        <!-- SLX leaderboard banner — shown on result screen -->
+        <div id="slx-result-banner" style="margin-bottom:14px;"></div>
+
         <div class="result-actions">
           <button class="btn-share" onclick="shareOnX()">
             <span class="x-mark">𝕏</span> Share your score on X
@@ -2240,6 +2260,68 @@ function fireConfetti() {
     console.error('[FOGO] Reown AppKit failed to load:', err?.message || err);
     // Degrade gracefully — wallet row stays in "not connected" state
   }
+</script>
+
+<!-- ── Superluminal × FOGO palette overrides ──────────────── -->
+<style>
+#slx-lb .slx-lb-left {
+  background: linear-gradient(120deg, #080420 0%, #0C0930 60%, #110D32 100%) !important;
+}
+#slx-lb .slx-lb-right {
+  background: linear-gradient(160deg, #110D32 0%, #0C0930 50%, #0C0930 100%) !important;
+}
+#slx-lb { border-color: rgba(213,244,85,0.14) !important; }
+</style>
+
+<!-- ── Superluminal × FOGO ─────────────────────────────────── -->
+<script>
+window.SLXBannerConfig = {
+  lang: window.PLAY_LANG === 'ko' ? 'ko' : 'en',
+  showBar:     false,   // no top bar on play page — nav already at top
+  showPopup:   false,   // no popup during game
+  waitlistUrl: 'https://slx.fi',
+  dismissBar:  false,
+  dismissPopup:false,
+};
+</script>
+<script src="/slx-banner.js"></script>
+<script>
+(function() {
+  // Draw SLX sunburst rays into the ambient in-game strip
+  var raysEl = document.getElementById('slx-rays-game');
+  if (raysEl && window.SLXBanner) {
+    // Inject rays via inner HTML — same algorithm as slx-banner.js
+    var cx=24,cy=24,rays=22,color='#D5F455',m='';
+    for(var i=0;i<rays;i++){
+      var a=(i/rays)*Math.PI*2-Math.PI/2,c=Math.cos(a),s=Math.sin(a);
+      var r1=8.5,r2=17.5,x1=cx+c*r1,y1=cy+s*r1,x2=cx+c*r2,y2=cy+s*r2;
+      var tx=-s*2.8,ty=c*2.8;
+      m+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+color+'" stroke-width="2.4" stroke-linecap="square"/>';
+    }
+    raysEl.innerHTML = m;
+  }
+
+  // Enable in-game strip pointer-events on result screen only
+  var origShow = window.showScreen;
+  if (typeof origShow === 'function') {
+    window.showScreen = function(name) {
+      origShow(name);
+      var strip = document.getElementById('slx-game-strip');
+      if (strip) {
+        strip.style.pointerEvents = (name === 'game') ? 'none' : 'auto';
+        strip.style.opacity = (name === 'game') ? '0.75' : '1';
+      }
+      // Inject leaderboard banner on result screen
+      if (name === 'result' && window.SLXBanner) {
+        var container = document.getElementById('slx-result-banner');
+        if (container && !container.hasChildNodes()) {
+          var lang = window.PLAY_LANG === 'ko' ? 'ko' : 'en';
+          SLXBanner.showLeaderboard(lang, container);
+        }
+      }
+    };
+  }
+})();
 </script>
 </body>
 </html>
