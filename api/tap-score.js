@@ -164,6 +164,7 @@ export default async function handler(req, res) {
   }
 
   const { wallet_address, x_handle, kol_ref, clicks, physical_clicks,
+          max_concurrent_fingers,
           duration_ms, click_timestamps, physical_click_timestamps,
           page_load_ts, play_pressed_ts } = req.body || {};
 
@@ -203,8 +204,20 @@ export default async function handler(req, res) {
   const tsForAbuse = (Array.isArray(physical_click_timestamps) && physical_click_timestamps.length > 2)
     ? physical_click_timestamps : click_timestamps;
 
+  // Scale CPS ceiling by touch finger count:
+  // 1 finger (or desktop mouse): 20 CPS
+  // 2 fingers: 26 CPS
+  // 3 fingers: 30 CPS
+  // 4+ fingers: 36 CPS
+  // Falls back to global MAX_CPS (25) if no finger data sent (e.g. old clients)
+  const fingers = (typeof max_concurrent_fingers === 'number' && max_concurrent_fingers >= 1)
+    ? max_concurrent_fingers : null;
+  const effectiveMaxCPS = fingers
+    ? (fingers >= 4 ? 36 : fingers === 3 ? 30 : fingers === 2 ? 26 : 20)
+    : MAX_CPS;
+
   const cps = physClicks / (duration_ms / 1000);
-  let flagged    = cps > MAX_CPS;
+  let flagged    = cps > effectiveMaxCPS;
   let flagReason = flagged ? 'rate_exceeded' : null;
 
   // Layer 4 — page load honeypot: bot scripts fire almost instantly after load
