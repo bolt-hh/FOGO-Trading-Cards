@@ -1716,11 +1716,12 @@ function resetPowerUps() {
 function startRun() {
   S.playPressedTs = Date.now(); // Layer 4 honeypot: record when play was pressed
   S.prevBest = S.bestScore; // A: capture pre-session best for PB detection
-  S.clicks          = 0;
-  S.physicalClicks  = 0;
-  S.clickTs         = [];
-  S.physicalClickTs = [];
-  S.fogoTx          = 0;
+  S.clicks                = 0;
+  S.physicalClicks        = 0;
+  S.clickTs               = [];
+  S.physicalClickTs       = [];
+  S.maxConcurrentFingers  = 1;   // updated by touchstart events during play
+  S.fogoTx                = 0;
   S.handle  = document.getElementById('x-handle-input').value.trim();
   S.kolRef  = document.getElementById('kol-select-input')?.value || '';
   document.getElementById('game-counter').textContent      = '0';
@@ -1759,9 +1760,26 @@ function runCountdown(n) {
 function beginGame() {
   S.gameActive = true;
   S.startTime  = Date.now();
+  S.maxConcurrentFingers = 1; // reset for this session
   showScreen('game');
   requestAnimationFrame(gameLoop);
 }
+
+// ── Touch finger tracker — runs throughout gameplay ──────────────
+// Records the peak number of simultaneous fingers so the API can
+// apply the appropriate CPS ceiling for mobile multi-finger players.
+(function() {
+  const tapBtn = document.getElementById('tap-btn');
+  if (!tapBtn) return;
+  function trackFingers(e) {
+    if (!S.gameActive) return;
+    const count = e.touches ? e.touches.length : 1;
+    if (count > (S.maxConcurrentFingers || 1)) {
+      S.maxConcurrentFingers = count;
+    }
+  }
+  document.addEventListener('touchstart', trackFingers, { passive: true });
+})();
 
 function gameLoop() {
   if (!S.gameActive) return;
@@ -1968,6 +1986,7 @@ async function showResultAndSubmit() {
         kol_ref:                   S.kolRef || null,
         clicks,
         physical_clicks:           S.physicalClicks || clicks,
+        max_concurrent_fingers:    S.maxConcurrentFingers || 1,
         duration_ms:               durMs,
         click_timestamps:          tsPayload,
         physical_click_timestamps: [...S.physicalClickTs],
