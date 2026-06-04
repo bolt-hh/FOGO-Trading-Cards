@@ -210,9 +210,13 @@ export default async function handler(req, res) {
   // 3 fingers: 30 CPS
   // 4+ fingers: 36 CPS
   // Falls back to global MAX_CPS (25) if no finger data sent (e.g. old clients)
-  const fingers = (typeof max_concurrent_fingers === 'number' && max_concurrent_fingers >= 1)
+  // Cap at 6 fingers max — physically the most one hand can place simultaneously.
+  // Prevents zoom exploit where players enlarge the button to fit 8-10 fingers.
+  const rawFingers = (typeof max_concurrent_fingers === 'number' && max_concurrent_fingers >= 1)
     ? max_concurrent_fingers : null;
-  // Raised 4-finger ceiling 36→42 to accommodate fast iOS multi-finger players
+  const fingers = rawFingers ? Math.min(rawFingers, 6) : null;
+
+  // CPS ceiling per finger count (raised 4-finger to 42 for fast iOS players)
   const effectiveMaxCPS = fingers
     ? (fingers >= 4 ? 42 : fingers === 3 ? 32 : fingers === 2 ? 26 : 20)
     : MAX_CPS;
