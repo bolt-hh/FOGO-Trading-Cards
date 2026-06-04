@@ -4,7 +4,6 @@
 
 const SUPABASE_URL   = 'https://nhdktvsllunlgdsaninx.supabase.co';
 const TPS            = 100000;    // Fogo TPS used in punchline calc
-const MAX_CPS        = 25;        // raised from 15 — power-ups inflate click count without changing physical speed
 const MIN_STD_DEV_MS = 8;         // below this = suspiciously robotic cadence (applied to physical taps only)
 const MAX_PLAYS_HOUR = 30;        // IP-level rate limit (no daily wallet cap — unlimited plays)
 
@@ -105,7 +104,9 @@ function volMultiplier(volUsd) {
 }
 
 // ── Anti-abuse checks ─────────────────────────────────────────────
-function analyseTimestamps(ts, clicks) {
+function analyseTimestamps(ts, clicks, maxCps) {
+  // maxCps is effectiveMaxCPS passed from the handler — finger-aware and device-aware
+  const cpsLimit = maxCps || 30; // 30 = safe fallback if somehow called without a limit
   if (!Array.isArray(ts) || ts.length < 3) return { flagged: false };
 
   // Server-side recount — allow generous slack for power-up virtual clicks
@@ -117,11 +118,11 @@ function analyseTimestamps(ts, clicks) {
     return { flagged: true, reason: 'timestamp_mismatch' };
   }
 
-  // Click rate — based on raw ts array (physical or all, whichever sent)
+  // Click rate — uses the same dynamic ceiling as the main CPS check
   const spanMs = ts[ts.length - 1] - ts[0];
   if (spanMs > 0) {
     const cps = (ts.length / spanMs) * 1000;
-    if (cps > MAX_CPS) return { flagged: true, reason: 'rate_exceeded' };
+    if (cps > cpsLimit) return { flagged: true, reason: 'rate_exceeded' };
   }
 
   // ── Deduplicate burst timestamps before statistical analysis ──────
@@ -209,7 +210,7 @@ export default async function handler(req, res) {
   // 2 fingers: 26 CPS
   // 3 fingers: 30 CPS
   // 4+ fingers: 36 CPS
-  // Falls back to global MAX_CPS (25) if no finger data sent (e.g. old clients)
+  // Falls back to 30 CPS if no finger data sent — generous enough for fast mobile single-finger
   // Cap at 6 fingers max — physically the most one hand can place simultaneously.
   // Prevents zoom exploit where players enlarge the button to fit 8-10 fingers.
   const rawFingers = (typeof max_concurrent_fingers === 'number' && max_concurrent_fingers >= 1)
@@ -237,7 +238,7 @@ export default async function handler(req, res) {
   }
 
   if (!flagged && tsForAbuse) {
-    const check = analyseTimestamps(tsForAbuse, physClicks);
+    const check = analyseTimestamps(tsForAbuse, physClicks, effectiveMaxCPS);
     flagged    = check.flagged;
     flagReason = check.reason || null;
   }
