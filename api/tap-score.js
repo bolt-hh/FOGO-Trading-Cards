@@ -217,9 +217,11 @@ export default async function handler(req, res) {
   const fingers = rawFingers ? Math.min(rawFingers, 6) : null;
 
   // CPS ceiling per finger count (raised 4-finger to 42 for fast iOS players)
+  // Fallback 30 CPS (not 25) when no finger data arrives — mobile players often
+  // send null if touch detection fires late, and single-finger mobile can hit 25+.
   const effectiveMaxCPS = fingers
     ? (fingers >= 4 ? 42 : fingers === 3 ? 32 : fingers === 2 ? 26 : 20)
-    : MAX_CPS;
+    : 30;
 
   const cps = physClicks / (duration_ms / 1000);
   let flagged    = cps > effectiveMaxCPS;
