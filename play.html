@@ -1761,24 +1761,48 @@ function beginGame() {
   S.gameActive = true;
   S.startTime  = Date.now();
   S.maxConcurrentFingers = 1; // reset for this session
+  // Clear any stale touch IDs from previous session
+  if (window._activeTouchIds) window._activeTouchIds.clear();
   showScreen('game');
   requestAnimationFrame(gameLoop);
 }
 
-// ── Touch finger tracker — runs throughout gameplay ──────────────
-// Records the peak number of simultaneous fingers so the API can
-// apply the appropriate CPS ceiling for mobile multi-finger players.
+// ── Touch finger tracker — iOS-compatible ────────────────────────
+// Records peak simultaneous fingers for the API CPS ceiling.
+// Uses a manual active-touch set to work around iOS Safari's
+// unreliable e.touches.length during rapid multi-finger tapping.
 (function() {
-  const tapBtn = document.getElementById('tap-btn');
-  if (!tapBtn) return;
-  function trackFingers(e) {
+  const activeIds = new Set();
+
+  function onTouchStart(e) {
     if (!S.gameActive) return;
-    const count = e.touches ? e.touches.length : 1;
+    // Add all newly pressed fingers to the active set
+    const changed = e.changedTouches || [];
+    for (let i = 0; i < changed.length; i++) {
+      activeIds.add(changed[i].identifier);
+    }
+    // Also check e.touches as a cross-check (whichever is larger)
+    const fromTouches = e.touches ? e.touches.length : 0;
+    const count = Math.max(activeIds.size, fromTouches);
     if (count > (S.maxConcurrentFingers || 1)) {
       S.maxConcurrentFingers = count;
     }
   }
-  document.addEventListener('touchstart', trackFingers, { passive: true });
+
+  function onTouchEnd(e) {
+    // Remove lifted fingers from active set
+    const changed = e.changedTouches || [];
+    for (let i = 0; i < changed.length; i++) {
+      activeIds.delete(changed[i].identifier);
+    }
+  }
+
+  document.addEventListener('touchstart', onTouchStart, { passive: true });
+  document.addEventListener('touchend',   onTouchEnd,   { passive: true });
+  document.addEventListener('touchcancel',onTouchEnd,   { passive: true });
+
+  // Expose set so beginGame can clear stale IDs between sessions
+  window._activeTouchIds = activeIds;
 })();
 
 function gameLoop() {
