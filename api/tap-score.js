@@ -212,8 +212,9 @@ export default async function handler(req, res) {
   // Falls back to global MAX_CPS (25) if no finger data sent (e.g. old clients)
   const fingers = (typeof max_concurrent_fingers === 'number' && max_concurrent_fingers >= 1)
     ? max_concurrent_fingers : null;
+  // Raised 4-finger ceiling 36→42 to accommodate fast iOS multi-finger players
   const effectiveMaxCPS = fingers
-    ? (fingers >= 4 ? 36 : fingers === 3 ? 30 : fingers === 2 ? 26 : 20)
+    ? (fingers >= 4 ? 42 : fingers === 3 ? 32 : fingers === 2 ? 26 : 20)
     : MAX_CPS;
 
   const cps = physClicks / (duration_ms / 1000);
