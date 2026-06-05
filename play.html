@@ -1013,6 +1013,17 @@ body::after{
       </div>
     </div>
 
+    <!-- Main leaderboard clarification note -->
+    <a href="https://fogotradingcards.com#leaderboard" target="_blank" rel="noopener"
+       style="display:flex;align-items:flex-start;gap:12px;background:rgba(195,251,165,0.05);border:1px solid rgba(195,251,165,0.15);border-radius:10px;padding:14px 16px;margin-bottom:16px;text-decoration:none;transition:border-color 0.15s;"
+       onmouseover="this.style.borderColor='rgba(195,251,165,0.30)'" onmouseout="this.style.borderColor='rgba(195,251,165,0.15)'">
+      <span style="font-size:18px;flex-shrink:0;margin-top:1px;">🎴</span>
+      <div>
+        <div id="lb-main-note-title" style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--lime);margin-bottom:4px;">Main Campaign Leaderboard</div>
+        <div id="lb-main-note-body" style="font-size:11px;color:var(--sub);line-height:1.55;">This is the Speed Run tap leaderboard. The full campaign leaderboard — including trading volume, tasks, and all earned points — is at <strong style="color:var(--lime);">fogotradingcards.com</strong>. Tap points earned here convert directly to raffle entries on the main site.</div>
+      </div>
+    </a>
+
     <!-- Record session box -->
     <div class="lb-record-box" id="lb-record-box" style="display:none;">
       <div class="lb-record-flame">🔥</div>
@@ -1063,6 +1074,9 @@ const TR = {
   kol_label:         { en: 'Who referred you?',            ko: '누가 추천했나요?' },
   kol_ph:            { en: '— Select a KOL —',            ko: '— KOL 선택 —' },
   lb_prize_eyebrow:  { en: '🏆 Season 2 Prize Pool',      ko: '🏆 시즌 2 상금 풀' },
+  lb_main_note_title:{ en: 'Main Campaign Leaderboard',   ko: '메인 캠페인 리더보드' },
+  lb_main_note_body: { en: 'This is the Speed Run tap leaderboard. The full campaign leaderboard — including trading volume, tasks, and all earned points — is at fogotradingcards.com. Tap points earned here convert directly to raffle entries on the main site.',
+                       ko: '이곳은 스피드 런 탭 리더보드입니다. 거래량, 태스크, 획득 포인트가 모두 포함된 전체 캠페인 리더보드는 fogotradingcards.com에 있습니다. 여기서 얻은 탭 포인트는 메인 사이트의 래플 참가권으로 자동 전환됩니다.' },
   lb_tile_taps_lbl:  { en: 'YOUR TAPS',                  ko: '내 탭' },
   lb_tile_taps_val:  { en: '= Entries',                  ko: '= 참가권' },
   lb_tile_prize_lbl: { en: 'PRIZE POOL',                 ko: '상금 풀' },
@@ -1158,6 +1172,8 @@ function applyTranslations() {
   const kolSel = id('kol-select-input');
   if (kolSel && kolSel.options[0]) kolSel.options[0].textContent = t('kol_ph');
   set('lb-prize-eyebrow',  t('lb_prize_eyebrow'),  true);
+  set('lb-main-note-title', t('lb_main_note_title'), true);
+  set('lb-main-note-body',  t('lb_main_note_body'),  true);
   set('lb-tile-taps-lbl',  t('lb_tile_taps_lbl'),  true);
   set('lb-tile-taps-val',  t('lb_tile_taps_val'),  true);
   set('lb-tile-prize-lbl', t('lb_tile_prize_lbl'), true);
