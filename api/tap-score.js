@@ -289,10 +289,19 @@ export default async function handler(req, res) {
     if (!Array.isArray(subs) || subs.length === 0) {
       try {
         const handle = x_handle.startsWith('@') ? x_handle : '@' + x_handle;
+        // Look up kol_id from kols table so game registrations match card registrations
+        let kolId = null;
+        if (kol_ref) {
+          try {
+            const kolRows = await sbGet(`/kols?handle=eq.${encodeURIComponent(kol_ref)}&select=id&limit=1`);
+            if (Array.isArray(kolRows) && kolRows[0]) kolId = kolRows[0].id;
+          } catch (_) { /* non-critical — kol_passcode fallback still stored */ }
+        }
         await sbPost('/card_submissions', {
           wallet_address,
           twitter_handle:  handle,
           kol_passcode:    kol_ref || null,
+          kol_id:          kolId   || null,
           total_points:    0,
           tap_points:      0,
           entry_count:     0,
