@@ -4920,10 +4920,22 @@ async function renderDashboard() {
   // ── Entries by KOL ───────────────────────────────────────────
   const kolBreak = document.getElementById('dash-kol-breakdown');
   if (kolBreak) {
-    const kolMap = {}; (STATE.allKols||[]).forEach(k=>{ kolMap[k.id]=k.name; });
+    // Build two lookups: by UUID (card flow) and by handle (game flow)
+    const kolMapById     = {};
+    const kolMapByHandle = {};
+    (STATE.allKols||[]).forEach(k=>{
+      if (k.id)     kolMapById[k.id]             = k.name;
+      if (k.handle) kolMapByHandle[k.handle.toLowerCase()] = k.name;
+      if (k.name)   kolMapByHandle[k.name.toLowerCase()]   = k.name;
+    });
     const kolCounts = {};
     subs.forEach(r => {
-      const name = kolMap[r.kol_id] || r.kol_passcode || r.kol_id || 'Unknown';
+      const passcode = (r.kol_passcode||'').toLowerCase();
+      const name = kolMapById[r.kol_id]
+                || kolMapByHandle[passcode]
+                || r.kol_passcode
+                || r.kol_id
+                || 'Unknown';
       kolCounts[name] = (kolCounts[name]||0)+1;
     });
     const sorted = Object.entries(kolCounts).sort(([,a],[,b])=>b-a).slice(0,8);
