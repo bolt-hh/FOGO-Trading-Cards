@@ -7166,6 +7166,18 @@ async function rescanWallet() {
 ================================================================ */
 let _lbPrevView = 'view-gate';
 
+// Auto-open leaderboard when arriving via #leaderboard hash (e.g. from play.html)
+(function() {
+  function checkHash() {
+    if (window.location.hash === '#leaderboard') {
+      setTimeout(showLeaderboard, 600); // slight delay for page to initialise
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', checkHash);
+  else checkHash();
+})();
+
 function showLeaderboard() {
   _lbPrevView = document.querySelector('.view.active')?.id || 'view-gate';
   showView('view-leaderboard');
