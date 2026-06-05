@@ -118,12 +118,13 @@ function analyseTimestamps(ts, clicks, maxCps) {
     return { flagged: true, reason: 'timestamp_mismatch' };
   }
 
-  // Click rate — uses the same dynamic ceiling as the main CPS check
-  const spanMs = ts[ts.length - 1] - ts[0];
-  if (spanMs > 0) {
-    const cps = (ts.length / spanMs) * 1000;
-    if (cps > cpsLimit) return { flagged: true, reason: 'rate_exceeded' };
-  }
+  // Click rate — use the full game duration (10s) not the tap span.
+  // Using span punishes burst-tappers who tap hard then pause: a player who
+  // taps 160 times in 5s then stops has span-CPS=32 but game-CPS=16.
+  // Both measures should agree with the stored physical_cps (clicks/10s).
+  const GAME_DURATION_MS = 10000;
+  const gameCps = (ts.length / GAME_DURATION_MS) * 1000;
+  if (gameCps > cpsLimit) return { flagged: true, reason: 'rate_exceeded' };
 
   // ── Deduplicate burst timestamps before statistical analysis ──────
   // Power-ups (Surge, Genesis, Lightning) push identical timestamps for bonus
