@@ -1166,6 +1166,15 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 .copy-flash{color:var(--lime);font-size:9px;display:none;margin-left:6px;}
 .copy-flash.on{display:inline;}
 
+/* Latest entries feed */
+.kol-chip{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;border:1px solid transparent;}
+.feed-tbl{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px;min-width:680px;}
+.feed-tbl th{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
+.feed-tbl td{padding:7px 10px;color:var(--sub);border-bottom:1px solid rgba(213,235,213,.04);white-space:nowrap;vertical-align:middle;}
+.feed-tbl tr:last-child td{border-bottom:none;}
+.feed-tbl tr:hover td{background:rgba(255,255,255,.012);}
+.feed-tbl td.fd{color:var(--dim);font-size:10px;}
+
 /* Admin empty state */
 .empty-state{
   text-align:center;padding:32px 20px;
@@ -2691,6 +2700,17 @@ function dismissSpeedRunModal() {
             <button class="btn-small" onclick="refreshAdmin()" style="font-size:9px;padding:5px 10px;">↻ Refresh</button>
           </div>
           <div id="dash-leaderboard"><div class="empty-state">Loading...</div></div>
+        </div>
+
+        <!-- Full-width: Latest Entries Feed -->
+        <div class="admin-section-full" style="margin-top:16px;margin-bottom:0;">
+          <div class="admin-section-head" style="margin-bottom:10px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+            Latest Entries — Recent 100 by Time
+            <div id="dash-feed-legend" style="display:inline-flex;flex-wrap:wrap;gap:6px;"></div>
+          </div>
+          <div style="overflow-x:auto;">
+            <div id="dash-latest-feed"><div class="empty-state">Loading...</div></div>
+          </div>
         </div>
 
         <!-- Link clicks stats (legacy section kept for compatibility) -->
@@ -5040,6 +5060,119 @@ async function renderDashboard() {
 
   // ── Top leaderboard preview ──────────────────────────────────
   await loadAdminLeaderboard();
+
+  // ── Latest entries feed ───────────────────────────────────────
+  renderLatestEntriesFeed();
+}
+
+/* ================================================================
+   LATEST ENTRIES FEED
+================================================================ */
+const FEED_PALETTE = [
+  { bg:'rgba(255,61,0,.15)',   border:'#FF3D00', text:'#FF7A5C' },
+  { bg:'rgba(195,251,165,.12)',border:'rgba(195,251,165,.6)', text:'#9FE87A' },
+  { bg:'rgba(96,165,250,.14)', border:'rgba(96,165,250,.6)',  text:'#7DBFFF' },
+  { bg:'rgba(167,139,250,.14)',border:'rgba(167,139,250,.5)', text:'#C4AEFF' },
+  { bg:'rgba(45,212,191,.13)', border:'rgba(45,212,191,.5)',  text:'#5EE8D8' },
+  { bg:'rgba(255,140,0,.14)',  border:'rgba(255,140,0,.6)',   text:'#FFB347' },
+  { bg:'rgba(250,204,21,.12)', border:'rgba(250,204,21,.5)',  text:'#FFE066' },
+  { bg:'rgba(244,114,182,.13)',border:'rgba(244,114,182,.5)', text:'#F9A8D4' },
+  { bg:'rgba(52,211,153,.12)', border:'rgba(52,211,153,.5)',  text:'#6EE7B7' },
+  { bg:'rgba(251,146,60,.14)', border:'rgba(251,146,60,.55)', text:'#FDBA74' },
+  { bg:'rgba(129,140,248,.14)',border:'rgba(129,140,248,.5)', text:'#A5B4FC' },
+  { bg:'rgba(209,213,219,.08)',border:'rgba(156,163,175,.4)', text:'#D1D5DB' },
+];
+
+function feedTimeAgo(isoStr) {
+  const diff = Math.floor((Date.now() - new Date(isoStr).getTime()) / 1000);
+  if (diff < 60)    return diff + 's ago';
+  if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+function renderLatestEntriesFeed() {
+  const container = document.getElementById('dash-latest-feed');
+  const legendEl  = document.getElementById('dash-feed-legend');
+  if (!container) return;
+
+  // Sort allSubmissions by created_at DESC, take 100
+  const sorted = [...(STATE.allSubmissions || [])]
+    .filter(s => s.created_at)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 100);
+
+  if (!sorted.length) {
+    container.innerHTML = '<div class="empty-state">No entries yet.</div>';
+    return;
+  }
+
+  // Build dual KOL lookup from STATE.allKols
+  const kolById = {}, kolByHandle = {};
+  (STATE.allKols || []).forEach(k => {
+    if (k.id)     kolById[k.id] = k.name;
+    if (k.handle) kolByHandle[k.handle.toLowerCase()] = k.name;
+    if (k.name)   kolByHandle[k.name.toLowerCase()]   = k.name;
+  });
+
+  // Collect unique KOL names in order of first appearance
+  const seenKols = [], kolColorMap = {};
+  sorted.forEach(e => {
+    const pc  = (e.kol_passcode || '').toLowerCase();
+    const name = kolById[e.kol_id] || kolByHandle[pc] || e.kol_passcode || null;
+    if (name && !seenKols.includes(name)) seenKols.push(name);
+  });
+  seenKols.forEach((n, i) => { kolColorMap[n] = FEED_PALETTE[i % FEED_PALETTE.length]; });
+
+  // Legend
+  if (legendEl) {
+    legendEl.innerHTML = seenKols.map(n => {
+      const c = kolColorMap[n];
+      return `<span style="display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:8px;color:${c.text};">
+        <span style="width:7px;height:7px;border-radius:50%;background:${c.text};display:inline-block;"></span>${n}
+      </span>`;
+    }).join('');
+  }
+
+  // Build table
+  let html = `<table class="feed-tbl"><thead><tr>
+    <th>#</th><th>Time</th><th>Wallet</th><th>X Handle</th><th>KOL Channel</th><th>Tier</th><th>Volume</th><th>Points</th>
+  </tr></thead><tbody>`;
+
+  sorted.forEach((e, idx) => {
+    const pc      = (e.kol_passcode || '').toLowerCase();
+    const kolName = kolById[e.kol_id] || kolByHandle[pc] || e.kol_passcode || null;
+    const c       = kolName ? kolColorMap[kolName] : null;
+    const chip    = c
+      ? `<span class="kol-chip" style="background:${c.bg};border-color:${c.border};color:${c.text};">${kolName}</span>`
+      : `<span style="color:var(--dim);font-size:10px;">—</span>`;
+
+    const wallet  = e.wallet_address
+      ? `<span style="color:var(--dim);">${e.wallet_address.slice(0,6)}…${e.wallet_address.slice(-4)}</span>`
+      : '—';
+    const handle  = e.x_handle
+      ? `<span style="color:var(--lime);">@${(e.x_handle||'').replace(/^@/,'')}</span>`
+      : `<span style="color:var(--dim);">—</span>`;
+    const tier    = e.tier_name
+      ? `<span style="color:var(--sub);font-size:10px;">${e.tier_name}</span>`
+      : `<span style="color:var(--dim);">—</span>`;
+    const vol     = e.total_volume_usd ? fmtUsd(e.total_volume_usd) : '—';
+    const pts     = e.total_points     ? e.total_points.toLocaleString() : '—';
+
+    html += `<tr>
+      <td class="fd">${idx + 1}</td>
+      <td class="fd" title="${e.created_at || ''}">${feedTimeAgo(e.created_at)}</td>
+      <td>${wallet}</td>
+      <td>${handle}</td>
+      <td>${chip}</td>
+      <td>${tier}</td>
+      <td style="color:var(--sub);">${vol}</td>
+      <td style="color:var(--lime);font-weight:600;">${pts}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
 }
 
 function renderKolTable() {
