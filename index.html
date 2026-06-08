@@ -2694,22 +2694,25 @@ function dismissSpeedRunModal() {
           </div>
         </div>
 
-        <!-- Full-width: Top leaderboard -->
+        <!-- Full-width: Top leaderboard (collapsible) -->
         <div class="admin-section-full" style="margin-bottom:0;">
-          <div class="admin-section-head" style="margin-bottom:12px;">Top Leaderboard
-            <button class="btn-small" onclick="refreshAdmin()" style="font-size:9px;padding:5px 10px;">↻ Refresh</button>
+          <div class="admin-section-head" style="margin-bottom:0;cursor:pointer;user-select:none;" onclick="toggleDashSection('dash-leaderboard','lb-chevron')">
+            Top Leaderboard
+            <span id="lb-chevron" style="margin-left:6px;font-size:11px;color:var(--dim);transition:transform .2s;display:inline-block;transform:rotate(-90deg);">▾</span>
+            <button class="btn-small" onclick="event.stopPropagation();refreshAdmin();" style="font-size:9px;padding:5px 10px;">↻ Refresh</button>
           </div>
-          <div id="dash-leaderboard"><div class="empty-state">Loading...</div></div>
+          <div id="dash-leaderboard" style="display:none;margin-top:12px;"><div class="empty-state">Click to expand.</div></div>
         </div>
 
-        <!-- Full-width: Latest Entries Feed -->
+        <!-- Full-width: Latest Entries Feed (collapsible) -->
         <div class="admin-section-full" style="margin-top:16px;margin-bottom:0;">
-          <div class="admin-section-head" style="margin-bottom:10px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div class="admin-section-head" style="margin-bottom:0;cursor:pointer;user-select:none;display:flex;align-items:center;flex-wrap:wrap;gap:8px;" onclick="toggleDashSection('dash-feed-body','feed-chevron')">
             Latest Entries — Recent 100 by Time
-            <div id="dash-feed-legend" style="display:inline-flex;flex-wrap:wrap;gap:6px;"></div>
+            <span id="feed-chevron" style="font-size:11px;color:var(--dim);transition:transform .2s;display:inline-block;transform:rotate(-90deg);">▾</span>
+            <div id="dash-feed-legend" style="display:inline-flex;flex-wrap:wrap;gap:6px;margin-left:4px;" onclick="event.stopPropagation()"></div>
           </div>
-          <div style="overflow-x:auto;">
-            <div id="dash-latest-feed"><div class="empty-state">Loading...</div></div>
+          <div id="dash-feed-body" style="display:none;margin-top:12px;overflow-x:auto;">
+            <div id="dash-latest-feed"><div class="empty-state">Click to expand.</div></div>
           </div>
         </div>
 
@@ -4958,7 +4961,7 @@ async function renderDashboard() {
                 || 'Unknown';
       kolCounts[name] = (kolCounts[name]||0)+1;
     });
-    const sorted = Object.entries(kolCounts).sort(([,a],[,b])=>b-a).slice(0,8);
+    const sorted = Object.entries(kolCounts).sort(([,a],[,b])=>b-a);
     const maxK = sorted[0]?.[1] || 1;
     kolBreak.innerHTML = sorted.map(([name,count]) => {
       const pct = Math.round((count/total)*100);
@@ -5058,11 +5061,25 @@ async function renderDashboard() {
     }).join('') || '<div class="empty-state">No clicks yet.</div>';
   }
 
-  // ── Top leaderboard preview ──────────────────────────────────
-  await loadAdminLeaderboard();
+  // ── Latest entries feed (only renders if section is open) ─────
+  const feedBody = document.getElementById('dash-feed-body');
+  if (feedBody && feedBody.style.display !== 'none') renderLatestEntriesFeed();
+}
 
-  // ── Latest entries feed ───────────────────────────────────────
-  renderLatestEntriesFeed();
+/* ================================================================
+   COLLAPSIBLE DASHBOARD SECTIONS
+================================================================ */
+function toggleDashSection(bodyId, chevronId) {
+  const body    = document.getElementById(bodyId);
+  const chevron = document.getElementById(chevronId);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  if (chevron) chevron.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)';
+  // If opening the feed for the first time, render it
+  if (!open && bodyId === 'dash-feed-body') renderLatestEntriesFeed();
+  // If opening the leaderboard for the first time, trigger load
+  if (!open && bodyId === 'dash-leaderboard') loadAdminLeaderboard();
 }
 
 /* ================================================================
