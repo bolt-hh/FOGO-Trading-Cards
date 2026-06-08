@@ -5501,10 +5501,19 @@ function renderKolMgmtTable() {
     wrap.innerHTML = '<div class="empty-state">No KOLs yet. Add one above.</div>';
     return;
   }
-  // Count entries per kol_id
+  // Count entries per KOL — match by kol_id first, fall back to kol_passcode vs name/handle
+  const kolByHandle = {};
+  kols.forEach(k => {
+    if (k.handle) kolByHandle[k.handle.toLowerCase()] = k.id;
+    if (k.name)   kolByHandle[k.name.toLowerCase()]   = k.id;
+  });
   const counts = {}, volMap = {};
   STATE.allSubmissions.forEach(s => {
-    const k = s.kol_id || 'unknown';
+    let kid = s.kol_id;
+    if (!kid && s.kol_passcode) {
+      kid = kolByHandle[(s.kol_passcode || '').toLowerCase()] || null;
+    }
+    const k = kid || 'unknown';
     counts[k] = (counts[k] || 0) + 1;
     volMap[k]  = (volMap[k]  || 0) + (s.total_volume_usd || 0);
   });
