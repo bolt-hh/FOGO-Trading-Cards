@@ -1,3 +1,9 @@
+const GAME_PAUSED = true; // ← flip to false to re-open
+
+export default async function handler(req, res) {
+  if (GAME_PAUSED) {
+    return res.status(503).json({ ok: false, paused: true, error: 'Game paused for maintenance — back shortly! 🔧' });
+  }
 // POST /api/tap-score
 // Records a Speed Run play. Validates anti-abuse, inserts into tap_scores,
 // and awards tap_pts to card_submissions (10 clicks = 1 point).
