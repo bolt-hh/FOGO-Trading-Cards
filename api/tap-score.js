@@ -194,11 +194,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: result?.error || 'processing_failed' });
   }
 
-  // ── Trigger leaderboard snapshot refresh (fire-and-forget, ≤1/30s) ─
-  fetch(`${SUPABASE_URL}/rest/v1/rpc/maybe_refresh_leaderboard`, {
-    method: 'POST', headers: sbHeaders(), body: '{}',
-  }).catch(() => {/* non-critical */});
-
+  // Leaderboard refresh is now handled inside process_tap() — no extra call needed.
   return res.status(200).json({
     ok:           true,
     flagged:      result.flagged,
