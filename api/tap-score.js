@@ -4,7 +4,7 @@
 
 // ── Kill switch: set to true to pause the game immediately ───────
 // Flip back to false and redeploy to re-open.
-const GAME_PAUSED = true;
+const GAME_PAUSED = false;
 
 const SUPABASE_URL   = 'https://nhdktvsllunlgdsaninx.supabase.co';
 const TPS            = 100000;    // Fogo TPS used in punchline calc
@@ -270,6 +270,8 @@ export default async function handler(req, res) {
   const leaderboardEligible = !flagged;
 
   // ── Insert into tap_scores ──
+  // click_timestamps used above for anti-cheat (in-memory only) — not persisted to DB.
+  // Storing ~0.5KB of JSON per row caused severe IO exhaustion at scale.
   const handle = x_handle.startsWith('@') ? x_handle : '@' + x_handle;
   await sbPost('/tap_scores', {
     wallet_address,
@@ -278,12 +280,18 @@ export default async function handler(req, res) {
     physical_clicks:      physical_clicks || null,
     duration_ms,
     fogo_equivalent:      Math.floor(clicks * TPS / (duration_ms / 10000)),
-    click_timestamps:     click_timestamps || null,
     ip_hash:              ipHash,
     flagged,
     flag_reason:          flagReason,
     leaderboard_eligible: leaderboardEligible,
   });
+
+  // ── Trigger leaderboard snapshot refresh (rate-limited to once/30s, fire-and-forget) ──
+  // maybe_refresh_leaderboard() checks the _leaderboard_refresh table and only runs
+  // REFRESH MATERIALIZED VIEW CONCURRENTLY if >30s have elapsed — no locking for readers.
+  fetch(`${SUPABASE_URL}/rest/v1/rpc/maybe_refresh_leaderboard`, {
+    method: 'POST', headers: sbHeaders(), body: '{}',
+  }).catch(() => {/* non-critical */});
 
   // ── Award points: calcTapPts + card_submissions fetch in parallel ──
   const [basePts, subsInit] = await Promise.all([
