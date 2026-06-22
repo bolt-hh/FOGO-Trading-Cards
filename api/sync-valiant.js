@@ -35,6 +35,17 @@ async function sbPatch(path, body) {
   }
 }
 
+async function sbPost(path, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
+    method: 'POST',
+    headers: { ...sbHeaders(), 'Prefer': 'return=minimal' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok && res.status !== 201) {
+    throw new Error(`Supabase POST ${path} → ${res.status}: ${await res.text()}`);
+  }
+}
+
 // ── Fuul volume query ────────────────────────────────────────────────────────
 async function getFuulVolume(address) {
   const params = new URLSearchParams({
@@ -137,7 +148,7 @@ export default async function handler(req, res) {
     await sleep(FUUL_DELAY_MS);
   }
 
-  return res.status(200).json({
+  const result = {
     ran_at:          new Date().toISOString(),
     duration_ms:     Date.now() - startTime,
     wallets_checked: targets.length,
@@ -149,5 +160,24 @@ export default async function handler(req, res) {
       skipped: skipped.filter(s => s.delta > 0),  // only show ones with any movement
       errors,
     },
-  });
+  };
+
+  // Persist run to Supabase so the admin dashboard can show sync health
+  // even after Vercel's 1-hour log retention window has passed.
+  try {
+    await sbPost('/cron_logs', {
+      job_name:        'sync-valiant',
+      ran_at:          result.ran_at,
+      duration_ms:     result.duration_ms,
+      wallets_checked: result.wallets_checked,
+      updated_count:   result.updated,
+      skipped_count:   result.skipped,
+      errors_count:    result.errors,
+      details:         result.details,
+    });
+  } catch (e) {
+    console.error('[sync-valiant] Failed to write cron_log:', e.message);
+  }
+
+  return res.status(200).json(result);
 }
