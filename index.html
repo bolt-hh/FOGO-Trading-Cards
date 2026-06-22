@@ -2654,6 +2654,18 @@ function dismissSpeedRunModal() {
           <div class="stat-tile"><div class="tile-val" id="a-kols">0</div><div class="tile-lbl">Active KOLs</div></div>
         </div>
 
+        <!-- Fuul Volume Sync health banner -->
+        <div id="cron-health-banner" style="margin-bottom:16px;padding:14px 18px;border-radius:2px;border:1px solid var(--border);background:var(--panel);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span id="cron-health-dot" style="width:10px;height:10px;border-radius:50%;background:var(--dim);flex-shrink:0;transition:background 0.3s;"></span>
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim);margin-bottom:3px;">Fuul Volume Sync</div>
+              <div id="cron-health-msg" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--sub);">Loading...</div>
+            </div>
+          </div>
+          <div id="cron-health-detail" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);text-align:right;line-height:1.6;"></div>
+        </div>
+
         <!-- 2-col grid: Charts -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <!-- Entries last 14 days -->
@@ -4918,6 +4930,9 @@ async function renderDashboard() {
       setV('a-link-clicks', count || 0);
     } catch(e) { setV('a-link-clicks', 0); }
   }
+
+  // Fuul sync health banner
+  loadCronHealth();
 
   // ── Entries last 14 days ─────────────────────────────────────
   const dayChart = document.getElementById('dash-day-chart');
@@ -7820,6 +7835,74 @@ async function awardUgcPoints() {
     document.getElementById('ugc-post-link').value = '';
   } else if (!result.ok) {
     alert('Error: ' + (result.error || 'unknown'));
+  }
+}
+
+/* ================================================================
+   FUUL SYNC HEALTH — reads cron_logs table, surfaces on Dashboard
+================================================================ */
+async function loadCronHealth() {
+  if (!db) return;
+  const dot    = document.getElementById('cron-health-dot');
+  const msg    = document.getElementById('cron-health-msg');
+  const detail = document.getElementById('cron-health-detail');
+  if (!dot || !msg || !detail) return;
+
+  try {
+    const { data, error } = await db
+      .from('cron_logs')
+      .select('ran_at,updated_count,skipped_count,errors_count,duration_ms')
+      .eq('job_name', 'sync-valiant')
+      .order('ran_at', { ascending: false })
+      .limit(6);
+
+    if (error || !data || data.length === 0) {
+      dot.style.background = '#888';
+      msg.textContent = 'No sync runs recorded yet — run the cron once to start tracking.';
+      detail.textContent = '';
+      return;
+    }
+
+    const last  = data[0];
+    const ranAt = new Date(last.ran_at);
+    const ageMs = Date.now() - ranAt.getTime();
+    const ageH  = ageMs / 3600000;
+
+    let color, statusText;
+    if (ageH < 26) {
+      color = '#4ade80'; statusText = '✓ Healthy';
+    } else if (ageH < 50) {
+      color = '#facc15'; statusText = '⚠ Stale';
+    } else {
+      color = '#f87171'; statusText = '✗ Critical — cron may be down';
+    }
+
+    dot.style.background = color;
+    dot.style.boxShadow  = `0 0 7px ${color}99`;
+
+    const fmtAgo = ageH < 1
+      ? Math.round(ageMs / 60000) + 'm ago'
+      : ageH < 24
+        ? ageH.toFixed(1) + 'h ago'
+        : (ageH / 24).toFixed(1) + 'd ago';
+
+    const utcStr = ranAt.toUTCString().replace(' GMT', ' UTC');
+    msg.innerHTML = `<span style="color:${color};font-weight:700;">${statusText}</span>&nbsp;&nbsp;·&nbsp;&nbsp;Last run <strong>${fmtAgo}</strong> &nbsp;(${utcStr})`;
+
+    const prevRuns = data.slice(1).map(r => {
+      const h = ((Date.now() - new Date(r.ran_at)) / 3600000).toFixed(1);
+      const upColor = r.errors_count > 0 ? '#f87171' : '#4ade80';
+      return `<span style="color:${upColor}">${h}h ago · ${r.updated_count}↑</span>`;
+    }).join('&nbsp;&nbsp;');
+
+    detail.innerHTML =
+      `<div style="margin-bottom:4px;">${last.updated_count} wallets updated &nbsp;·&nbsp; ${last.skipped_count} skipped &nbsp;·&nbsp; ` +
+      `<span style="color:${last.errors_count > 0 ? '#f87171' : 'var(--dim)'}">${last.errors_count} errors</span> &nbsp;·&nbsp; ${last.duration_ms}ms</div>` +
+      (prevRuns ? `<div style="font-size:9px;color:var(--dim);">Prev runs: ${prevRuns}</div>` : '');
+
+  } catch(e) {
+    if (msg) msg.textContent = 'Failed to load sync status';
+    console.error('[cron-health]', e);
   }
 }
 
