@@ -6,6 +6,7 @@ const FUUL_API      = 'https://api.fuul.xyz/api/v1/payouts/leaderboard/volume';
 const FUUL_BEARER   = 'f0ccd94978c13f2062b1ac07a00ddc9b3fc7daf322e03b4aa4d9cc3edf681c55';
 const MIN_DELTA_PTS = 25;   // skip wallets with <25 pt change to avoid noisy writes
 const FUUL_DELAY_MS = 130;  // ms between Fuul requests (rate limit courtesy)
+const FINAL_WEEK_3X = true; // forward-only 3× multiplier — set to false to revert after campaign ends
 
 // ── Supabase REST helpers ────────────────────────────────────────────────────
 function sbHeaders() {
@@ -109,9 +110,36 @@ export default async function handler(req, res) {
       const frozenVol    = brk._frozen_vol || 0;
 
       // Query live Fuul volume
-      const fuulVol     = await getFuulVolume(addr);
-      const newVolPts   = Math.floor(fuulVol / 50) * 25;
-      const deltaPts    = newVolPts - storedVolPts;
+      const fuulVol = await getFuulVolume(addr);
+
+      // ── Final Week 3× forward-only multiplier ──────────────────────────────
+      // On the first cron run with FINAL_WEEK_3X=true each wallet's current Fuul
+      // vol + pts are snapshot as the baseline. All volume earned ABOVE that
+      // baseline earns 75 pts per $50 (3×). Pre-existing vol stays at its already-
+      // stored pts — no retroactive inflation.
+      let newVolPts;
+      if (FINAL_WEEK_3X && brk._3x_base_fuul_vol === undefined) {
+        // First pass — persist baseline, no points change this run
+        const snapshotBrk = isFrozen
+          ? { ...brk, valiant: storedVolPts, _3x_base_fuul_vol: fuulVol, _3x_base_vol_pts: storedVolPts }
+          : { ...brk, volume:  storedVolPts, _3x_base_fuul_vol: fuulVol, _3x_base_vol_pts: storedVolPts };
+        await sbPatch(`/card_submissions?wallet_address=eq.${addr}`, { points_breakdown: snapshotBrk });
+        skipped.push({ addr: addr.slice(0, 8), delta: 0, reason: '3x_baseline_saved' });
+        await sleep(FUUL_DELAY_MS);
+        continue;
+      } else if (FINAL_WEEK_3X) {
+        // Baseline exists — 3× only on vol earned above snapshot
+        const baseFuulVol = brk._3x_base_fuul_vol || 0;
+        const baseVolPts  = brk._3x_base_vol_pts  || 0;
+        const fwVol       = Math.max(0, fuulVol - baseFuulVol);
+        newVolPts         = baseVolPts + Math.floor(fwVol / 50) * 75;
+      } else {
+        // Standard formula (1× — 25 pts per $50)
+        newVolPts = Math.floor(fuulVol / 50) * 25;
+      }
+      // ───────────────────────────────────────────────────────────────────────
+
+      const deltaPts = newVolPts - storedVolPts;
 
       if (deltaPts < MIN_DELTA_PTS) {
         skipped.push({ addr: addr.slice(0, 8), delta: deltaPts });
