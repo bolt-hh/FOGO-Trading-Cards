@@ -2029,11 +2029,11 @@ function dismissSpeedRunModal() {
         <div style="display:flex;flex-direction:column;gap:7px;">
           <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-1" style="color:var(--sub);">🎴 Generate your Trader Card</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+50 pts</span></div>
           <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-2" style="color:var(--sub);">𝕏 Share card on X</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+50 pts</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-3" style="color:var(--sub);">📊 Onchain volume (per $50)</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;">+25 pts</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-3" style="color:var(--sub);">📊 Onchain volume (per $50)</span><span style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:11px;display:flex;align-items:center;gap:4px;"><span style="background:var(--fire);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:0.05em;">3×</span>+75 pts</span></div>
           <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-4" style="color:var(--sub);">⚡ Use <a href="https://valiant.trade" target="_blank" onclick="trackLinkClick('valiant','https://valiant.trade','gate')" style="color:var(--fire);text-decoration:none;">Valiant</a> / <a href="https://app.pyron.fi" target="_blank" onclick="trackLinkClick('pyron','https://app.pyron.fi','gate')" style="color:var(--fire);text-decoration:none;">Pyron</a> / <a href="https://brasa.finance" target="_blank" onclick="trackLinkClick('brasa','https://brasa.finance','gate')" style="color:var(--fire);text-decoration:none;">Brasa</a> / <a href="https://app.ignitionfi.xyz/rewards" target="_blank" onclick="trackLinkClick('ignition','https://app.ignitionfi.xyz/rewards','gate')" style="color:var(--fire);text-decoration:none;">Ignition</a></span><span style="color:var(--fire);font-family:'JetBrains Mono',monospace;font-size:11px;">+200 each</span></div>
           <div style="display:flex;justify-content:space-between;font-size:12px;"><span id="t-maxi-5" style="color:var(--sub);">🎬 Share UGC on X (max 3 posts)</span><span style="color:var(--sub);font-family:'JetBrains Mono',monospace;font-size:11px;">+100 each</span></div>
         </div>
-        <div id="t-maxi-footer" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);letter-spacing:0.08em;">🏆 225 Winners · Volume points uncapped · More activity = more entries</div>
+        <div id="t-maxi-footer" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);letter-spacing:0.08em;">🏆 225 Winners · 🔥 3× Vol Pts Final Week · More activity = more entries</div>
       </div>
     </div>
 
@@ -6770,6 +6770,7 @@ function renderTasksUI(tasks) {
     else if (task.task_type === 'auto' && key && breakdown[key]) done = true;
     else if (task.task_type === 'link' && key && proto[key] && proto[key] > 0) done = true;
     else if (task.task_type === 'manual' && key === 'ugc' && (STATE.ugcPoints || 0) > 0) done = true;
+    else if (task.task_type === 'manual' && key === 'ugc_final' && (STATE.cardData?.points_breakdown?.ugc_final || 0) > 0) done = true;
     else if (task.task_type === 'manual' && key === 'holder' && (STATE.holderPts || 0) > 0) done = true;
 
     let typeClass = '';
@@ -6910,6 +6911,48 @@ function renderTasksUI(tasks) {
       ${linkBtn}${checkBtn}
     </div>`;
   }).join('');
+
+  // Append the Speed Run card at the bottom of the Final Week tab (tab 3)
+  if (activeTab === 3) {
+    grid.innerHTML += renderFinalWeekSpeedRunHTML(lang);
+  }
+}
+
+/* Speed Run card appended below DB tasks on the Final Week tab */
+function renderFinalWeekSpeedRunHTML(lang) {
+  const tapPts    = STATE.tapPoints || 0;
+  const hasPlayed = tapPts > 0;
+  const statusBadge = hasPlayed
+    ? `<span class="task-status-badge done">${lang === 'ko' ? '진행 중' : 'In Progress'}</span>`
+    : `<span class="task-status-badge pending">${lang === 'ko' ? '시작 안 함' : 'Not Started'}</span>`;
+  const ptsEarned = hasPlayed
+    ? `<div style="background:rgba(195,251,165,0.07);border:1px solid rgba(195,251,165,0.18);border-radius:6px;padding:8px 12px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(213,235,213,0.45);">${lang === 'ko' ? '획득한 탭 포인트' : 'Tap Pts Earned'}</span>
+        <span style="font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;color:var(--lime);">+${tapPts}</span>
+      </div>`
+    : '';
+  const desc = lang === 'ko'
+    ? '마지막 기회! 리더보드 순위를 최대로 올리세요. 10초 안에 최대한 빠르게 탭하세요 — 10탭 = 포인트 1점, 영구 누적.'
+    : 'Final sprint — last chance to max your leaderboard rank! Tap as fast as you can in 10 seconds. Every 10 taps = 1 pt, accumulates forever.';
+  return `<div class="task-card ugc-expanded ${hasPlayed ? 'done manual-type' : 'manual-type'}" style="margin-top:8px;">
+    <div class="task-card-top">
+      <div class="task-card-info">
+        <div class="task-card-name">⚡ ${lang === 'ko' ? 'FOGO 스피드 런 · 파이널 스프린트' : 'FOGO Speed Run · Final Sprint'}</div>
+        <div class="task-card-desc">${desc}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+        <span class="task-points-badge">${lang === 'ko' ? '10탭 = 1pt' : '10 taps = 1pt'}</span>
+        ${statusBadge}
+      </div>
+    </div>
+    ${ptsEarned}
+    <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+      <a href="/play" style="display:inline-flex;align-items:center;gap:6px;background:var(--fire);color:#fff;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:9px 18px;border-radius:5px;text-decoration:none;">
+        ▶ ${lang === 'ko' ? '지금 플레이' : 'Play Now'}
+      </a>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:0.08em;">${lang === 'ko' ? '지갑 자동 연결됨' : 'Wallet auto-connects'}</span>
+    </div>
+  </div>`;
 }
 
 /* ================================================================
