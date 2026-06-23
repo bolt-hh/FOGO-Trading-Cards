@@ -1515,6 +1515,13 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
   transition:all 0.15s;white-space:nowrap;
 }
 .task-tab-btn.active{background:rgba(195,251,165,0.1);border-color:rgba(195,251,165,0.6);color:var(--lime);}
+@keyframes tab-fire-pulse {
+  0%,100% { border-color:rgba(195,251,165,0.3); color:var(--dim); box-shadow:none; }
+  50%      { border-color:rgba(255,61,0,0.65); color:#ff6535; box-shadow:0 0 10px rgba(255,61,0,0.22); }
+}
+.task-tab-btn.final-week-tab:not(.active) {
+  animation: tab-fire-pulse 1.5s ease-in-out infinite;
+}
 .task-tab-btn.locked{
   border:1px solid rgba(195,251,165,0.25);color:var(--dimmer);cursor:default;
   position:relative;
@@ -6730,7 +6737,8 @@ function renderTaskTabsUI() {
     }
     const label = (lang === 'ko' ? tab.nameKo : tab.name);
     const active = STATE.activeTaskTab === tab.id ? ' active' : '';
-    return `<div class="task-tab-btn${active}" onclick="switchTaskTab(${tab.id})">${label}</div>`;
+    const fireTab = tab.id === 3 ? ' final-week-tab' : '';
+    return `<div class="task-tab-btn${active}${fireTab}" onclick="switchTaskTab(${tab.id})">${label}</div>`;
   }).join('');
 }
 
@@ -7006,10 +7014,51 @@ function renderTasksUI(tasks) {
     </div>`;
   }).join('');
 
-  // Append the Speed Run card at the bottom of the Final Week tab (tab 3)
+  // Final Week tab (tab 3) — prepend 3× vol card, append Speed Run card
   if (activeTab === 3) {
+    grid.innerHTML = renderFinalWeek3xVolCardHTML(lang) + grid.innerHTML;
     grid.innerHTML += renderFinalWeekSpeedRunHTML(lang);
   }
+}
+
+/* 3× Volume card — pinned to the top of the Final Week tab */
+function renderFinalWeek3xVolCardHTML(lang) {
+  const isKo       = lang === 'ko';
+  const brk        = STATE.cardData?.points_breakdown || {};
+  const curVolPts  = brk.valiant ?? brk.volume ?? 0;
+  const baseVolPts = brk._3x_base_vol_pts ?? null;
+  const fwEarned   = baseVolPts !== null ? Math.max(0, curVolPts - baseVolPts) : 0;
+  const hasEarned  = fwEarned > 0;
+
+  const earnedRow = hasEarned
+    ? `<div style="background:rgba(255,61,0,0.06);border:1px solid rgba(255,61,0,0.22);border-radius:6px;padding:8px 12px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,100,50,0.55);">${isKo ? '이번 주 볼륨 포인트' : 'Vol Pts This Week'}</span>
+        <span style="font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;color:var(--fire);">+${fwEarned.toLocaleString()}</span>
+      </div>`
+    : '';
+
+  const desc = isKo
+    ? `파이널 위크 한정 — $50 거래량마다 <strong style="color:var(--fire);">75 포인트</strong> (기존 3배). Fuul이 on-chain USD 거래량을 자동 추적합니다. 더 많이 거래할수록 더 많이 버세요.`
+    : `Final Week only — every $50 of verified Valiant perp and swap volume earns <strong style="color:var(--fire);">75 points</strong> (3× the normal rate). Powered by Fuul — your exact on-chain USD notional is tracked automatically. Trade on Valiant to keep earning.`;
+
+  return `<div class="task-card manual-type ${hasEarned ? 'done' : ''}" style="border-color:rgba(255,61,0,0.4);background:rgba(255,61,0,0.03);">
+    <div class="task-card-info">
+      <div class="task-card-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        📊 ${isKo ? 'Valiant 거래 볼륨 (per $50)' : 'Valiant Trading Volume (per $50)'}
+        <span style="background:var(--fire);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;letter-spacing:0.06em;flex-shrink:0;">🔥 3× FINAL WEEK</span>
+      </div>
+      <div class="task-card-desc">${desc}</div>
+    </div>
+    <span class="task-points-badge fire">+75 pts / $50</span>
+    <span class="task-status-badge ${hasEarned ? 'done' : 'pending'}">${hasEarned ? (isKo ? '진행 중' : 'In Progress') : (isKo ? '지속 진행' : 'Ongoing')}</span>
+    ${earnedRow}
+    <div style="margin-top:12px;">
+      <a href="https://valiant.trade" target="_blank" rel="noopener noreferrer"
+        style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,61,0,0.1);border:1px solid rgba(255,61,0,0.4);color:var(--fire);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:8px 16px;border-radius:5px;text-decoration:none;">
+        🔥 ${isKo ? 'Valiant에서 거래하기' : 'Trade on Valiant'}
+      </a>
+    </div>
+  </div>`;
 }
 
 /* Speed Run card appended below DB tasks on the Final Week tab */
