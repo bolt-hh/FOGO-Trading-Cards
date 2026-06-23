@@ -104,20 +104,36 @@ export default async function handler(req, res) {
       // ── UGC ──────────────────────────────────────────────────────────────
 
       case 'ugcApprove': {
+        // Fetch submission to determine task_key (ugc vs ugc_final) and correct pts
+        const ugcFetch = await sb('GET',
+          `ugc_submissions?id=eq.${encodeURIComponent(params.ugcId)}&select=task_key,wallet_address`, null);
+        const ugcRow   = Array.isArray(ugcFetch.data) ? ugcFetch.data[0] : null;
+        const taskKey  = ugcRow?.task_key || 'ugc';
+        const pts      = taskKey === 'ugc_final' ? 500 : 100;
+        const walletAddress = params.walletAddress || ugcRow?.wallet_address;
+
         await sb('PATCH', `ugc_submissions?id=eq.${encodeURIComponent(params.ugcId)}`,
-          { status: 'approved', points_awarded: 100 });
-        // Add 100pts to card_submissions
+          { status: 'approved', points_awarded: pts });
+
+        // Update card_submissions — pts + points_breakdown key
         const sub = await sb('GET',
-          `card_submissions?wallet_address=eq.${encodeURIComponent(params.walletAddress)}&select=ugc_points,total_points`, null);
+          `card_submissions?wallet_address=eq.${encodeURIComponent(walletAddress)}&select=ugc_points,total_points,points_breakdown`, null);
         const row = Array.isArray(sub.data) ? sub.data[0] : null;
         if (row) {
-          const newUgc   = (row.ugc_points   || 0) + 100;
-          const newTotal = (row.total_points || 0) + 100;
+          const newUgc   = (row.ugc_points   || 0) + pts;
+          const newTotal = (row.total_points || 0) + pts;
+          const newBreak = { ...(row.points_breakdown || {}) };
+          // Write to correct breakdown key so card UI reflects completion
+          if (taskKey === 'ugc_final') {
+            newBreak.ugc_final = (newBreak.ugc_final || 0) + pts;
+          } else {
+            newBreak.ugc = (newBreak.ugc || 0) + pts;
+          }
           await sb('PATCH',
-            `card_submissions?wallet_address=eq.${encodeURIComponent(params.walletAddress)}`,
-            { ugc_points: newUgc, total_points: newTotal, entry_count: newTotal });
+            `card_submissions?wallet_address=eq.${encodeURIComponent(walletAddress)}`,
+            { ugc_points: newUgc, total_points: newTotal, entry_count: newTotal, points_breakdown: newBreak });
         }
-        return res.status(200).json({ ok: true });
+        return res.status(200).json({ ok: true, pts, taskKey });
       }
 
       case 'ugcReject': {
