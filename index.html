@@ -4802,16 +4802,21 @@ async function refreshAdminUgc() {
       const d = new Date(s.created_at);
       const date = d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
       const statusColor = s.status === 'approved' ? 'var(--lime)' : s.status === 'rejected' ? 'var(--red)' : 'var(--dim)';
+      const isFinalWeek = s.task_key === 'ugc_final';
+      const approvePts  = isFinalWeek ? 500 : 100;
+      const typeBadge   = isFinalWeek
+        ? `<span style="background:rgba(255,61,0,0.15);color:var(--fire);font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;margin-left:5px;letter-spacing:0.06em;">🔥 FINAL WK</span>`
+        : '';
       const approveBtn = s.status !== 'approved'
-        ? `<button class="btn-small" style="font-size:8px;padding:3px 8px;background:rgba(195,251,165,0.1);border-color:rgba(195,251,165,0.3);color:var(--lime);" onclick="adminUgcApprove('${s.id}','${s.wallet_address}')">Approve +100pts</button>`
-        : '<span style="color:var(--lime);font-size:9px;">✓ Approved</span>';
+        ? `<button class="btn-small" style="font-size:8px;padding:3px 8px;background:rgba(195,251,165,0.1);border-color:rgba(195,251,165,0.3);color:var(--lime);" onclick="adminUgcApprove('${s.id}','${s.wallet_address}')">Approve +${approvePts}pts</button>`
+        : `<span style="color:var(--lime);font-size:9px;">✓ +${s.points_awarded || approvePts}pts</span>`;
       const rejectBtn = s.status !== 'rejected'
         ? `<button class="btn-small admin-del-btn" style="font-size:8px;padding:3px 8px;margin-left:4px;" onclick="adminUgcReject('${s.id}')">Reject</button>`
         : '';
       return `<tr>
         <td style="font-family:'JetBrains Mono',monospace;font-size:10px;">${i+1}</td>
         <td class="addr" title="${esc(s.wallet_address)}">${esc(wallet)}</td>
-        <td>${esc(s.twitter_handle || '—')}</td>
+        <td>${esc(s.twitter_handle || '—')}${typeBadge}</td>
         <td><a href="${safeUrl(s.post_link)}" target="_blank" rel="noopener noreferrer" style="color:var(--lime);font-size:10px;" title="${esc(s.post_link)}">View ↗</a></td>
         <td style="color:${statusColor};font-family:'JetBrains Mono',monospace;font-size:10px;">${esc(s.status)}</td>
         <td class="hi">${s.points_awarded || 0}</td>
@@ -6506,13 +6511,17 @@ function updatePointsDisplay() {
 async function loadTasks() {
   if (!db) return;
   try {
-    // Load tasks + tab settings in parallel
-    const [tasksRes, settingsRes] = await Promise.all([
+    // Load tasks + tab settings + Final Week UGC submission state in parallel
+    const [tasksRes, settingsRes, ugcFinalRes] = await Promise.all([
       db.from('tasks').select('*').eq('active', true).order('tab_group').order('sort_order'),
       db.from('app_settings').select('key,value').like('key', 'task_tab_%'),
+      STATE.wallet
+        ? db.from('ugc_submissions').select('id,post_link,status,points_awarded').eq('wallet_address', STATE.wallet).eq('task_key', 'ugc_final').order('created_at', { ascending: false }).limit(1)
+        : Promise.resolve({ data: [] }),
     ]);
     if (tasksRes.error || !tasksRes.data) return;
     STATE.tasks = tasksRes.data;
+    STATE._ugcFinalSubmission = ugcFinalRes?.data?.[0] || null;
 
     // Parse tab settings
     const raw = {};
@@ -6834,6 +6843,91 @@ function renderTasksUI(tasks) {
       </div>`;
     }
 
+    // ── Final Week UGC task — template display + X compose button + inline link submit
+    if (key === 'ugc_final') {
+      const sub = STATE._ugcFinalSubmission;
+      const isApproved = sub?.status === 'approved';
+      const isPending  = sub?.status === 'pending';
+      const isRejected = sub?.status === 'rejected';
+      const hasSub     = isApproved || isPending;
+
+      const tplEn = `Only 7 days left to enter the @FOGO_chain Trader Cards raffle 🃏\n225 winners · I'm climbing the leaderboard!\nTrade on @valiant_trade for more points 📊\nGet your card: fogo-cards.xyz\n#FOGOTraderCards #FOGO`;
+      const tplKo = `@FOGO_chain 트레이더 카드 래플 7일 남았습니다 🃏\n225명 당첨 · 리더보드 순위 상승 중!\n@valiant_trade 거래로 추가 포인트 📊\nfogo-cards.xyz\n#FOGOTraderCards #FOGO`;
+      const tpl    = lang === 'ko' ? tplKo : tplEn;
+      const xUrl   = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(tpl);
+
+      // Status badge
+      let sBadge;
+      if (isApproved)       sBadge = `<span class="task-status-badge done">✓ ${t.tasks_completed || 'Completed'}</span>`;
+      else if (isPending)   sBadge = `<span class="task-status-badge pending" style="color:rgba(213,235,213,0.55);">⏳ ${lang === 'ko' ? '검토 중' : 'Pending Review'}</span>`;
+      else if (isRejected)  sBadge = `<span class="task-status-badge pending" style="color:rgba(255,100,80,0.85);">✗ ${lang === 'ko' ? '거절됨' : 'Rejected'}</span>`;
+      else                  sBadge = `<span class="task-status-badge pending">${lang === 'ko' ? '시작 안 함' : 'Not Started'}</span>`;
+
+      // Submission state section
+      let subSection = '';
+      if (isApproved) {
+        subSection = `<div style="background:rgba(195,251,165,0.07);border:1px solid rgba(195,251,165,0.2);border-radius:6px;padding:9px 12px;margin-top:10px;display:flex;align-items:center;gap:8px;">
+          <a href="${sub.post_link}" target="_blank" style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${sub.post_link}</a>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--lime);flex-shrink:0;">+${sub.points_awarded || pts} pts ✓</span>
+        </div>`;
+      } else if (isPending) {
+        subSection = `<div style="background:rgba(213,235,213,0.03);border:1px solid rgba(213,235,213,0.1);border-radius:6px;padding:9px 12px;margin-top:10px;display:flex;align-items:center;gap:8px;">
+          <a href="${sub.post_link}" target="_blank" style="color:var(--sub);font-family:'JetBrains Mono',monospace;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${sub.post_link}</a>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(213,235,213,0.35);flex-shrink:0;">${lang === 'ko' ? '검토 대기' : 'Under review'}</span>
+        </div>`;
+      } else {
+        // Not yet submitted (or rejected) — dialog hidden until user clicks Submit Link
+        const initVis   = isRejected ? 'block' : 'none';
+        const dialogLbl = isRejected ? (lang === 'ko' ? '다른 링크를 제출하세요' : 'Submit a different link') : (lang === 'ko' ? 'X 포스트 링크 붙여넣기' : 'Paste your X post link');
+        subSection = `<div id="ugc-final-dialog" style="display:${initVis};margin-top:10px;background:rgba(213,235,213,0.04);border:1px solid rgba(213,235,213,0.14);border-radius:6px;padding:12px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(213,235,213,0.3);margin-bottom:8px;">${dialogLbl}</div>
+          <div style="display:flex;gap:7px;">
+            <input id="ugc-final-input" type="url" placeholder="https://x.com/yourpost..." autocomplete="off"
+              style="flex:1;background:rgba(213,235,213,0.05);border:1px solid rgba(213,235,213,0.18);border-radius:4px;padding:8px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;outline:none;min-width:0;"
+              oninput="document.getElementById('ugc-final-btn').disabled=!this.value.trim()">
+            <button id="ugc-final-btn" disabled onclick="submitUgcFinalLink()"
+              style="background:var(--lime);color:#0c0f09;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;padding:8px 14px;border-radius:4px;border:none;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;flex-shrink:0;">${lang === 'ko' ? '제출' : 'Submit'}</button>
+          </div>
+        </div>`;
+      }
+
+      return `<div class="task-card ugc-expanded ${isApproved ? 'done' : ''} manual-type" id="ugc-final-task-card">
+        <div class="task-card-top" style="margin-bottom:10px;">
+          <div class="task-card-info">
+            <div class="task-card-name">${name}</div>
+            <div class="task-card-desc">${lang === 'ko' ? '마지막 7일 — X에 포스팅하고 500 포인트 획득' : 'Last 7 days — post on X and earn 500 pts'}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+            <span class="task-points-badge">+${pts} pts</span>
+            ${sBadge}
+          </div>
+        </div>
+
+        <div style="background:rgba(213,235,213,0.04);border:1px solid rgba(213,235,213,0.1);border-radius:6px;padding:10px 12px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(213,235,213,0.3);margin-bottom:6px;">📋 ${lang === 'ko' ? '템플릿 복사 후 X에 붙여넣기' : 'Copy & paste this on X'}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--sub);line-height:1.6;white-space:pre-wrap;">${tpl.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+          <button onclick="copyUgcFinalTemplate(this,'${lang}')"
+            style="display:inline-flex;align-items:center;gap:5px;background:rgba(213,235,213,0.07);border:1px solid rgba(213,235,213,0.18);color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 12px;border-radius:4px;cursor:pointer;">
+            📋 ${lang === 'ko' ? '복사' : 'Copy'}
+          </button>
+          <a href="${xUrl}" target="_blank" rel="noopener"
+            onclick="setTimeout(()=>{const d=document.getElementById('ugc-final-dialog');if(d&&d.style.display==='none')d.style.display='block';},2000)"
+            style="display:inline-flex;align-items:center;gap:5px;background:#000;border:1px solid rgba(255,255,255,0.12);color:#fff;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 12px;border-radius:4px;text-decoration:none;">
+            𝕏 ${lang === 'ko' ? 'X에 포스팅' : 'Post on X'}
+          </a>
+          ${!hasSub && !isRejected ? `<button id="ugc-final-show-btn" onclick="document.getElementById('ugc-final-dialog').style.display='block';this.style.display='none';"
+            style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,61,0,0.1);border:1px solid rgba(255,61,0,0.25);color:var(--fire);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:7px 12px;border-radius:4px;cursor:pointer;">
+            ↗ ${lang === 'ko' ? '링크 제출' : 'Submit Link'}
+          </button>` : ''}
+        </div>
+
+        ${subSection}
+      </div>`;
+    }
+
     // UGC task gets its own expanded card with inline submission slots
     if (key === 'ugc') {
       const maxSlots = task.max_completions > 0 ? task.max_completions : 3;
@@ -7003,6 +7097,62 @@ async function submitXShareInline() {
   if (STATE.tasks) renderTasksUI(STATE.tasks);
   // Also enable the raffle confirm checkbox if the user hasn't checked it yet
   // (the checkbox is the last gate before entering)
+}
+
+/* ── Final Week UGC helpers ─────────────────────────────────────────────── */
+function copyUgcFinalTemplate(btn, lang) {
+  const tplEn = `Only 7 days left to enter the @FOGO_chain Trader Cards raffle 🃏\n225 winners · I'm climbing the leaderboard!\nTrade on @valiant_trade for more points 📊\nGet your card: fogo-cards.xyz\n#FOGOTraderCards #FOGO`;
+  const tplKo = `@FOGO_chain 트레이더 카드 래플 7일 남았습니다 🃏\n225명 당첨 · 리더보드 순위 상승 중!\n@valiant_trade 거래로 추가 포인트 📊\nfogo-cards.xyz\n#FOGOTraderCards #FOGO`;
+  const tpl = lang === 'ko' ? tplKo : tplEn;
+
+  const done = () => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = lang === 'ko' ? '✓ 복사됨' : '✓ Copied!';
+    btn.style.background = 'rgba(195,251,165,0.15)';
+    btn.style.borderColor = 'rgba(195,251,165,0.4)';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; btn.style.borderColor = ''; }, 2000);
+  };
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(tpl).then(done).catch(() => {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = tpl; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+    });
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = tpl; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+  }
+}
+
+async function submitUgcFinalLink() {
+  if (!db || !STATE.wallet) return;
+  const input = document.getElementById('ugc-final-input');
+  const btn   = document.getElementById('ugc-final-btn');
+  const link  = input?.value?.trim();
+  if (!link) return;
+
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  try {
+    const { error } = await db.from('ugc_submissions').insert({
+      wallet_address: STATE.wallet,
+      twitter_handle: STATE.handle || null,
+      post_link:      link,
+      status:         'pending',
+      points_awarded: 0,
+      task_key:       'ugc_final',
+    });
+    if (error) throw error;
+
+    STATE._ugcFinalSubmission = { post_link: link, status: 'pending', points_awarded: 0, task_key: 'ugc_final' };
+    if (STATE.tasks) renderTasksUI(STATE.tasks);
+  } catch(e) {
+    console.error('[FOGO] ugc_final submit:', e.message);
+    btn.disabled = false;
+    btn.textContent = CURRENT_LANG === 'ko' ? '제출' : 'Submit';
+  }
 }
 
 /* ================================================================
