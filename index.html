@@ -6852,7 +6852,7 @@ function renderTasksUI(tasks) {
       const hasSub     = isApproved || isPending;
 
       const tplEn = `Only 7 days left to enter the @fogo Trader Cards raffle!\n\n550,000 in $FOGO prize pool!\n\n225 winners · I'm climbing the leaderboard!\n\nTrade on @ValiantTrade for more points\n\nGet your card: fogotradingcards.com\n\n#FOGOTraderCards #FOGOKorea`;
-      const tplKo = `@FOGO_chain 트레이더 카드 래플 7일 남았습니다 🃏\n225명 당첨 · 리더보드 순위 상승 중!\n@valiant_trade 거래로 추가 포인트 📊\nfogo-cards.xyz\n#FOGOTraderCards #FOGO`;
+      const tplKo = `@fogo 트레이더 카드 래플 7일 남았습니다!\n\n$FOGO 55만 개 상금 풀!\n\n225명 당첨 · 리더보드 순위 상승 중!\n\n@ValiantTrade 거래로 추가 포인트\n\n카드 받기: fogotradingcards.com\n\n#FOGOTraderCards #FOGOKorea`;
       const tpl    = lang === 'ko' ? tplKo : tplEn;
       const xUrl   = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(tpl);
 
@@ -7102,7 +7102,7 @@ async function submitXShareInline() {
 /* ── Final Week UGC helpers ─────────────────────────────────────────────── */
 function copyUgcFinalTemplate(btn, lang) {
   const tplEn = `Only 7 days left to enter the @fogo Trader Cards raffle!\n\n550,000 in $FOGO prize pool!\n\n225 winners · I'm climbing the leaderboard!\n\nTrade on @ValiantTrade for more points\n\nGet your card: fogotradingcards.com\n\n#FOGOTraderCards #FOGOKorea`;
-  const tplKo = `@FOGO_chain 트레이더 카드 래플 7일 남았습니다 🃏\n225명 당첨 · 리더보드 순위 상승 중!\n@valiant_trade 거래로 추가 포인트 📊\nfogo-cards.xyz\n#FOGOTraderCards #FOGO`;
+  const tplKo = `@fogo 트레이더 카드 래플 7일 남았습니다!\n\n$FOGO 55만 개 상금 풀!\n\n225명 당첨 · 리더보드 순위 상승 중!\n\n@ValiantTrade 거래로 추가 포인트\n\n카드 받기: fogotradingcards.com\n\n#FOGOTraderCards #FOGOKorea`;
   const tpl = lang === 'ko' ? tplKo : tplEn;
 
   const done = () => {
