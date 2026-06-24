@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/sync-valiant.js": {
+      "maxDuration": 300
+    }
+  },
   "crons": [
     {
       "path": "/api/sync-valiant",
@@ -7,7 +12,9 @@
   ],
   "rewrites": [
     { "source": "/api/fogoscan/(.*)", "destination": "/api/fogoscan" },
-    { "source": "/play", "destination": "/play.html" }
+    { "source": "/play", "destination": "/play.html" },
+    { "source": "/report/pfp", "destination": "/dashboard_pfp.html" },
+    { "source": "/report/trading-card", "destination": "/dashboard_tradingcard.html" }
   ],
   "headers": [
     {
