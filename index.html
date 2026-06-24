@@ -3761,8 +3761,9 @@ function fmtUsdFull(n) {
 // ── VALIANT VOLUME (Fuul API) ─────────────────────────────────────────────────
 // Fetches verified on-chain USD notional volume for a wallet from Fuul,
 // which powers Valiant's rewards layer and tracks all perp + swap activity.
-const FUUL_API    = 'https://api.fuul.xyz/api/v1/payouts/leaderboard/volume';
-const FUUL_BEARER = 'f0ccd94978c13f2062b1ac07a00ddc9b3fc7daf322e03b4aa4d9cc3edf681c55';
+const FUUL_API      = 'https://api.fuul.xyz/api/v1/payouts/leaderboard/volume';
+const FUUL_BEARER   = 'f0ccd94978c13f2062b1ac07a00ddc9b3fc7daf322e03b4aa4d9cc3edf681c55';
+const FINAL_WEEK_3X = true; // forward-only 3× multiplier — mirrors sync-valiant.js; set false after campaign
 
 async function fetchValiantVolume(address) {
   try {
@@ -7547,6 +7548,7 @@ async function rescanWallet() {
     // Only Valiant on-chain volume (via Fuul) adds to the running total.
     // New wallets (no frozen base yet): calculatePoints() runs normally.
     let frozenBasePts = null, frozenBaseVol = null, existingHolderPts = 0;
+    let base3xFuulVol = null, base3xVolPts = 0;  // Final Week 3× baseline from DB
     if (db) {
       const { data: rec } = await db.from('card_submissions')
         .select('points_breakdown, total_volume_usd')
@@ -7559,12 +7561,29 @@ async function rescanWallet() {
       }
       // Preserve holder points — never reset on rescan
       existingHolderPts = brk.holder_pts || 0;
+      // Capture Final Week 3× baseline so rescan uses same formula as cron
+      if (brk._3x_base_fuul_vol !== undefined) {
+        base3xFuulVol = brk._3x_base_fuul_vol;
+        base3xVolPts  = brk._3x_base_vol_pts || 0;
+      }
     }
     if (existingHolderPts > 0) STATE.holderPts = existingHolderPts;
 
-    const fuulVol          = data.valiantVolumeUsd || 0;
-    const walletBal        = data.walletBalance    || 0;
-    const newValiantPts    = Math.floor(fuulVol / 50) * 25;
+    const fuulVol    = data.valiantVolumeUsd || 0;
+    const walletBal  = data.walletBalance    || 0;
+
+    // ── Final Week 3× forward-only multiplier (mirrors sync-valiant.js) ──────
+    // If the cron has already snapshotted a baseline, apply 75pts/$50 on
+    // volume above that baseline. Pre-baseline vol stays at stored base pts.
+    // Falls back to standard 25pts/$50 if no baseline exists yet.
+    let newValiantPts;
+    if (FINAL_WEEK_3X && base3xFuulVol !== null) {
+      const fwVol  = Math.max(0, fuulVol - base3xFuulVol);
+      newValiantPts = base3xVolPts + Math.floor(fwVol / 50) * 75;
+    } else {
+      newValiantPts = Math.floor(fuulVol / 50) * 25;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     let finalPts, ptsBrk, totalVol;
 
