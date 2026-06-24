@@ -92,7 +92,11 @@ export default async function handler(req, res) {
     if (!brk) return false;
     const isFrozen = brk._frozen_base_pts !== undefined;
     if (isFrozen) return (brk.valiant || 0) > 0;          // frozen: must have valiant pts
-    return (w.total_volume_usd || 0) > 0;                  // live: has any on-chain volume
+    // Live model: include if (a) already has synced vol, OR (b) has never been Fuul-checked yet.
+    // Condition (b) catches new card-minters and wallets the cron previously skipped.
+    // On first encounter the cron snapshots them (baseline saved, no pts change).
+    // After that _3x_base_fuul_vol is defined, so they fall through to condition (a) going forward.
+    return (w.total_volume_usd || 0) > 0 || brk._3x_base_fuul_vol === undefined;
   });
 
   const updated = [];
