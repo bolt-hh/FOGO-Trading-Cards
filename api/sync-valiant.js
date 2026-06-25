@@ -156,8 +156,11 @@ export default async function handler(req, res) {
       const newBrk = isFrozen
         ? { ...brk, valiant: newVolPts }
         : { ...brk, volume:  newVolPts };
-      // total_volume_usd = frozen vol (pre-migration) + live Fuul vol
-      const newVolUsd = isFrozen ? (frozenVol + fuulVol) : fuulVol;
+      // total_volume_usd = frozen vol (pre-migration) + live Fuul vol + any admin-locked vol
+      // _locked_vol_usd preserves wallet-balance-era volume that was stripped when
+      // the cron switched to Fuul-only tracking (e.g. @Happyhelper7777 +610K).
+      const lockedVol = brk._locked_vol_usd || 0;
+      const newVolUsd = isFrozen ? (frozenVol + fuulVol + lockedVol) : (fuulVol + lockedVol);
 
       await sbPatch(`/card_submissions?wallet_address=eq.${addr}`, {
         total_points:     newTotalPts,
