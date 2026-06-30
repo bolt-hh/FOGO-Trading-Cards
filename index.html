@@ -3224,6 +3224,10 @@ const CONFIG = {
   raffle_end_date: '2026-06-30T23:59:59Z', // ISO 8601 UTC — countdown target
 };
 
+// ── Campaign deadline: June 30 2026 23:59:59 KST (= 14:59:59 UTC) ───
+const CAMPAIGN_END_MS = 1782831599000;
+function campaignEnded() { return Date.now() > CAMPAIGN_END_MS; }
+
 /* ================================================================
    STATE
 ================================================================ */
@@ -3420,12 +3424,20 @@ function handlePfpUpload(event) {
 }
 
 function checkHandlesReady() {
+  const btn = document.getElementById('gen-btn');
+  // Hard-lock if campaign has ended
+  if (campaignEnded()) {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn-sheen"></span>Campaign Ended';
+    }
+    return;
+  }
   const x   = (document.getElementById('x-handle')?.value || '').trim();
   const tg  = (document.getElementById('tg-handle')?.value || '').trim();
   const sel = document.getElementById('app-kol-select');
   const man = document.getElementById('app-kol-manual');
   const kolOk = (sel && sel.value) || (man && man.value.trim());
-  const btn = document.getElementById('gen-btn');
   if (btn) btn.disabled = !(x && tg && kolOk && STATE.wallet && STATE.signature);
 }
 
@@ -3904,6 +3916,14 @@ function computePower(volumeUsd) {
 async function generateCard() {
   const errBox = document.getElementById('app-err');
   errBox.classList.remove('on');
+
+  // Campaign deadline guard
+  if (campaignEnded()) {
+    showAppErr('The campaign has ended. Card generation is now closed. Thank you for participating! 🙏');
+    const genBtn = document.getElementById('gen-btn');
+    if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Campaign Ended'; }
+    return;
+  }
 
   // Must have a connected + signed wallet
   if (!STATE.wallet)    { showAppErr('Connect your wallet first.'); return; }
