@@ -1058,6 +1058,10 @@ const GAME_DURATION = 10000; // ms
 const SB_URL  = 'https://nhdktvsllunlgdsaninx.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oZGt0dnNsbHVubGdkc2FuaW54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NTIxMjgsImV4cCI6MjA5MTQyODEyOH0.GUFMjeDdphFeFp84jkeAtJNLX6-pi7KppEBdfDGXkhM';
 
+// ── Campaign deadline: June 30 2026 23:59:59 KST (= 14:59:59 UTC) ───
+const CAMPAIGN_END_MS = 1782831599000;
+function campaignEnded() { return Date.now() > CAMPAIGN_END_MS; }
+
 // ── i18n ─────────────────────────────────────────────────────────
 const LANG = window.PLAY_LANG || 'en';
 const TR = {
@@ -1449,10 +1453,16 @@ function onKolInput() {
 }
 
 function updateStartBtn() {
-  const handle  = (document.getElementById('x-handle-input')?.value || '').trim();
-  const kolRef  = (document.getElementById('kol-select-input')?.value || '').trim();
   const btn     = document.getElementById('start-btn');
   const txt     = document.getElementById('start-btn-text');
+  // Hard-lock if campaign is over
+  if (campaignEnded()) {
+    if (btn) btn.disabled = true;
+    if (txt) txt.textContent = LANG === 'ko' ? '캠페인 종료' : 'Campaign Ended';
+    return;
+  }
+  const handle  = (document.getElementById('x-handle-input')?.value || '').trim();
+  const kolRef  = (document.getElementById('kol-select-input')?.value || '').trim();
   // When no wallet: keep enabled so clicking triggers wallet connect
   // When wallet connected but form incomplete: disable
   const ready   = !!walletAddress && handle.length > 0 && kolRef.length > 0;
@@ -1469,6 +1479,13 @@ function updateStartBtn() {
 }
 
 function onStartClick() {
+  if (campaignEnded()) {
+    const btn = document.getElementById('start-btn');
+    const txt = document.getElementById('start-btn-text');
+    if (btn) btn.disabled = true;
+    if (txt) txt.textContent = LANG === 'ko' ? '캠페인 종료' : 'Campaign Ended';
+    return;
+  }
   if (!walletAddress) { openWallet(); return; }
   startRun();
 }
