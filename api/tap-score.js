@@ -6,6 +6,9 @@
 // Flip back to false and redeploy to re-open.
 const GAME_PAUSED = false;
 
+// ── Campaign deadline: June 30 2026 23:59:59 KST (= 14:59:59 UTC) ───
+const CAMPAIGN_END_MS = 1782831599000;
+
 const SUPABASE_URL        = 'https://nhdktvsllunlgdsaninx.supabase.co';
 const TPS                 = 100000;   // Fogo TPS used in fogo_equivalent calc
 const MIN_STD_DEV_MS      = 8;        // below this = suspiciously robotic cadence
@@ -92,6 +95,11 @@ export default async function handler(req, res) {
   // Kill switch — returns before any DB interaction
   if (GAME_PAUSED) {
     return res.status(503).json({ ok: false, paused: true, error: 'Game paused for maintenance — back shortly! 🔧' });
+  }
+
+  // Campaign deadline — hard cutoff at June 30 2026 23:59:59 KST
+  if (Date.now() > CAMPAIGN_END_MS) {
+    return res.status(200).json({ ok: false, ended: true, error: 'The campaign has ended. Thanks for playing! 🙏' });
   }
 
   const {
