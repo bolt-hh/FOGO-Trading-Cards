@@ -1165,7 +1165,15 @@ function applyTranslations() {
 
   set('.nav-tag',        t('nav_tag'));
   const navLb = q('.nav-ghost'); if (navLb) navLb.innerHTML = '&#9776; ' + t('nav_leaderboard');
-  const liveDot = q('.live-badge'); if (liveDot) liveDot.innerHTML = '<span class="live-dot"></span>' + t('nav_live');
+  const liveDot = q('.live-badge');
+  if (liveDot) {
+    if (campaignEnded()) {
+      liveDot.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:var(--dim);display:inline-block;"></span>' +
+        (LANG === 'ko' ? '캠페인 종료' : 'Campaign Ended');
+    } else {
+      liveDot.innerHTML = '<span class="live-dot"></span>' + t('nav_live');
+    }
+  }
   set('.entry-eyebrow',  t('eyebrow'));
   const sub = q('.entry-sub'); if (sub) sub.innerHTML = t('entry_sub').replace('. Every', '.<br>Every');
   set('wallet-status-txt',  t('wallet_off'), true);
