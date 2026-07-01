@@ -1985,7 +1985,8 @@ function goFinalWeekTasks() {
     </div>
     <div class="nav-right">
       <button class="lb-back-btn" style="font-size:10px;padding:7px 14px;" onclick="showLeaderboard()" id="t-nav-leaderboard">Leaderboard</button>
-      <div class="live-status"><span class="live-dot"></span><span id="t-nav-live" data-ko="커뮤니티 활성화 진행 중">Community Activation Live</span></div>
+      <button class="lb-back-btn" style="font-size:10px;padding:7px 14px;" onclick="showWinners()" id="t-nav-winners" data-ko="수상자">Winners</button>
+      <div class="live-status"><span style="width:6px;height:6px;border-radius:50%;background:var(--dim,#666);display:inline-block;flex-shrink:0;"></span><span id="t-nav-live" data-ko="캠페인 종료">Campaign Ended</span></div>
       <div class="lang-toggle" role="group" aria-label="Language">
         <a class="lang-btn" id="nav-lang-en" href="?" style="text-decoration:none;">EN</a>
         <a class="lang-btn" id="nav-lang-ko" href="?lang=ko" style="text-decoration:none;">한국어</a>
@@ -2650,6 +2651,25 @@ function goFinalWeekTasks() {
       <div id="leaderboard-content">
         <div class="empty-state" style="padding:40px;">Loading leaderboard...</div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ WINNERS VIEW ================================================================ -->
+<section id="view-winners" class="view">
+  <div class="lb-inner">
+    <div class="lb-eyebrow">FOGO Community Activation</div>
+    <h2 class="lb-headline">Winners</h2>
+
+    <div style="text-align:center;padding:48px 24px 32px;">
+      <div style="font-size:48px;margin-bottom:20px;">🏆</div>
+      <p style="font-size:1.15rem;font-weight:600;color:var(--fg);margin:0 0 12px;">Campaign has ended.</p>
+      <p style="font-size:0.95rem;color:var(--dim);margin:0 0 32px;">Winners will be announced soon. Stay tuned!</p>
+      <p style="font-size:0.85rem;color:var(--dim);margin:0;" data-ko="당첨자 발표를 위해 공식 채널을 팔로우하세요.">Follow our official channels for the winner announcement.</p>
+    </div>
+
+    <div class="lb-actions" style="justify-content:center;">
+      <button class="lb-back-btn" onclick="winnersGoBack()" id="t-winners-back">← Back</button>
     </div>
   </div>
 </section>
@@ -7700,6 +7720,16 @@ function showLeaderboard() {
 
 function leaderboardGoBack() {
   showView(_lbPrevView || 'view-gate');
+}
+
+let _winnersPrevView = 'view-gate';
+function showWinners() {
+  _winnersPrevView = document.querySelector('.view.active')?.id || 'view-gate';
+  showView('view-winners');
+}
+
+function winnersGoBack() {
+  showView(_winnersPrevView || 'view-gate');
 }
 
 async function loadLeaderboard() {
