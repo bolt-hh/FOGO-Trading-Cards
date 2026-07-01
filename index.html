@@ -6276,7 +6276,16 @@ function setLanguage(lang) {
 
   // Nav bar
   setTxt('t-nav-version', t.nav_version || 'Trader Card · Community Activation');
-  setTxt('t-nav-live',    t.nav_live    || 'Community Activation Live');
+  if (campaignEnded()) {
+    // Replace pulsing live dot with a static dim dot + "Campaign Ended"
+    const liveWrap = document.getElementById('t-nav-live')?.parentElement;
+    if (liveWrap) {
+      liveWrap.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:var(--dim);display:inline-block;"></span><span>' +
+        (LANG === 'ko' ? '캠페인 종료' : 'Campaign Ended') + '</span>';
+    }
+  } else {
+    setTxt('t-nav-live', t.nav_live || 'Community Activation Live');
+  }
 
   // Prize bar (in view-app)
   setTxt('t-prize-title',    t.prize_title    || 'Season 2 Raffle — Community Prize Pool');
