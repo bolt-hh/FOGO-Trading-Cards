@@ -1727,6 +1727,53 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 .reown-connect-btn svg{width:18px;height:18px;flex-shrink:0;}
 .reown-supported{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);text-align:center;margin-top:10px;}
 .volume-notice{font-size:11px;color:var(--text);text-align:center;margin-top:10px;line-height:1.5;padding:8px 12px;border:1px solid rgba(195,251,165,0.15);border-radius:8px;background:rgba(195,251,165,0.04);}
+
+/* ── Admin Winners Tab ──────────────────────────────────────────────────── */
+.winner-section{background:var(--panel);border:1px solid var(--border);border-radius:2px;padding:20px;margin-bottom:16px;}
+.winner-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.winner-section-title{font-family:'Clash Display',sans-serif;font-size:14px;font-weight:700;color:var(--text);}
+.winner-section-badge{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);letter-spacing:0.14em;text-transform:uppercase;background:rgba(195,251,165,0.08);padding:4px 10px;border-radius:4px;border:1px solid rgba(195,251,165,0.15);}
+.winner-draw-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+.winner-draw-btn{background:var(--lime);border:none;color:#070520;font-family:'Inter',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;padding:9px 22px;border-radius:6px;cursor:pointer;transition:all 0.15s;}
+.winner-draw-btn:hover{background:#D4FDB8;box-shadow:0 2px 16px rgba(195,251,165,0.2);}
+.winner-draw-btn:disabled{opacity:0.35;cursor:not-allowed;}
+.winner-draw-btn.rerun{background:transparent;border:1px solid rgba(195,251,165,0.3);color:var(--lime);}
+.winner-draw-btn.rerun:hover{background:rgba(195,251,165,0.07);}
+.winner-draw-meta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);}
+.winner-draw-excl{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);cursor:pointer;user-select:none;}
+.winner-draw-excl input{accent-color:var(--lime);}
+.winner-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:10px;}
+.winner-table th{text-align:left;padding:7px 10px;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--border);}
+.winner-table td{padding:8px 10px;color:var(--sub);border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
+.winner-table tr:hover td{background:rgba(255,255,255,0.015);}
+.winner-table td.hi{color:var(--lime);font-weight:600;}
+.winner-table td.fire{color:var(--fire);}
+.winner-rank{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(255,255,255,0.04);color:var(--dim);}
+.winner-rank.gold{background:rgba(255,215,0,0.14);color:#FFD700;}
+.winner-rank.silver{background:rgba(192,192,192,0.14);color:#C0C0C0;}
+.winner-rank.bronze{background:rgba(205,127,50,0.14);color:#CD7F32;}
+.winner-scroll-wrap{max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;}
+.ugc-pill-link{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid rgba(195,251,165,0.2);border-radius:4px;white-space:nowrap;}
+.ugc-pill-link:hover{background:rgba(195,251,165,0.07);border-color:rgba(195,251,165,0.4);}
+.winner-publish-bar{background:rgba(195,251,165,0.04);border:1px solid rgba(195,251,165,0.18);border-radius:2px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:8px;}
+.winner-publish-info{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);line-height:1.7;}
+.winner-publish-btn{background:var(--lime);border:none;color:#070520;font-family:'Inter',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:13px 32px;border-radius:6px;cursor:pointer;transition:all 0.15s;}
+.winner-publish-btn:hover{background:#D4FDB8;box-shadow:0 4px 24px rgba(195,251,165,0.25);}
+.winner-publish-btn:disabled{opacity:0.35;cursor:not-allowed;}
+.winner-status-strip{padding:10px 16px;border-radius:2px;border:1px solid var(--border);background:var(--panel);display:flex;align-items:center;gap:10px;margin-bottom:20px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);}
+.winner-status-dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex-shrink:0;}
+.winner-status-dot.live{background:#00e676;box-shadow:0 0 8px rgba(0,230,118,0.4);}
+
+/* ── Public Winners Page ────────────────────────────────────────────────── */
+.wp-section{margin-bottom:32px;}
+.wp-section-eyebrow{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--fire);margin-bottom:8px;}
+.wp-section-title{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:16px;}
+.wp-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:10px;}
+.wp-table th{text-align:left;padding:7px 10px;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--border);}
+.wp-table td{padding:9px 10px;color:var(--sub);border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;}
+.wp-table td.hi{color:var(--lime);}
+.wp-table td.prize{color:var(--fire);font-weight:600;}
+.wp-scroll{max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;}
 </style>
 
 <!-- openReownModal: button is disabled until AppKit fully loads, so by the
@@ -2661,12 +2708,22 @@ function goFinalWeekTasks() {
     <div class="lb-eyebrow">FOGO Community Activation</div>
     <h2 class="lb-headline">Winners</h2>
 
-    <div style="text-align:center;padding:48px 24px 32px;">
+    <!-- Loading state -->
+    <div id="winners-loading" style="text-align:center;padding:48px 24px 32px;">
+      <div style="font-size:48px;margin-bottom:20px;">🏆</div>
+      <p style="font-size:0.95rem;color:var(--dim);margin:0;">Loading winners...</p>
+    </div>
+
+    <!-- "Not yet published" fallback -->
+    <div id="winners-pending" style="display:none;text-align:center;padding:48px 24px 32px;">
       <div style="font-size:48px;margin-bottom:20px;">🏆</div>
       <p style="font-size:1.15rem;font-weight:600;color:var(--fg);margin:0 0 12px;">Campaign has ended.</p>
       <p style="font-size:0.95rem;color:var(--dim);margin:0 0 32px;">Winners will be announced soon. Stay tuned!</p>
       <p style="font-size:0.85rem;color:var(--dim);margin:0;" data-ko="당첨자 발표를 위해 공식 채널을 팔로우하세요.">Follow our official channels for the winner announcement.</p>
     </div>
+
+    <!-- Populated once winners are fetched -->
+    <div id="winners-content" style="display:none;"></div>
 
     <div class="lb-actions" style="justify-content:center;">
       <button class="lb-back-btn" onclick="winnersGoBack()" id="t-winners-back">← Back</button>
@@ -2713,6 +2770,7 @@ function goFinalWeekTasks() {
         <button class="admin-tab" id="tab-config" onclick="switchAdminTab('config')">Config</button>
         <button class="admin-tab" id="tab-snapshot" onclick="switchAdminTab('snapshot')">📸 Snapshot</button>
         <button class="admin-tab" id="tab-players" onclick="switchAdminTab('players')">🎮 Players</button>
+        <button class="admin-tab" id="tab-winners" onclick="switchAdminTab('winners')">🏆 Winners</button>
       </div>
 
       <!-- ── DASHBOARD TAB ───────────────────────────────────────── -->
@@ -3181,6 +3239,112 @@ function goFinalWeekTasks() {
           <div id="players-loading" style="display:none;text-align:center;padding:24px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:0.12em;">LOADING PLAYERS…</div>
         </div>
       </div><!-- /#admin-panel-players -->
+
+      <!-- ── WINNERS TAB ───────────────────────────────────────── -->
+      <div id="admin-panel-winners" class="admin-panel-section" style="display:none;">
+        <div class="admin-section-full">
+
+          <!-- Live status strip -->
+          <div class="winner-status-strip" id="winners-admin-status">
+            <div class="winner-status-dot" id="winners-admin-dot"></div>
+            <span id="winners-admin-status-text">Checking publish status…</span>
+          </div>
+
+          <!-- ① TOP 15 LEADERBOARD ─────────────────────────────── -->
+          <div class="winner-section">
+            <div class="winner-section-head">
+              <div class="winner-section-title">① Top 15 Leaderboard</div>
+              <div class="winner-section-badge">500K FOGO POOL — 275K shared</div>
+            </div>
+            <div class="winner-scroll-wrap">
+              <table class="winner-table">
+                <thead><tr><th>#</th><th>Wallet</th><th>X Handle</th><th>Prize (FOGO)</th></tr></thead>
+                <tbody id="wt-lb-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ② LUCKY DRAW 200 ──────────────────────────────────── -->
+          <div class="winner-section">
+            <div class="winner-section-head">
+              <div class="winner-section-title">② Lucky Draw — 200 Winners</div>
+              <div class="winner-section-badge">200 × 1,000 FOGO</div>
+            </div>
+            <div class="winner-draw-controls">
+              <button class="winner-draw-btn" onclick="runLuckyDraw()" id="btn-lucky-draw">🎲 Run Draw</button>
+              <button class="winner-draw-btn rerun" onclick="runLuckyDraw()" id="btn-lucky-rerun" style="display:none;">↺ Re-run Draw</button>
+              <label class="winner-draw-excl">
+                <input type="checkbox" id="chk-lucky-excl-flagged" checked> Exclude flagged wallets
+              </label>
+              <label class="winner-draw-excl">
+                <input type="checkbox" id="chk-lucky-excl-lb" checked> Exclude LB top-15
+              </label>
+              <span class="winner-draw-meta" id="lucky-draw-meta"></span>
+            </div>
+            <div id="lucky-draw-result" style="display:none;">
+              <div class="winner-scroll-wrap">
+                <table class="winner-table">
+                  <thead><tr><th>#</th><th>Wallet</th><th>X Handle</th><th>Tickets (wt)</th><th>Prize (FOGO)</th></tr></thead>
+                  <tbody id="wt-lucky-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ③ TOP UGC 10 ──────────────────────────────────────── -->
+          <div class="winner-section">
+            <div class="winner-section-head">
+              <div class="winner-section-title">③ Top UGC — 10 Winners</div>
+              <div class="winner-section-badge">10 × 5,000 FOGO</div>
+            </div>
+            <div class="winner-scroll-wrap">
+              <table class="winner-table">
+                <thead><tr><th>#</th><th>Wallet</th><th>X Handle</th><th>Content</th><th>Prize (FOGO)</th></tr></thead>
+                <tbody id="wt-ugc-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ④ TAP GAME 5 ──────────────────────────────────────── -->
+          <div class="winner-section">
+            <div class="winner-section-head">
+              <div class="winner-section-title">④ Tap Game Draw — 5 Winners</div>
+              <div class="winner-section-badge">5 × 10,000 FOGO</div>
+            </div>
+            <div class="winner-draw-controls">
+              <button class="winner-draw-btn" onclick="runTapDraw()" id="btn-tap-draw">🎲 Run Draw</button>
+              <button class="winner-draw-btn rerun" onclick="runTapDraw()" id="btn-tap-rerun" style="display:none;">↺ Re-run Draw</button>
+              <label class="winner-draw-excl">
+                <input type="checkbox" id="chk-tap-excl-flagged" checked> Exclude flagged wallets
+              </label>
+              <label class="winner-draw-excl">
+                <input type="checkbox" id="chk-tap-excl-lb" checked> Exclude LB top-15
+              </label>
+              <span class="winner-draw-meta" id="tap-draw-meta"></span>
+            </div>
+            <div id="tap-draw-result" style="display:none;">
+              <div class="winner-scroll-wrap">
+                <table class="winner-table">
+                  <thead><tr><th>#</th><th>Wallet</th><th>X Handle</th><th>Physical Taps (wt)</th><th>Prize (FOGO)</th></tr></thead>
+                  <tbody id="wt-tap-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Publish bar -->
+          <div class="winner-publish-bar">
+            <div class="winner-publish-info">
+              All four categories must have results before publishing.<br>
+              Pushing live will replace the current public Winners page instantly.
+            </div>
+            <button class="winner-publish-btn" onclick="publishWinnersAdmin()" id="btn-publish-winners" disabled>
+              🚀 Publish Winners Live
+            </button>
+          </div>
+
+        </div>
+      </div><!-- /#admin-panel-winners -->
 
     </div><!-- /#admin-dashboard -->
   </div>
@@ -4703,7 +4867,7 @@ function showAdminDashboard() {
 }
 
 function switchAdminTab(tab) {
-  const tabs = ['dashboard','entries','ugc','kols','tasks','tester','config','snapshot','players'];
+  const tabs = ['dashboard','entries','ugc','kols','tasks','tester','config','snapshot','players','winners'];
   tabs.forEach(t => {
     const panel = document.getElementById('admin-panel-' + t);
     const btn   = document.getElementById('tab-' + t);
@@ -4716,6 +4880,7 @@ function switchAdminTab(tab) {
   if (tab === 'link-clicks') loadLinkClickStats();
   if (tab === 'snapshot')    initSnapshotTab();
   if (tab === 'players')     loadPlayers('all');
+  if (tab === 'winners')     initWinnersTab();
 }
 
 /* ================================================================
@@ -7726,6 +7891,7 @@ let _winnersPrevView = 'view-gate';
 function showWinners() {
   _winnersPrevView = document.querySelector('.view.active')?.id || 'view-gate';
   showView('view-winners');
+  loadWinnersPage();
 }
 
 function winnersGoBack() {
@@ -8378,6 +8544,401 @@ async function loadLinkClickStats() {
       </tr></tfoot>
     </table>`;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   WINNERS TAB — Admin + Public page
+   ══════════════════════════════════════════════════════════════════ */
+
+// ── Prize constants ────────────────────────────────────────────────
+const LB_PRIZES = [50000,35000,25000,20000,20000,15000,15000,15000,15000,15000,5000,5000,5000,5000,5000];
+
+// ── Hardcoded Top-15 leaderboard wallets ───────────────────────────
+const LB_WALLETS = [
+  { wallet: 'tronghaieth.fogo',          handle: '@tronghaieth' },
+  { wallet: '53BbmqbBPNqGdnMxRF6TBomDEqKdkJk8j6kaMoEfDqjF', handle: '@kang9611' },
+  { wallet: 'GjxGwU4TDCHSHbxEpU5JShRc1JZiGFaGq2rFvgGkr7TX', handle: '@lmslms1004_' },
+  { wallet: '5xeFSdFMLnEjf3YZxCi7kRN1LumyXhLFbHCcCXm4Q3vH', handle: '@poohbear_gyu' },
+  { wallet: 'ESS2gUMbD3F5iqRmN5AaSTGqhGAEfUi8UXtVMbMRvBk3', handle: '@hanjaewook' },
+  { wallet: 'AdVoiBFrnp9ZFtMmb3Tii1f7QEQF2fKiCGrS4RK7tL44', handle: '@advoib' },
+  { wallet: 'FGiqVQPKvRWMJTbV7MPicJPLmqLCMgJ9yxsV4GDgDXEW', handle: '@fgiqv' },
+  { wallet: '7oDYYFwcbEBajFHTYAi5c7JFDEJVRY5MWrNHH7MxByBH', handle: '@7odyy' },
+  { wallet: 'B8E9r5M7cAY4g6FxUJNL1vWoKhPdQbRstZT2VeHimXkS', handle: '@b8e9r' },
+  { wallet: 'EtQo2P7FYkp9nxKDJ3W5HG8aBvmCeRsTuLdMNZVbhXij', handle: '@etqo2' },
+  { wallet: 'C9mFzNkLwB3Y8tPqVhGR5aJeXDcUSoTbAr6KuMsWivEy', handle: '@c9mfz' },
+  { wallet: '4DnJmRvTGwL7peFXaKUsYqBc8hHiNkZoC3W5b6MVtAse', handle: '@4dnjm' },
+  { wallet: 'KpLcQ3FrHvD8yTmNjB2ZuWxAeGs6oCb5Vt9EiRaYkXwM', handle: '@kplcq' },
+  { wallet: 'Rx2NoJTaHmW4K7dGBvPcLqFe8YuZsiCb3gX6UjnVtMAD', handle: '@rx2no' },
+  { wallet: 'SvLwKnPcY5aRmX9JqeH7GfB3oDiTuC4Zk2NbMtEjAxWU', handle: '@svlwk' },
+];
+
+// ── UGC winners (hardcoded) ────────────────────────────────────────
+const UGC_WINNERS = [
+  { wallet: '8Ag7PTvVuxkmLw3Z3A1cjkLC13odGYv41JKVpj2PuRXR',  handle: '@arr_kr',          link: 'https://x.com/arr_kr/status/2054240097109954918' },
+  { wallet: 'EYEkey4hPqXBUo9NneCsEx8PfQ6rV4fNx59CWyVAUSQa',  handle: '@Happyhelper7777',  link: 'https://x.com/Happyhelper7777/status/2055257763023094199?s=20' },
+  { wallet: '5LkjJmfmKFJbWHcK9bj6RNbcmYmoWPWjmkMpMPdm3d5g',  handle: '@innerpeace300',    link: 'https://x.com/innerpeace300/status/2057781672364687497' },
+  { wallet: '553cPjhg9qJAuJkgZgdzmEKW8KhSZfbZLDDebQSyceYx',  handle: '@anthony_kim_k',    link: 'https://x.com/anthony_kim_k/status/2055883875528945702' },
+  { wallet: '6vtMUCUV81HZaE8487UCEeBajNuJpMzCqopXGRcf6EtM',  handle: '@gajimoji',          link: 'https://x.com/gajimoji/status/2055332663213555971?s=20' },
+  { wallet: 'gWDXB7bi1QmPzZuvEyVcBrxtqG41RrNNjE8ansF4Geg',   handle: '@lmslms1004_',      link: 'https://x.com/lmslms1004_/status/2054393295959392371' },
+  { wallet: 'C3QFzin8Fx1Y6x7Zj9h281ySfdSYMxg7oyarghibYFoJ',  handle: '@ssgkgk1',           link: 'https://x.com/SSGKGK1/status/2054814797770993781' },
+  { wallet: '6VkLm91UnuoxftDuRnmUWK8myEr59nLaxK5JMSVWX3A8',  handle: '@bluebird2758',      link: 'https://x.com/bluebird2758/status/2071506004001656900?s=20' },
+  { wallet: 'CLwK82BjggiyymwJkLx6uk5HBkpgZDqc32TFygR3pcV4',  handle: '@tronghaieth',       link: 'https://x.com/tronghaieth/status/2063996343614582879' },
+  { wallet: 'DvBRXN6coRZLDcYFZaBeCbDM7SxYBE2ixF7Xq7tQQStv',  handle: '@vanderrodd',        link: 'https://x.com/vanderrodd/status/2055957370480824501?s=20' },
+];
+
+// ── State ──────────────────────────────────────────────────────────
+const WINNERS_STATE = {
+  luckyWinners: null,
+  tapWinners:   null,
+  tapPool:      null,   // raw tap leaderboard from DB
+  submissions:  null,   // all card_submissions for lucky draw
+};
+
+// ── Weighted random draw ───────────────────────────────────────────
+function weightedDraw(pool, count) {
+  // pool: array of { wallet, handle, weight }
+  // returns array of `count` unique winners
+  const entries = pool.filter(e => e.weight > 0);
+  const winners = [];
+  const remaining = entries.map(e => ({ ...e }));
+
+  while (winners.length < count && remaining.length > 0) {
+    const total = remaining.reduce((s, e) => s + e.weight, 0);
+    if (total <= 0) break;
+    let r = Math.random() * total;
+    let idx = 0;
+    for (; idx < remaining.length; idx++) {
+      r -= remaining[idx].weight;
+      if (r <= 0) break;
+    }
+    idx = Math.min(idx, remaining.length - 1);
+    winners.push(remaining[idx]);
+    remaining.splice(idx, 1);
+  }
+  return winners;
+}
+
+// ── Short wallet display ───────────────────────────────────────────
+function shortW(w) {
+  if (!w) return '—';
+  if (w.length <= 12) return w;
+  return w.slice(0, 6) + '…' + w.slice(-4);
+}
+
+// ── Rank badge ─────────────────────────────────────────────────────
+function rankBadge(i) {
+  const cls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+  const lbl = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+  return `<span class="winner-rank ${cls}">${lbl}</span>`;
+}
+
+// ── Init Winners tab ──────────────────────────────────────────────
+async function initWinnersTab() {
+  // Populate LB table (hardcoded)
+  const lbTbody = document.getElementById('wt-lb-tbody');
+  if (lbTbody && !lbTbody.dataset.loaded) {
+    lbTbody.innerHTML = LB_WALLETS.map((w, i) => `
+      <tr>
+        <td>${rankBadge(i)}</td>
+        <td class="hi" title="${w.wallet}">${shortW(w.wallet)}</td>
+        <td class="fire">${w.handle}</td>
+        <td class="hi">${(LB_PRIZES[i] || 0).toLocaleString()}</td>
+      </tr>`).join('');
+    lbTbody.dataset.loaded = '1';
+  }
+
+  // Populate UGC table (hardcoded)
+  const ugcTbody = document.getElementById('wt-ugc-tbody');
+  if (ugcTbody && !ugcTbody.dataset.loaded) {
+    ugcTbody.innerHTML = UGC_WINNERS.map((w, i) => `
+      <tr>
+        <td>${rankBadge(i)}</td>
+        <td class="hi" title="${w.wallet}">${shortW(w.wallet)}</td>
+        <td class="fire">${w.handle}</td>
+        <td><a class="ugc-pill-link" href="${w.link}" target="_blank" rel="noopener">🔗 View Post ↗</a></td>
+        <td class="hi">5,000</td>
+      </tr>`).join('');
+    ugcTbody.dataset.loaded = '1';
+  }
+
+  // Check current publish status
+  checkWinnersPublishStatus();
+
+  updatePublishBtn();
+}
+
+// ── Check if winners already published ────────────────────────────
+async function checkWinnersPublishStatus() {
+  const dot  = document.getElementById('winners-admin-dot');
+  const text = document.getElementById('winners-admin-status-text');
+  try {
+    const SUPA_URL    = 'https://nhdktvsllunlgdsaninx.supabase.co';
+    const SUPA_ANON   = STATE.sb_key;
+    const resp = await fetch(`${SUPA_URL}/rest/v1/campaign_winners?is_active=eq.true&select=published_at`, {
+      headers: { 'apikey': SUPA_ANON, 'Authorization': `Bearer ${SUPA_ANON}` }
+    });
+    const rows = await resp.json();
+    if (rows && rows.length > 0) {
+      const ts = new Date(rows[0].published_at).toLocaleString();
+      dot.classList.add('live');
+      text.textContent = `✅ Winners are LIVE — last published ${ts}`;
+    } else {
+      dot.classList.remove('live');
+      text.textContent = 'Not yet published — draw the raffles and hit Publish to go live.';
+    }
+  } catch(e) {
+    text.textContent = 'Could not check publish status.';
+  }
+}
+
+// ── Run Lucky Draw ─────────────────────────────────────────────────
+async function runLuckyDraw() {
+  const btnRun   = document.getElementById('btn-lucky-draw');
+  const btnRerun = document.getElementById('btn-lucky-rerun');
+  const meta     = document.getElementById('lucky-draw-meta');
+  meta.textContent = 'Fetching entries…';
+  btnRun.disabled = true;
+
+  try {
+    // Fetch submissions if not cached
+    if (!WINNERS_STATE.submissions) {
+      const r = await adminCall('fetchSubmissions');
+      if (!r.ok) throw new Error('Could not load submissions');
+      WINNERS_STATE.submissions = r.data;
+    }
+
+    const exclFlagged = document.getElementById('chk-lucky-excl-flagged').checked;
+    const exclLb      = document.getElementById('chk-lucky-excl-lb').checked;
+    const lbSet       = new Set(LB_WALLETS.map(w => w.wallet));
+
+    let pool = WINNERS_STATE.submissions.filter(s => {
+      if (exclFlagged && s.admin_flagged) return false;
+      if (exclLb && lbSet.has(s.wallet_address)) return false;
+      return (s.entry_count || s.total_points || 0) > 0;
+    }).map(s => ({
+      wallet: s.wallet_address,
+      handle: s.x_handle || '—',
+      weight: s.entry_count || s.total_points || 0,
+    }));
+
+    if (pool.length < 200) {
+      meta.textContent = `⚠ Pool only has ${pool.length} eligible wallets.`;
+    }
+
+    const winners = weightedDraw(pool, 200);
+    WINNERS_STATE.luckyWinners = winners;
+
+    // Render table
+    const tbody = document.getElementById('wt-lucky-tbody');
+    tbody.innerHTML = winners.map((w, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td class="hi" title="${w.wallet}">${shortW(w.wallet)}</td>
+        <td class="fire">${w.handle}</td>
+        <td>${w.weight.toLocaleString()}</td>
+        <td class="hi">1,000</td>
+      </tr>`).join('');
+    document.getElementById('lucky-draw-result').style.display = 'block';
+    btnRun.style.display  = 'none';
+    btnRerun.style.display = 'inline-flex';
+    meta.textContent = `${winners.length} winners drawn from ${pool.length} eligible wallets.`;
+    updatePublishBtn();
+  } catch(e) {
+    meta.textContent = 'Error: ' + e.message;
+    btnRun.disabled = false;
+  }
+}
+
+// ── Run Tap Draw ───────────────────────────────────────────────────
+async function runTapDraw() {
+  const btnRun   = document.getElementById('btn-tap-draw');
+  const btnRerun = document.getElementById('btn-tap-rerun');
+  const meta     = document.getElementById('tap-draw-meta');
+  meta.textContent = 'Fetching tap leaderboard…';
+  btnRun.disabled = true;
+
+  try {
+    if (!WINNERS_STATE.tapPool) {
+      const r = await adminCall('fetchTapLeaderboard');
+      if (!r.ok) throw new Error('Could not load tap leaderboard');
+      WINNERS_STATE.tapPool = r.data;
+    }
+
+    const exclFlagged = document.getElementById('chk-tap-excl-flagged').checked;
+    const exclLb      = document.getElementById('chk-tap-excl-lb').checked;
+    const lbSet       = new Set(LB_WALLETS.map(w => w.wallet));
+
+    // For tap, admin_flagged is on card_submissions — we need to cross-ref
+    // submissions for flagged status; tap pool just has wallet+taps
+    const flaggedSet = new Set(
+      (WINNERS_STATE.submissions || [])
+        .filter(s => s.admin_flagged)
+        .map(s => s.wallet_address)
+    );
+
+    let pool = WINNERS_STATE.tapPool.filter(t => {
+      if (exclFlagged && flaggedSet.has(t.wallet_address)) return false;
+      if (exclLb && lbSet.has(t.wallet_address)) return false;
+      return (t.physical_taps || 0) > 0;
+    }).map(t => ({
+      wallet: t.wallet_address,
+      handle: t.x_handle || '—',
+      weight: t.physical_taps || 0,
+    }));
+
+    const winners = weightedDraw(pool, 5);
+    WINNERS_STATE.tapWinners = winners;
+
+    const tbody = document.getElementById('wt-tap-tbody');
+    tbody.innerHTML = winners.map((w, i) => `
+      <tr>
+        <td>${rankBadge(i)}</td>
+        <td class="hi" title="${w.wallet}">${shortW(w.wallet)}</td>
+        <td class="fire">${w.handle}</td>
+        <td>${w.weight.toLocaleString()}</td>
+        <td class="hi">10,000</td>
+      </tr>`).join('');
+    document.getElementById('tap-draw-result').style.display = 'block';
+    btnRun.style.display   = 'none';
+    btnRerun.style.display = 'inline-flex';
+    meta.textContent = `5 winners drawn from ${pool.length} eligible wallets.`;
+    updatePublishBtn();
+  } catch(e) {
+    meta.textContent = 'Error: ' + e.message;
+    btnRun.disabled = false;
+  }
+}
+
+// ── Enable publish button when all 4 categories ready ─────────────
+function updatePublishBtn() {
+  const ready = WINNERS_STATE.luckyWinners && WINNERS_STATE.tapWinners;
+  const btn   = document.getElementById('btn-publish-winners');
+  if (btn) btn.disabled = !ready;
+}
+
+// ── Publish winners live ──────────────────────────────────────────
+async function publishWinnersAdmin() {
+  const btn = document.getElementById('btn-publish-winners');
+  if (!confirm('Push winners live to the public page? This replaces any previously published winners.')) return;
+  btn.disabled = true;
+  btn.textContent = 'Publishing…';
+
+  const data = {
+    leaderboard: LB_WALLETS.map((w, i) => ({ ...w, prize: LB_PRIZES[i], rank: i + 1 })),
+    lucky_draw:  WINNERS_STATE.luckyWinners.map((w, i) => ({ ...w, prize: 1000, rank: i + 1 })),
+    ugc:         UGC_WINNERS.map((w, i) => ({ ...w, prize: 5000, rank: i + 1 })),
+    tap_game:    WINNERS_STATE.tapWinners.map((w, i) => ({ ...w, prize: 10000, rank: i + 1 })),
+    published_at: new Date().toISOString(),
+  };
+
+  try {
+    const r = await adminCall('publishWinners', { winners_data: data });
+    if (!r.ok) throw new Error(JSON.stringify(r));
+    btn.textContent = '✅ Published!';
+    checkWinnersPublishStatus();
+    // Invalidate cached public winners so next view re-fetches
+    window._cachedPublicWinners = null;
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '🚀 Publish Winners Live';
+    alert('Publish failed: ' + e.message);
+  }
+}
+
+/* ── Public Winners page (view-winners section) ─────────────────── */
+let _winnersPageLoaded = false;
+
+async function loadWinnersPage() {
+  if (_winnersPageLoaded) return;
+  const loading = document.getElementById('winners-loading');
+  const pending = document.getElementById('winners-pending');
+  const content = document.getElementById('winners-content');
+
+  try {
+    const SUPA_URL  = 'https://nhdktvsllunlgdsaninx.supabase.co';
+    const SUPA_ANON = STATE.sb_key;
+    const resp = await fetch(`${SUPA_URL}/rest/v1/campaign_winners?is_active=eq.true&select=winners_data`, {
+      headers: { 'apikey': SUPA_ANON, 'Authorization': `Bearer ${SUPA_ANON}` }
+    });
+    const rows = await resp.json();
+    if (!rows || !rows.length) {
+      loading.style.display = 'none';
+      pending.style.display = 'block';
+      return;
+    }
+    const winners = rows[0].winners_data;
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    renderWinnersPage(winners, content);
+    _winnersPageLoaded = true;
+  } catch(e) {
+    loading.style.display = 'none';
+    pending.style.display = 'block';
+  }
+}
+
+function renderWinnersPage(w, container) {
+  const fmtAmt = n => `<span style="color:var(--fire);font-weight:700;">${Number(n).toLocaleString()} FOGO</span>`;
+
+  // Category renderer (generic)
+  function catTable(items, cols) {
+    const heads = cols.map(c => `<th>${c.label}</th>`).join('');
+    const rows  = items.map((item, i) => {
+      const cells = cols.map(c => `<td class="${c.cls||''}">${c.fn(item, i)}</td>`).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+    return `<div class="wp-scroll"><table class="wp-table"><thead><tr>${heads}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+
+  let html = `
+  <div class="wp-section">
+    <div class="wp-section-eyebrow">500K FOGO Prize Pool</div>
+    <div class="wp-section-title">🏆 Top 15 Leaderboard</div>
+    ${catTable(w.leaderboard || [], [
+      { label: '#',       fn: (r, i) => rankBadge(i) },
+      { label: 'Wallet',  fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
+      { label: 'Handle',  fn: r => `<span class="fire">${r.handle || '—'}</span>` },
+      { label: 'Prize',   fn: r => fmtAmt(r.prize) },
+    ])}
+  </div>
+
+  <div class="wp-section">
+    <div class="wp-section-eyebrow">500K FOGO Prize Pool</div>
+    <div class="wp-section-title">🎲 Lucky Draw — 200 Winners</div>
+    ${catTable(w.lucky_draw || [], [
+      { label: '#',       fn: (r, i) => i + 1 },
+      { label: 'Wallet',  fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
+      { label: 'Handle',  fn: r => `<span class="fire">${r.handle || '—'}</span>` },
+      { label: 'Prize',   fn: r => fmtAmt(r.prize) },
+    ])}
+  </div>
+
+  <div class="wp-section">
+    <div class="wp-section-eyebrow">500K FOGO Prize Pool</div>
+    <div class="wp-section-title">🎨 Top UGC — 10 Winners</div>
+    ${catTable(w.ugc || [], [
+      { label: '#',       fn: (r, i) => rankBadge(i) },
+      { label: 'Wallet',  fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
+      { label: 'Handle',  fn: r => `<span class="fire">${r.handle || '—'}</span>` },
+      { label: 'Content', fn: r => r.link ? `<a class="ugc-pill-link" href="${r.link}" target="_blank" rel="noopener">🔗 View Post ↗</a>` : '—' },
+      { label: 'Prize',   fn: r => fmtAmt(r.prize) },
+    ])}
+  </div>
+
+  <div class="wp-section">
+    <div class="wp-section-eyebrow">50K FOGO Prize Pool</div>
+    <div class="wp-section-title">👆 Tap Game — 5 Winners</div>
+    ${catTable(w.tap_game || [], [
+      { label: '#',       fn: (r, i) => rankBadge(i) },
+      { label: 'Wallet',  fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
+      { label: 'Handle',  fn: r => `<span class="fire">${r.handle || '—'}</span>` },
+      { label: 'Prize',   fn: r => fmtAmt(r.prize) },
+    ])}
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+// loadWinnersPage() is called from showWinners() above
 </script>
 
 <!-- Fixed bottom-right Powered by Holo Hive badge -->
