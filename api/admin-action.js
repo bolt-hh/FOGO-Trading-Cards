@@ -251,6 +251,27 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: r.ok });
       }
 
+      // ── Winners ───────────────────────────────────────────────────────────
+
+      case 'publishWinners': {
+        if (!params.winners_data) return res.status(400).json({ error: 'Missing winners_data' });
+        // Deactivate any existing active row
+        await sb('PATCH', 'campaign_winners?is_active=eq.true',
+          { is_active: false }, { 'Prefer': 'return=minimal' });
+        // Insert new active winners
+        const r = await sb('POST', 'campaign_winners',
+          { winners_data: params.winners_data, is_active: true, published_at: new Date().toISOString() },
+          { 'Prefer': 'return=representation' });
+        return res.status(200).json({ ok: r.ok, data: r.data });
+      }
+
+      case 'fetchTapLeaderboard': {
+        const r = await sb('GET',
+          'tap_leaderboard_admin?select=wallet_address,x_handle,physical_taps,total_taps&order=physical_taps.desc.nullslast',
+          null, { 'Prefer': 'return=representation' });
+        return res.status(200).json({ ok: r.ok, data: r.data });
+      }
+
       default:
         return res.status(400).json({ error: `Unknown action: ${action}` });
     }
