@@ -2058,7 +2058,7 @@ function goFinalWeekTasks() {
     </div>
     <div class="nav-right">
       <button class="lb-back-btn" style="font-size:10px;padding:7px 14px;" onclick="showLeaderboard()" id="t-nav-leaderboard">Leaderboard</button>
-      <button class="lb-back-btn" style="font-size:10px;padding:7px 14px;" onclick="showWinners()" id="t-nav-winners" data-ko="수상자">Winners</button>
+      <a class="lb-back-btn" style="font-size:10px;padding:7px 14px;text-decoration:none;cursor:pointer;" id="t-nav-winners" data-ko="수상자" href="/winners" onclick="this.href=document.documentElement.lang==='ko'?'/winners?lang=ko':'/winners'">Winners</a>
       <div class="live-status"><span style="width:6px;height:6px;border-radius:50%;background:var(--dim,#666);display:inline-block;flex-shrink:0;"></span><span id="t-nav-live" data-ko="캠페인 종료">Campaign Ended</span></div>
       <div class="lang-toggle" role="group" aria-label="Language">
         <a class="lang-btn" id="nav-lang-en" href="?" style="text-decoration:none;">EN</a>
