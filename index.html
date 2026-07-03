@@ -9032,6 +9032,7 @@ async function publishWinnersAdmin() {
     checkWinnersPublishStatus();
     // Invalidate cached public winners so next view re-fetches
     window._cachedPublicWinners = null;
+    _winnersPageLoaded = false;
   } catch(e) {
     btn.disabled = false;
     btn.textContent = '🚀 Publish Winners Live';
