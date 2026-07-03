@@ -1794,6 +1794,12 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 .winners-chain-notice strong{color:var(--fire);}
 .winners-chain-notice a{color:var(--lime);text-decoration:none;}
 .winners-chain-notice a:hover{text-decoration:underline;}
+.winners-tx-proof{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:-16px 0 24px;padding:10px 14px;border:1px solid rgba(255,255,255,0.07);border-radius:8px;background:rgba(255,255,255,0.02);}
+.winners-tx-proof-label{font-size:0.7rem;color:var(--sub);opacity:0.5;width:100%;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.07em;}
+.winners-tx-chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--sub);font-size:0.72rem;text-decoration:none;white-space:nowrap;transition:border-color .15s,color .15s,background .15s;font-family:monospace;}
+.winners-tx-chip:hover{border-color:rgba(255,107,0,0.45);color:var(--fire);background:rgba(255,107,0,0.06);text-decoration:none;}
+.winners-tx-chip .tx-n{color:rgba(255,255,255,0.7);font-weight:600;margin-right:4px;}
+.winners-tx-chip .tx-r{opacity:0.5;font-size:0.68rem;}
 </style>
 
 <!-- openReownModal: button is disabled until AppKit fully loads, so by the
@@ -9129,6 +9135,30 @@ function renderWinnersPage(w, container) {
     ? `<div class="winners-chain-notice" id="winners-chain-notice">🔗 상금은 <strong>FOGO 체인</strong>에 있습니다. FOGO 잔액을 확인하려면 <a href="https://portfolio.fogo.io/" target="_blank">portfolio.fogo.io</a>를 이용하시거나 <a href="https://www.nightly.app/" target="_blank">Nightly 지갑</a>을 설치하세요.</div>`
     : `<div class="winners-chain-notice" id="winners-chain-notice">🔗 Prizes are on <strong>FOGO chain</strong>. To view your FOGO balance, visit <a href="https://portfolio.fogo.io/" target="_blank">portfolio.fogo.io</a> or install <a href="https://www.nightly.app/" target="_blank">Nightly wallet</a>.</div>`;
 
+  // Transfer proof chips — 15 disperse TXs
+  const TX_PROOFS = [
+    {r:'1–15',   sig:'4TgEuKcmW8KLF7dwaKGqLeM5iXkoPzax55YH4msiCxDYdof9u7obYR3PzBc1LePMzeatyTvitKrfZL5cjRaK8b2q'},
+    {r:'16–30',  sig:'4gz5BnXHjNeinyfbk8xYVAkxDagX2RuD3vibWMioFMVajqdFqGEvahjjKA6ZHy4FV6PsbqL7HKrK6WjxruDzBduQ'},
+    {r:'31–45',  sig:'5JEH7ZumUbBs3rgCnFi8cfDFhdoWxYxjVdGhEmduaqN3sE9QbyrbX8Vfx1TAyqawRJBf223bHuy9BEmBW5WPZHbT'},
+    {r:'46–60',  sig:'5fttvNecTnhQrQFtr79oTT4h7ZMPqxZHtLnc2HeEy1GFbs37SkLyeafntMpbnhDomMDMnrRB39V41qKvtd7Uvsff'},
+    {r:'61–75',  sig:'2vmivbH3QNSvRbuDM4HQmgqXdt88FMNwghVJvK9ugyREr8Y7bYgG9pxB5n7BKu5wDEzMjPtApZ8pa7ij777Jhjt7'},
+    {r:'76–90',  sig:'5VBtE7BG6vc7qSrr5n9435URUmbt3NXKAZt8uifQDnejWFNALZBsFj4HbJMKbFbpfzTVNcy6pyUQoZej1zkZrc2U'},
+    {r:'91–105', sig:'5zRnP6AHZU7zKPyNt59nyurfnDSuDSf1EWzFgn1H8xuFfKzUKcvrod69ifZW7zFZxKv7JZvaN8aTYFe13eaxgE4b'},
+    {r:'106–120',sig:'5od9szpqWpJGbxeZ9C5wrRzffAZCq15s8EkzyEkXZ9FokEKeFFNrANiQExXPNSYEMxG35kLdVzsGq2cRwggDznNi'},
+    {r:'121–135',sig:'2BZiek4KN5K27qYp1hdwjnouR9Lii3MHeqUFeUbMmpF9bZ9Rws4KveVKGmBy7JVZ1dgEEvpaqMwscNkHiFuiFgry'},
+    {r:'136–150',sig:'3znWTnNYEyJiAU8EsT75E2QSwiU5xowS1vmGE24mDDhxAfpp7kSFMStn67vwLzAyJn85fv8P7JQwroeSfZm6Xr8G'},
+    {r:'151–165',sig:'3m2i75YJ6hshfhjm8KzrQoXrrrfwUFzVUWxDBTwEZsmrUac3Sir9XEEhvW42jDV1rAvQJMiatJ6x6jmQAKcuAY1b'},
+    {r:'166–180',sig:'61fnSR4HfDVjt6TFmiZTcYwj34oZemu3QfVwTKca86p1dXETTcv8SfBMQY8LmBXBuNYkVf4hCZshHrEp5j5qoPSR'},
+    {r:'181–195',sig:'2Ej9BSTwJBfFqkuE3bd3P19qYjatgmNtBon4iDyJFqvhEvZsiM96zEkxpxBYFLii4oibatDaN4KMFFvjdgUaefw3'},
+    {r:'196–210',sig:'25EU4hf29W98qGEEErEA2aA99eWHNdSxQcmDQ7cSjNok8Yrfnyg13bfRbgvidq67LSC9oATX3CrVw'},
+    {r:'211–216',sig:'4srAiTwRi737pdDijdqcD3PyHGdc4NVQ4tP2RcNtCxkJZH9kTrL2ymxVcScfZJaTEUigvGCEGz8TwHeNqcHVTYAJ'},
+  ];
+  const txLabel = isKo ? '전송 증명' : 'Transfer Proofs';
+  const txChips = TX_PROOFS.map((tx,i) =>
+    `<a class="winners-tx-chip" href="https://fogoscan.com/tx/${tx.sig}" target="_blank" rel="noopener" title="Tx ${i+1}: wallets ${tx.r}"><span class="tx-n">Tx ${i+1}</span><span class="tx-r">${tx.r}</span></a>`
+  ).join('');
+  const txStrip = `<div class="winners-tx-proof"><div class="winners-tx-proof-label">${txLabel}</div>${txChips}</div>`;
+
   const t = {
     pool500:  isKo ? '500K FOGO 상금 풀'          : '500K FOGO Prize Pool',
     pool50:   isKo ? '50K FOGO 상금 풀'            : '50K FOGO Prize Pool',
@@ -9141,7 +9171,7 @@ function renderWinnersPage(w, container) {
     content:  isKo ? '콘텐츠'  : 'Content',
   };
 
-  let html = chainNotice + `
+  let html = chainNotice + txStrip + `
   <div class="wp-section">
     <div class="wp-section-eyebrow">${t.pool500}</div>
     <div class="wp-section-title">${t.lb}</div>
