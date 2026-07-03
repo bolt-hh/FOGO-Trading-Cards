@@ -3562,23 +3562,14 @@ window.addEventListener('DOMContentLoaded', () => {
   if (params.get(CONFIG.admin_param)) {
     showView('view-admin');
   } else if (params.get('view') === 'winners') {
+    // Lock the winners view so AppKit/Reown async callbacks can't override it
+    window._winnersViewLocked = true;
     showView('view-winners');
     loadWinnersPage();
+    // Auto-release lock after 6 s (safety valve so nav still works after load)
+    setTimeout(() => { window._winnersViewLocked = false; }, 6000);
   } else {
     showView('view-gate');
-  }
-
-  // Extra guard for ?view=winners — re-asserts the view after all async scripts
-  // (AppKit wallet init, subscribeAccount, etc.) have had a chance to run.
-  if (params.get('view') === 'winners') {
-    window.addEventListener('load', () => {
-      showView('view-winners');
-    });
-    setTimeout(() => {
-      if (new URLSearchParams(location.search).get('view') === 'winners') {
-        showView('view-winners');
-      }
-    }, 800);
   }
 
   // Re-apply language after ALL scripts settle (including enhance.js bootstrap)
@@ -3625,6 +3616,9 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function showView(id) {
+  // If the winners view is locked (direct ?view=winners URL entry), block any
+  // other view from taking over until the winners page has finished loading.
+  if (window._winnersViewLocked && id !== 'view-winners') return;
   const active = document.querySelector('.view.active');
   if (active && active.id !== id) STATE._prevView = active.id;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -9110,6 +9104,7 @@ async function loadWinnersPage() {
     content.style.display = 'block';
     renderWinnersPage(winners, content);
     _winnersPageLoaded = true;
+    window._winnersViewLocked = false; // release lock — page rendered, nav can work normally
   } catch(e) {
     loading.style.display = 'none';
     pending.style.display = 'block';
