@@ -1760,6 +1760,9 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 .winner-publish-btn{background:var(--lime);border:none;color:#070520;font-family:'Inter',sans-serif;font-size:12px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:13px 32px;border-radius:6px;cursor:pointer;transition:all 0.15s;}
 .winner-publish-btn:hover{background:#D4FDB8;box-shadow:0 4px 24px rgba(195,251,165,0.25);}
 .winner-publish-btn:disabled{opacity:0.35;cursor:not-allowed;}
+.winner-download-btn{background:transparent;border:1px solid rgba(195,251,165,0.35);color:var(--lime);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:13px 24px;border-radius:6px;cursor:pointer;transition:all 0.15s;}
+.winner-download-btn:hover{background:rgba(195,251,165,0.06);border-color:var(--lime);}
+.winner-bar-btns{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 .winner-status-strip{padding:10px 16px;border-radius:2px;border:1px solid var(--border);background:var(--panel);display:flex;align-items:center;gap:10px;margin-bottom:20px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);}
 .winner-status-dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex-shrink:0;}
 .winner-status-dot.live{background:#00e676;box-shadow:0 0 8px rgba(0,230,118,0.4);}
@@ -3338,9 +3341,14 @@ function goFinalWeekTasks() {
               All four categories must have results before publishing.<br>
               Pushing live will replace the current public Winners page instantly.
             </div>
-            <button class="winner-publish-btn" onclick="publishWinnersAdmin()" id="btn-publish-winners" disabled>
-              🚀 Publish Winners Live
-            </button>
+            <div class="winner-bar-btns">
+              <button class="winner-download-btn" onclick="downloadWinnersCSV()">
+                ⬇ Download CSV
+              </button>
+              <button class="winner-publish-btn" onclick="publishWinnersAdmin()" id="btn-publish-winners" disabled>
+                🚀 Publish Winners Live
+              </button>
+            </div>
           </div>
 
         </div>
@@ -8806,6 +8814,51 @@ async function runTapDraw() {
     meta.textContent = 'Error: ' + e.message;
     btnRun.disabled = false;
   }
+}
+
+// ── Download all winners as CSV ────────────────────────────────────
+function downloadWinnersCSV() {
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const headers = ['category','rank','wallet_address','x_handle','fogo_amount','ugc_post_url'];
+  const rows = [];
+
+  // 1. Leaderboard Top 15 (always available)
+  LB_WALLETS.forEach((w, i) => {
+    rows.push(['Leaderboard Top 15', i + 1, w.wallet, w.handle, LB_PRIZES[i], '']);
+  });
+
+  // 2. Lucky Draw 200 (if drawn)
+  if (WINNERS_STATE.luckyWinners) {
+    WINNERS_STATE.luckyWinners.forEach((w, i) => {
+      rows.push(['Lucky Draw 200', i + 1, w.wallet, w.handle, 1000, '']);
+    });
+  }
+
+  // 3. UGC Top 10 (always available)
+  UGC_WINNERS.forEach((w, i) => {
+    rows.push(['UGC Top 10', i + 1, w.wallet, w.handle, 5000, w.link || '']);
+  });
+
+  // 4. Tap Game 5 (if drawn)
+  if (WINNERS_STATE.tapWinners) {
+    WINNERS_STATE.tapWinners.forEach((w, i) => {
+      rows.push(['Tap Game 5', i + 1, w.wallet, w.handle, 10000, '']);
+    });
+  }
+
+  if (rows.length === 0) {
+    alert('No winner data available yet. Run the draws first.');
+    return;
+  }
+
+  const csv = [headers.map(q).join(','), ...rows.map(r => r.map(q).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `fogo-winners-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // ── Enable publish button when all 4 categories ready ─────────────
