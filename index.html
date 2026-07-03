@@ -9153,9 +9153,9 @@ function renderWinnersPage(w, container) {
     {r:'196–210',sig:'25EU4hf29W98qGEEErEA2aA99eWHNdSxQcmDQ7cSjNok8Yrfnyg13bfRbgvidq67LSC9oATX3CrVw'},
     {r:'211–216',sig:'4srAiTwRi737pdDijdqcD3PyHGdc4NVQ4tP2RcNtCxkJZH9kTrL2ymxVcScfZJaTEUigvGCEGz8TwHeNqcHVTYAJ'},
   ];
-  const txLabel = isKo ? '전송 증명' : 'Transfer Proofs';
+  const txLabel = isKo ? '상금 풀 배포 증명' : 'Prize Pool Distribution Proof';
   const txChips = TX_PROOFS.map((tx,i) =>
-    `<a class="winners-tx-chip" href="https://fogoscan.com/tx/${tx.sig}" target="_blank" rel="noopener" title="Tx ${i+1}: wallets ${tx.r}"><span class="tx-n">Tx ${i+1}</span><span class="tx-r">${tx.r}</span></a>`
+    `<a class="winners-tx-chip" href="https://fogoscan.com/tx/${tx.sig}" target="_blank" rel="noopener" title="Tx ${i+1}"><span class="tx-n">Tx ${i+1}</span></a>`
   ).join('');
   const txStrip = `<div class="winners-tx-proof"><div class="winners-tx-proof-label">${txLabel}</div>${txChips}</div>`;
 
