@@ -12,6 +12,7 @@
   ],
   "rewrites": [
     { "source": "/api/fogoscan/(.*)", "destination": "/api/fogoscan" },
+    { "source": "/winners", "destination": "/winners.html" },
     { "source": "/play", "destination": "/play.html" },
     { "source": "/report/pfp", "destination": "/dashboard_pfp.html" },
     { "source": "/report/trading-card", "destination": "/dashboard_tradingcard.html" }
