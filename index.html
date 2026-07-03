@@ -3562,6 +3562,19 @@ window.addEventListener('DOMContentLoaded', () => {
     showView('view-gate');
   }
 
+  // Extra guard for ?view=winners — re-asserts the view after all async scripts
+  // (AppKit wallet init, subscribeAccount, etc.) have had a chance to run.
+  if (params.get('view') === 'winners') {
+    window.addEventListener('load', () => {
+      showView('view-winners');
+    });
+    setTimeout(() => {
+      if (new URLSearchParams(location.search).get('view') === 'winners') {
+        showView('view-winners');
+      }
+    }, 800);
+  }
+
   // Re-apply language after ALL scripts settle (including enhance.js bootstrap)
   // requestAnimationFrame runs after browser has processed all synchronous code
   // Apply EN tooltips on load for all users; overwritten to KO if lang=ko
