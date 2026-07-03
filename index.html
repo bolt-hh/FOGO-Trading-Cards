@@ -109,6 +109,13 @@
     't-tier-5': '알파 추출자', 't-tier-6': 'FOGO 에이펙스',
     // Rescan
     'rescan-btn-label': '↻ 지갑 재스캔',
+    // Winners page (static)
+    't-winners-eyebrow':       'FOGO 커뮤니티 활성화',
+    't-winners-headline':      '수상자',
+    't-winners-loading-text':  '수상자 로딩 중...',
+    't-winners-pending-title': '캠페인이 종료되었습니다.',
+    't-winners-pending-sub':   '수상자는 곧 발표됩니다. 기대해 주세요!',
+    't-winners-back':          '← 뒤로',
   };
 
   function applyKo() {
@@ -1783,6 +1790,10 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 .wp-table td.hi{color:var(--lime);}
 .wp-table td.prize{color:var(--fire);font-weight:600;}
 .wp-scroll{max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;}
+.winners-chain-notice{background:rgba(255,107,0,0.07);border:1px solid rgba(255,107,0,0.22);border-radius:8px;padding:13px 18px;margin-bottom:28px;font-size:0.83rem;color:var(--sub);line-height:1.6;}
+.winners-chain-notice strong{color:var(--fire);}
+.winners-chain-notice a{color:var(--lime);text-decoration:none;}
+.winners-chain-notice a:hover{text-decoration:underline;}
 </style>
 
 <!-- openReownModal: button is disabled until AppKit fully loads, so by the
@@ -2714,20 +2725,20 @@ function goFinalWeekTasks() {
 <!-- ================================================================ WINNERS VIEW ================================================================ -->
 <section id="view-winners" class="view">
   <div class="lb-inner">
-    <div class="lb-eyebrow">FOGO Community Activation</div>
-    <h2 class="lb-headline">Winners</h2>
+    <div class="lb-eyebrow" id="t-winners-eyebrow">FOGO Community Activation</div>
+    <h2 class="lb-headline" id="t-winners-headline">Winners</h2>
 
     <!-- Loading state -->
     <div id="winners-loading" style="text-align:center;padding:48px 24px 32px;">
       <div style="font-size:48px;margin-bottom:20px;">🏆</div>
-      <p style="font-size:0.95rem;color:var(--dim);margin:0;">Loading winners...</p>
+      <p id="t-winners-loading-text" style="font-size:0.95rem;color:var(--dim);margin:0;">Loading winners...</p>
     </div>
 
     <!-- "Not yet published" fallback -->
     <div id="winners-pending" style="display:none;text-align:center;padding:48px 24px 32px;">
       <div style="font-size:48px;margin-bottom:20px;">🏆</div>
-      <p style="font-size:1.15rem;font-weight:600;color:var(--fg);margin:0 0 12px;">Campaign has ended.</p>
-      <p style="font-size:0.95rem;color:var(--dim);margin:0 0 32px;">Winners will be announced soon. Stay tuned!</p>
+      <p id="t-winners-pending-title" style="font-size:1.15rem;font-weight:600;color:var(--fg);margin:0 0 12px;">Campaign has ended.</p>
+      <p id="t-winners-pending-sub" style="font-size:0.95rem;color:var(--dim);margin:0 0 32px;">Winners will be announced soon. Stay tuned!</p>
       <p style="font-size:0.85rem;color:var(--dim);margin:0;" data-ko="당첨자 발표를 위해 공식 채널을 팔로우하세요.">Follow our official channels for the winner announcement.</p>
     </div>
 
@@ -3544,6 +3555,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (params.get(CONFIG.admin_param)) {
     showView('view-admin');
+  } else if (params.get('view') === 'winners') {
+    showView('view-winners');
+    loadWinnersPage();
   } else {
     showView('view-gate');
   }
@@ -7910,9 +7924,15 @@ function showWinners() {
   _winnersPrevView = document.querySelector('.view.active')?.id || 'view-gate';
   showView('view-winners');
   loadWinnersPage();
+  // Keep lang-toggle links pointing to the winners page so switching language preserves the view
+  document.querySelectorAll('a[id*="lang-en"]').forEach(a => { a.href = '?view=winners'; });
+  document.querySelectorAll('a[id*="lang-ko"]').forEach(a => { a.href = '?lang=ko&view=winners'; });
 }
 
 function winnersGoBack() {
+  // Restore lang-toggle links to the base site
+  document.querySelectorAll('a[id*="lang-en"]').forEach(a => { a.href = '?'; });
+  document.querySelectorAll('a[id*="lang-ko"]').forEach(a => { a.href = '?lang=ko'; });
   showView(_winnersPrevView || 'view-gate');
 }
 
@@ -9074,6 +9094,7 @@ async function loadWinnersPage() {
 
 function renderWinnersPage(w, container) {
   const fmtAmt = n => `<span style="color:var(--fire);font-weight:700;">${Number(n).toLocaleString()} FOGO</span>`;
+  const isKo = document.documentElement.lang === 'ko';
 
   // Category renderer (generic)
   function catTable(items, cols) {
@@ -9085,49 +9106,62 @@ function renderWinnersPage(w, container) {
     return `<div class="wp-scroll"><table class="wp-table"><thead><tr>${heads}</tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
-  let html = `
+  // FOGO chain notice — bilingual
+  const chainNotice = isKo
+    ? `<div class="winners-chain-notice" id="winners-chain-notice">🔗 상금은 <strong>FOGO 체인</strong>에 있습니다. FOGO 잔액을 확인하려면 <a href="https://portfolio.fogo.io/" target="_blank">portfolio.fogo.io</a>를 이용하시거나 <a href="https://www.nightly.app/" target="_blank">Nightly 지갑</a>을 설치하세요.</div>`
+    : `<div class="winners-chain-notice" id="winners-chain-notice">🔗 Prizes are on <strong>FOGO chain</strong>. To view your FOGO balance, visit <a href="https://portfolio.fogo.io/" target="_blank">portfolio.fogo.io</a> or install <a href="https://www.nightly.app/" target="_blank">Nightly wallet</a>.</div>`;
+
+  const t = {
+    pool500:  isKo ? '500K FOGO 상금 풀'          : '500K FOGO Prize Pool',
+    pool50:   isKo ? '50K FOGO 상금 풀'            : '50K FOGO Prize Pool',
+    lb:       isKo ? '🏆 상위 15위 리더보드'        : '🏆 Top 15 Leaderboard',
+    draw:     isKo ? '🎲 럭키 드로우 — 200명 당첨'  : '🎲 Lucky Draw — 200 Winners',
+    ugc:      isKo ? '🎨 상위 UGC — 10명 당첨'     : '🎨 Top UGC — 10 Winners',
+    tap:      isKo ? '👆 탭 게임 — 5명 당첨'        : '👆 Tap Game — 5 Winners',
+    wallet:   isKo ? '지갑'    : 'Wallet',
+    prize:    isKo ? '상금'    : 'Prize',
+    content:  isKo ? '콘텐츠'  : 'Content',
+  };
+
+  let html = chainNotice + `
   <div class="wp-section">
-    <div class="wp-section-eyebrow">500K FOGO Prize Pool</div>
-    <div class="wp-section-title">🏆 Top 15 Leaderboard</div>
+    <div class="wp-section-eyebrow">${t.pool500}</div>
+    <div class="wp-section-title">${t.lb}</div>
     ${catTable(w.leaderboard || [], [
-      { label: '#',       fn: (r, i) => rankBadge(i) },
-      { label: 'Wallet',  fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
-      { label: 'Handle',  fn: r => `<span class="fire">${r.handle || '—'}</span>` },
-      { label: 'Prize',   fn: r => fmtAmt(r.prize) },
+      { label: '#',         fn: (r, i) => rankBadge(i) },
+      { label: t.wallet,    fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
+      { label: t.prize,     fn: r => fmtAmt(r.prize) },
     ])}
   </div>
 
   <div class="wp-section">
-    <div class="wp-section-eyebrow">500K FOGO Prize Pool</div>
-    <div class="wp-section-title">🎲 Lucky Draw — 200 Winners</div>
+    <div class="wp-section-eyebrow">${t.pool500}</div>
+    <div class="wp-section-title">${t.draw}</div>
     ${catTable(w.lucky_draw || [], [
-      { label: '#',       fn: (r, i) => i + 1 },
-      { label: 'Wallet',  fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
-      { label: 'Handle',  fn: r => `<span class="fire">${r.handle || '—'}</span>` },
-      { label: 'Prize',   fn: r => fmtAmt(r.prize) },
+      { label: '#',         fn: (r, i) => i + 1 },
+      { label: t.wallet,    fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
+      { label: t.prize,     fn: r => fmtAmt(r.prize) },
     ])}
   </div>
 
   <div class="wp-section">
-    <div class="wp-section-eyebrow">500K FOGO Prize Pool</div>
-    <div class="wp-section-title">🎨 Top UGC — 10 Winners</div>
+    <div class="wp-section-eyebrow">${t.pool500}</div>
+    <div class="wp-section-title">${t.ugc}</div>
     ${catTable(w.ugc || [], [
-      { label: '#',       fn: (r, i) => rankBadge(i) },
-      { label: 'Wallet',  fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
-      { label: 'Handle',  fn: r => `<span class="fire">${r.handle || '—'}</span>` },
-      { label: 'Content', fn: r => r.link ? `<a class="ugc-pill-link" href="${r.link}" target="_blank" rel="noopener">🔗 View Post ↗</a>` : '—' },
-      { label: 'Prize',   fn: r => fmtAmt(r.prize) },
+      { label: '#',         fn: (r, i) => rankBadge(i) },
+      { label: t.wallet,    fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
+      { label: t.content,   fn: r => r.link ? `<a class="ugc-pill-link" href="${r.link}" target="_blank" rel="noopener">🔗 View Post ↗</a>` : '—' },
+      { label: t.prize,     fn: r => fmtAmt(r.prize) },
     ])}
   </div>
 
   <div class="wp-section">
-    <div class="wp-section-eyebrow">50K FOGO Prize Pool</div>
-    <div class="wp-section-title">👆 Tap Game — 5 Winners</div>
+    <div class="wp-section-eyebrow">${t.pool50}</div>
+    <div class="wp-section-title">${t.tap}</div>
     ${catTable(w.tap_game || [], [
-      { label: '#',       fn: (r, i) => rankBadge(i) },
-      { label: 'Wallet',  fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
-      { label: 'Handle',  fn: r => `<span class="fire">${r.handle || '—'}</span>` },
-      { label: 'Prize',   fn: r => fmtAmt(r.prize) },
+      { label: '#',         fn: (r, i) => rankBadge(i) },
+      { label: t.wallet,    fn: r => `<span class="hi" title="${r.wallet}">${shortW(r.wallet)}</span>` },
+      { label: t.prize,     fn: r => fmtAmt(r.prize) },
     ])}
   </div>`;
 
