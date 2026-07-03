@@ -1762,7 +1762,13 @@ html[lang="ko"] .gate-tier[data-tooltip-ko]:hover::after{
 .winner-publish-btn:disabled{opacity:0.35;cursor:not-allowed;}
 .winner-download-btn{background:transparent;border:1px solid rgba(195,251,165,0.35);color:var(--lime);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:13px 24px;border-radius:6px;cursor:pointer;transition:all 0.15s;}
 .winner-download-btn:hover{background:rgba(195,251,165,0.06);border-color:var(--lime);}
+.winner-save-draft-btn{background:transparent;border:1px solid rgba(255,200,80,0.4);color:#ffc850;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:13px 24px;border-radius:6px;cursor:pointer;transition:all 0.15s;}
+.winner-save-draft-btn:hover{background:rgba(255,200,80,0.06);border-color:#ffc850;}
+.winner-save-draft-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.winner-draft-status{font-family:'JetBrains Mono',monospace;font-size:10px;color:#ffc850;opacity:0.75;margin-top:6px;}
 .winner-bar-btns{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.winner-replace-btn{background:transparent;border:1px solid rgba(255,100,100,0.35);color:rgba(255,120,120,0.85);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:3px;cursor:pointer;transition:all 0.12s;white-space:nowrap;}
+.winner-replace-btn:hover{background:rgba(255,80,80,0.08);border-color:rgba(255,100,100,0.7);color:#ff8888;}
 .winner-status-strip{padding:10px 16px;border-radius:2px;border:1px solid var(--border);background:var(--panel);display:flex;align-items:center;gap:10px;margin-bottom:20px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);}
 .winner-status-dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex-shrink:0;}
 .winner-status-dot.live{background:#00e676;box-shadow:0 0 8px rgba(0,230,118,0.4);}
@@ -3287,7 +3293,7 @@ function goFinalWeekTasks() {
             <div id="lucky-draw-result" style="display:none;">
               <div class="winner-scroll-wrap">
                 <table class="winner-table">
-                  <thead><tr><th>#</th><th>Wallet</th><th>X Handle</th><th>Tickets (wt)</th><th>Prize (FOGO)</th></tr></thead>
+                  <thead><tr><th>#</th><th>Wallet</th><th>X Handle</th><th>Tickets (wt)</th><th>Prize (FOGO)</th><th></th></tr></thead>
                   <tbody id="wt-lucky-tbody"></tbody>
                 </table>
               </div>
@@ -3340,10 +3346,14 @@ function goFinalWeekTasks() {
             <div class="winner-publish-info">
               All four categories must have results before publishing.<br>
               Pushing live will replace the current public Winners page instantly.
+              <div class="winner-draft-status" id="draft-status"></div>
             </div>
             <div class="winner-bar-btns">
               <button class="winner-download-btn" onclick="downloadWinnersCSV()">
                 ⬇ Download CSV
+              </button>
+              <button class="winner-save-draft-btn" onclick="saveDraftAdmin()" id="btn-save-draft">
+                💾 Save Draft
               </button>
               <button class="winner-publish-btn" onclick="publishWinnersAdmin()" id="btn-publish-winners" disabled>
                 🚀 Publish Winners Live
@@ -8671,6 +8681,9 @@ async function initWinnersTab() {
   // Check current publish status
   checkWinnersPublishStatus();
 
+  // Restore any saved draft (Lucky Draw + Tap Game winners)
+  loadSavedDraft();
+
   updatePublishBtn();
 }
 
@@ -8724,7 +8737,7 @@ async function runLuckyDraw() {
       return (s.entry_count || s.total_points || 0) > 0;
     }).map(s => ({
       wallet: s.wallet_address,
-      handle: s.x_handle || '—',
+      handle: s.twitter_handle || '—',
       weight: s.entry_count || s.total_points || 0,
     }));
 
@@ -8735,16 +8748,7 @@ async function runLuckyDraw() {
     const winners = weightedDraw(pool, 200);
     WINNERS_STATE.luckyWinners = winners;
 
-    // Render table
-    const tbody = document.getElementById('wt-lucky-tbody');
-    tbody.innerHTML = winners.map((w, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td class="hi" title="${w.wallet}">${shortW(w.wallet)}</td>
-        <td class="fire">${w.handle}</td>
-        <td>${w.weight.toLocaleString()}</td>
-        <td class="hi">1,000</td>
-      </tr>`).join('');
+    renderLuckyTable();
     document.getElementById('lucky-draw-result').style.display = 'block';
     btnRun.style.display  = 'none';
     btnRerun.style.display = 'inline-flex';
@@ -8813,6 +8817,144 @@ async function runTapDraw() {
   } catch(e) {
     meta.textContent = 'Error: ' + e.message;
     btnRun.disabled = false;
+  }
+}
+
+// ── Render Lucky Draw table (shared by draw + replace + draft load) ─
+function renderLuckyTable() {
+  const tbody = document.getElementById('wt-lucky-tbody');
+  if (!tbody || !WINNERS_STATE.luckyWinners) return;
+  tbody.innerHTML = WINNERS_STATE.luckyWinners.map((w, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td class="hi" title="${w.wallet}">${shortW(w.wallet)}</td>
+      <td class="fire">${w.handle}</td>
+      <td>${(w.weight || 0).toLocaleString()}</td>
+      <td class="hi">1,000</td>
+      <td><button class="winner-replace-btn" onclick="replaceLuckyWinner(${i})">↺ Replace</button></td>
+    </tr>`).join('');
+}
+
+// ── Replace one lucky draw winner ──────────────────────────────────
+function replaceLuckyWinner(idx) {
+  if (!WINNERS_STATE.luckyWinners || !WINNERS_STATE.submissions) {
+    alert('Pool data not loaded. Run the draw first so submissions are cached.');
+    return;
+  }
+
+  // Exclude all current winners except the slot being replaced
+  const excludeSet = new Set(
+    WINNERS_STATE.luckyWinners.filter((_, i) => i !== idx).map(w => w.wallet)
+  );
+  const exclFlagged = document.getElementById('chk-lucky-excl-flagged').checked;
+  const exclLb      = document.getElementById('chk-lucky-excl-lb').checked;
+  const lbSet       = new Set(LB_WALLETS.map(w => w.wallet));
+
+  const pool = WINNERS_STATE.submissions.filter(s => {
+    if (excludeSet.has(s.wallet_address)) return false;
+    if (exclFlagged && s.admin_flagged) return false;
+    if (exclLb && lbSet.has(s.wallet_address)) return false;
+    return (s.entry_count || s.total_points || 0) > 0;
+  }).map(s => ({
+    wallet: s.wallet_address,
+    handle: s.twitter_handle || '—',
+    weight: s.entry_count || s.total_points || 0,
+  }));
+
+  if (pool.length === 0) {
+    alert('No eligible replacements left in pool.');
+    return;
+  }
+
+  const [replacement] = weightedDraw(pool, 1);
+  WINNERS_STATE.luckyWinners[idx] = replacement;
+  renderLuckyTable();
+  updatePublishBtn();
+}
+
+// ── Save draft to DB ───────────────────────────────────────────────
+async function saveDraftAdmin() {
+  const btn = document.getElementById('btn-save-draft');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const data = {
+    leaderboard: LB_WALLETS.map((w, i) => ({ ...w, prize: LB_PRIZES[i], rank: i + 1 })),
+    lucky_draw:  WINNERS_STATE.luckyWinners
+                   ? WINNERS_STATE.luckyWinners.map((w, i) => ({ ...w, prize: 1000, rank: i + 1 }))
+                   : null,
+    ugc:         UGC_WINNERS.map((w, i) => ({ ...w, prize: 5000, rank: i + 1 })),
+    tap_game:    WINNERS_STATE.tapWinners
+                   ? WINNERS_STATE.tapWinners.map((w, i) => ({ ...w, prize: 10000, rank: i + 1 }))
+                   : null,
+  };
+
+  try {
+    const r = await adminCall('saveDraft', { winners_data: data });
+    if (!r.ok) throw new Error(JSON.stringify(r));
+    btn.textContent = '✅ Saved';
+    const ts = new Date().toLocaleString();
+    const statusEl = document.getElementById('draft-status');
+    if (statusEl) statusEl.textContent = `Draft saved: ${ts}`;
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+  } catch(e) {
+    btn.textContent = orig;
+    btn.disabled = false;
+    alert('Save failed: ' + e.message);
+  }
+}
+
+// ── Load saved draft on tab open ───────────────────────────────────
+async function loadSavedDraft() {
+  try {
+    const r = await adminCall('loadDraft');
+    if (!r.ok || !r.data || !r.data.length) return;
+    const row = r.data[0];
+    const d   = row.winners_data;
+
+    // Restore Lucky Draw
+    if (d.lucky_draw && d.lucky_draw.length) {
+      WINNERS_STATE.luckyWinners = d.lucky_draw.map(w => ({
+        wallet: w.wallet, handle: w.handle || '—', weight: w.weight || 0,
+      }));
+      renderLuckyTable();
+      document.getElementById('lucky-draw-result').style.display = 'block';
+      document.getElementById('btn-lucky-draw').style.display    = 'none';
+      document.getElementById('btn-lucky-rerun').style.display   = 'inline-flex';
+      const lMeta = document.getElementById('lucky-draw-meta');
+      if (lMeta) lMeta.textContent = `${WINNERS_STATE.luckyWinners.length} winners loaded from saved draft.`;
+    }
+
+    // Restore Tap Game
+    if (d.tap_game && d.tap_game.length) {
+      WINNERS_STATE.tapWinners = d.tap_game.map(w => ({
+        wallet: w.wallet, handle: w.handle || '—', weight: w.weight || 0,
+      }));
+      const tapTbody = document.getElementById('wt-tap-tbody');
+      if (tapTbody) {
+        tapTbody.innerHTML = WINNERS_STATE.tapWinners.map((w, i) => `
+          <tr>
+            <td>${rankBadge(i)}</td>
+            <td class="hi" title="${w.wallet}">${shortW(w.wallet)}</td>
+            <td class="fire">${w.handle}</td>
+            <td>${(w.weight || 0).toLocaleString()}</td>
+            <td class="hi">10,000</td>
+          </tr>`).join('');
+      }
+      document.getElementById('tap-draw-result').style.display   = 'block';
+      document.getElementById('btn-tap-draw').style.display      = 'none';
+      document.getElementById('btn-tap-rerun').style.display     = 'inline-flex';
+      const tMeta = document.getElementById('tap-draw-meta');
+      if (tMeta) tMeta.textContent = `${WINNERS_STATE.tapWinners.length} winners loaded from saved draft.`;
+    }
+
+    const statusEl = document.getElementById('draft-status');
+    if (statusEl) statusEl.textContent = `Draft saved: ${new Date(row.published_at).toLocaleString()}`;
+
+    updatePublishBtn();
+  } catch(e) {
+    console.warn('[loadSavedDraft] no draft or load failed:', e);
   }
 }
 
