@@ -7924,13 +7924,18 @@ function showWinners() {
   _winnersPrevView = document.querySelector('.view.active')?.id || 'view-gate';
   showView('view-winners');
   loadWinnersPage();
+  // Push winners URL into address bar
+  const isKo = document.documentElement.lang === 'ko';
+  history.pushState({ view: 'winners' }, '', isKo ? '?lang=ko&view=winners' : '?view=winners');
   // Keep lang-toggle links pointing to the winners page so switching language preserves the view
   document.querySelectorAll('a[id*="lang-en"]').forEach(a => { a.href = '?view=winners'; });
   document.querySelectorAll('a[id*="lang-ko"]').forEach(a => { a.href = '?lang=ko&view=winners'; });
 }
 
 function winnersGoBack() {
-  // Restore lang-toggle links to the base site
+  // Restore URL and lang-toggle links to base site
+  const isKo = document.documentElement.lang === 'ko';
+  history.pushState({}, '', isKo ? '?lang=ko' : '?');
   document.querySelectorAll('a[id*="lang-en"]').forEach(a => { a.href = '?'; });
   document.querySelectorAll('a[id*="lang-ko"]').forEach(a => { a.href = '?lang=ko'; });
   showView(_winnersPrevView || 'view-gate');
