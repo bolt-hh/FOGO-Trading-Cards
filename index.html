@@ -8693,7 +8693,7 @@ async function checkWinnersPublishStatus() {
   const text = document.getElementById('winners-admin-status-text');
   try {
     const SUPA_URL    = 'https://nhdktvsllunlgdsaninx.supabase.co';
-    const SUPA_ANON   = STATE.sb_key;
+    const SUPA_ANON   = CONFIG.sb_key;
     const resp = await fetch(`${SUPA_URL}/rest/v1/campaign_winners?is_active=eq.true&select=published_at`, {
       headers: { 'apikey': SUPA_ANON, 'Authorization': `Bearer ${SUPA_ANON}` }
     });
@@ -9051,7 +9051,7 @@ async function loadWinnersPage() {
 
   try {
     const SUPA_URL  = 'https://nhdktvsllunlgdsaninx.supabase.co';
-    const SUPA_ANON = STATE.sb_key;
+    const SUPA_ANON = CONFIG.sb_key;
     const resp = await fetch(`${SUPA_URL}/rest/v1/campaign_winners?is_active=eq.true&select=winners_data`, {
       headers: { 'apikey': SUPA_ANON, 'Authorization': `Bearer ${SUPA_ANON}` }
     });
