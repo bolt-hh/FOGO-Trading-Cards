@@ -258,10 +258,30 @@ export default async function handler(req, res) {
         // Deactivate any existing active row
         await sb('PATCH', 'campaign_winners?is_active=eq.true',
           { is_active: false }, { 'Prefer': 'return=minimal' });
+        // Clear any saved drafts
+        await sb('DELETE', 'campaign_winners?is_draft=eq.true', null, { 'Prefer': 'return=minimal' });
         // Insert new active winners
         const r = await sb('POST', 'campaign_winners',
-          { winners_data: params.winners_data, is_active: true, published_at: new Date().toISOString() },
+          { winners_data: params.winners_data, is_active: true, is_draft: false, published_at: new Date().toISOString() },
           { 'Prefer': 'return=representation' });
+        return res.status(200).json({ ok: r.ok, data: r.data });
+      }
+
+      case 'saveDraft': {
+        if (!params.winners_data) return res.status(400).json({ error: 'Missing winners_data' });
+        // Delete any existing draft (only one draft at a time)
+        await sb('DELETE', 'campaign_winners?is_draft=eq.true', null, { 'Prefer': 'return=minimal' });
+        // Insert new draft
+        const r = await sb('POST', 'campaign_winners',
+          { winners_data: params.winners_data, is_active: false, is_draft: true, published_at: new Date().toISOString() },
+          { 'Prefer': 'return=representation' });
+        return res.status(200).json({ ok: r.ok, data: r.data });
+      }
+
+      case 'loadDraft': {
+        const r = await sb('GET',
+          'campaign_winners?is_draft=eq.true&order=published_at.desc&limit=1',
+          null, { 'Prefer': 'return=representation' });
         return res.status(200).json({ ok: r.ok, data: r.data });
       }
 
