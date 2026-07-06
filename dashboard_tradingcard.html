@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOGO Trader Card — Campaign Report · Holo Hive</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080420;--bg2:#0d0930;--panel:#110c38;--panel2:#160f42;
+  --fire:#FF3D00;--ember:#FF6B00;
+  --lime:#C3FBA5;--lime-d:rgba(195,251,165,.1);
+  --text:#D5EBD5;--sub:rgba(213,235,213,0.65);--dim:rgba(213,235,213,0.35);
+  --border:rgba(213,235,213,0.08);--border-hi:rgba(213,235,213,0.18);
+}
+html,body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+
+/* ── Gate ── */
+#gate{position:fixed;inset:0;background:#080420;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.gate-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:48px 44px;max-width:400px;width:100%;text-align:center;}
+.gate-logo{width:52px;height:52px;margin:0 auto 24px;}
+.gate-eyebrow{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--ember);margin-bottom:10px;}
+.gate-title{font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:6px;}
+.gate-sub{font-size:13px;color:var(--dim);margin-bottom:32px;line-height:1.6;}
+.gate-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:13px 16px;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);letter-spacing:.08em;outline:none;margin-bottom:12px;transition:border-color .2s;}
+.gate-input::placeholder{color:var(--dim);}
+.gate-input:focus{border-color:rgba(195,251,165,.3);}
+.gate-btn{width:100%;background:linear-gradient(90deg,var(--lime),rgba(195,251,165,.7));color:#080420;font-family:'Clash Display',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:8px;padding:14px;cursor:pointer;transition:opacity .15s;}
+.gate-btn:hover{opacity:.88;}
+.gate-err{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fire);margin-top:10px;display:none;}
+
+/* ── Page ── */
+#dash{display:none;}
+.page{max-width:1160px;margin:0 auto;padding:52px 40px 80px;}
+
+/* Header */
+.hdr{border-bottom:1px solid var(--border);padding-bottom:32px;margin-bottom:44px;}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:28px;}
+.hdr-eyebrow{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--ember);margin-bottom:12px;}
+.hdr-title{font-family:'Clash Display',sans-serif;font-size:46px;font-weight:700;color:var(--text);letter-spacing:-.025em;line-height:1.05;margin-bottom:10px;}
+.hdr-desc{font-size:15px;color:var(--sub);line-height:1.65;max-width:500px;}
+.hdr-meta{flex-shrink:0;text-align:right;}
+.hdr-logo{width:44px;height:44px;margin:0 0 16px auto;}
+.hdr-dates{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;}
+.hdr-by{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);}
+.hdr-badge{display:inline-block;margin-top:12px;background:var(--lime-d);border:1px solid rgba(195,251,165,.3);border-radius:4px;padding:5px 12px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--lime);}
+
+/* Hero KPI strip */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.kpi{background:var(--bg);padding:22px 18px;}
+.kpi-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;}
+.kpi-val{font-family:'Clash Display',sans-serif;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1;margin-bottom:4px;}
+.kpi-sub{font-size:10px;color:var(--dim);}
+
+/* Section */
+.sec{margin-bottom:52px;}
+.sec-label{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--fire);margin-bottom:18px;}
+
+/* Card */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px;}
+.card-title{font-family:'Clash Display',sans-serif;font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.card-desc{font-size:11px;color:var(--dim);margin-bottom:18px;}
+.card-full{margin-bottom:20px;}
+
+/* Chart canvas wrap */
+.ch-wrap{position:relative;}
+.ch-wrap.h260{height:260px;}
+.ch-wrap.h300{height:300px;}
+.ch-wrap.h280{height:280px;}
+.ch-wrap.h240{height:240px;}
+
+/* Grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+/* Timeline phases */
+.phases{display:flex;gap:0;}
+.phase{flex:1;border-top:2px solid var(--border);padding:14px 16px 0;}
+.phase.act{border-top-color:var(--fire);}
+.phase.act .ph-label{color:var(--fire);}
+.ph-date{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);margin-bottom:5px;}
+.ph-label{font-size:13px;font-weight:600;color:var(--sub);margin-bottom:4px;}
+.ph-detail{font-size:11px;color:var(--dim);line-height:1.55;}
+
+/* Milestone strip */
+.milestones{display:flex;gap:0;margin-bottom:20px;}
+.ms-item{flex:1;border-top:2px solid var(--border);padding:12px 16px 0;}
+.ms-item.lit{border-top-color:var(--lime);}
+.ms-date{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);margin-bottom:5px;}
+.ms-val{font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;color:var(--lime);letter-spacing:-.02em;margin-bottom:2px;}
+.ms-note{font-size:10px;color:var(--sub);}
+
+/* Quote */
+.quote{background:linear-gradient(135deg,rgba(195,251,165,.06),rgba(255,61,0,.04));border:1px solid rgba(195,251,165,.15);border-radius:10px;padding:18px 22px;margin-bottom:12px;}
+.quote-text{font-style:italic;font-size:13px;color:var(--text);line-height:1.65;margin-bottom:7px;}
+.quote-attr{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--lime);letter-spacing:.12em;}
+
+/* Mini stat row */
+.mini-stat-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:0;}
+.mini-stat{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:16px 18px;flex:1;min-width:140px;}
+.mn{font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:3px;}
+.ml{font-size:10px;color:var(--dim);}
+
+/* Progress bars */
+.krow{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.kname{font-size:12px;color:var(--sub);width:210px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ktrack{flex:1;background:rgba(255,255,255,.04);border-radius:2px;height:6px;overflow:hidden;}
+.kfill{height:100%;border-radius:2px;background:rgba(195,251,165,.5);}
+.kfill.f{background:linear-gradient(90deg,var(--fire),var(--ember));}
+.kval{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--sub);text-align:right;min-width:90px;white-space:nowrap;}
+
+/* Note / insight */
+.note{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);line-height:1.65;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.insight{background:rgba(195,251,165,.05);border:1px solid rgba(195,251,165,.15);border-radius:8px;padding:14px 16px;margin-top:14px;font-size:12px;color:var(--sub);line-height:1.65;}
+.insight b{color:var(--lime);}
+
+/* UGC stats */
+.ugc-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.ugc-stat{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;}
+.ugc-val{font-family:'Clash Display',sans-serif;font-size:30px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px;}
+.ugc-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);}
+
+/* Funnel */
+.funnel{display:flex;flex-direction:column;gap:0;overflow:hidden;border-radius:12px;border:1px solid var(--border);}
+.funnel-row{display:flex;align-items:center;gap:16px;padding:18px 22px;border-bottom:1px solid var(--border);background:var(--panel);}
+.funnel-row:last-child{border-bottom:none;}
+.funnel-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden;}
+.funnel-bar{height:100%;border-radius:4px;}
+.funnel-num{font-family:'Clash Display',sans-serif;font-size:28px;font-weight:700;letter-spacing:-.02em;width:80px;flex-shrink:0;}
+.funnel-label{font-size:13px;color:var(--sub);width:220px;flex-shrink:0;}
+.funnel-pct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);width:80px;text-align:right;flex-shrink:0;}
+
+/* Game wrap */
+.game-wrap{background:linear-gradient(135deg,rgba(255,61,0,.08),rgba(195,251,165,.04));border:1px solid rgba(255,61,0,.2);border-radius:14px;padding:28px 32px 24px;margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom:none;}
+.game-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.gkv{font-family:'Clash Display',sans-serif;font-size:32px;font-weight:700;color:var(--fire);letter-spacing:-.02em;margin-bottom:4px;}
+.gkl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);}
+.game-chart-card{background:var(--panel);border:1px solid var(--border);border-top:none;border-bottom-left-radius:12px;border-bottom-right-radius:12px;padding:28px;border-radius:0 0 12px 12px;}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);padding:10px 14px;border-bottom:1px solid var(--border);text-align:left;background:rgba(255,255,255,.015);white-space:nowrap;}
+tbody td{padding:9px 14px;color:var(--sub);border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:rgba(255,255,255,.015);}
+.r{text-align:right;}
+.mn-f{font-family:'JetBrains Mono',monospace;}
+td.pos{font-family:'JetBrains Mono',monospace;color:var(--dim);width:32px;}
+.fogo-amt{font-family:'JetBrains Mono',monospace;color:var(--lime);font-weight:600;}
+.hl{color:var(--text);font-weight:600;}
+
+/* Prize banner */
+.prize-banner{background:linear-gradient(135deg,rgba(195,251,165,.07),rgba(255,61,0,.06));border:1px solid rgba(195,251,165,.2);border-radius:14px;padding:24px 32px;margin-bottom:24px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;align-items:center;}
+.pb-item{padding:0 18px;text-align:center;border-right:1px solid var(--border);}
+.pb-item:first-child{text-align:left;padding-left:0;}
+.pb-item:last-child{border-right:none;text-align:right;padding-right:0;}
+.pb-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;}
+.pb-val{font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.02em;}
+
+/* Footer */
+.footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.footer-l{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);}
+.footer-r{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);}
+
+/* Colours */
+.cv-fire{color:var(--fire);}
+.cv-lime{color:var(--lime);}
+.cv-amber{color:var(--ember);}
+.cv-blue{color:#60A5FA;}
+.cv-purple{color:#A78BFA;}
+.cv-teal{color:#2DD4BF;}
+
+/* ── Mobile ── */
+@media(max-width:900px){
+  .kpi-row{grid-template-columns:repeat(3,1fr);}
+  .ugc-stat-row{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:768px){
+  .page{padding:28px 18px 60px;}
+  .hdr-top{flex-direction:column-reverse;}
+  .hdr-meta{text-align:left;}
+  .hdr-logo{margin:0 0 12px 0;}
+  .hdr-title{font-size:30px;}
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .kpi-val{font-size:22px;}
+  .g2,.g3{grid-template-columns:1fr;}
+  .phases{flex-direction:column;}
+  .phase{border-top:none;border-left:2px solid var(--border);padding:10px 14px;}
+  .phase.act{border-left-color:var(--fire);}
+  .milestones{flex-direction:column;gap:8px;}
+  .ms-item{border-top:none;border-left:2px solid var(--border);padding:6px 14px;}
+  .ms-item.lit{border-left-color:var(--lime);}
+  .game-kpis{grid-template-columns:repeat(2,1fr);}
+  .prize-banner{grid-template-columns:1fr 1fr;row-gap:16px;}
+  .pb-item{border-right:none!important;text-align:left!important;padding:0!important;}
+  .funnel-label{width:auto;flex:1;}
+  .funnel-pct{display:none;}
+  .footer{flex-direction:column;align-items:flex-start;}
+  .ugc-stat-row{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:480px){
+  .hdr-title{font-size:24px;}
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .ch-wrap.h300,.ch-wrap.h280{height:220px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Password Gate ── -->
+<div id="gate">
+  <div class="gate-card">
+    <svg class="gate-logo" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path fill="#FF3D00" d="M512 0A512 512 0 0 0 0 512a512 512 0 0 0 512 512 512 512 0 0 0 512-512A512 512 0 0 0 512 0Z"/><path fill="#fff" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/></svg>
+    <div class="gate-eyebrow">Campaign Report</div>
+    <div class="gate-title">FOGO Trader Card</div>
+    <div class="gate-sub">Enter the access code to view the<br>full campaign results report.</div>
+    <input id="passInput" class="gate-input" type="password" placeholder="Access code" autocomplete="off" onkeydown="if(event.key==='Enter')unlock()">
+    <button class="gate-btn" onclick="unlock()">Unlock Report →</button>
+    <div id="gateErr" class="gate-err">Incorrect access code. Please try again.</div>
+  </div>
+</div>
+
+<!-- ── Dashboard ── -->
+<div id="dash">
+<div class="page">
+
+<!-- ──────────── HEADER ──────────── -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-eyebrow">Holo Hive · Korea Campaign Report · Jul 6, 2026</div>
+      <h1 class="hdr-title">FOGO Trader Card<br>Korea Activation</h1>
+      <p class="hdr-desc">Three-phase Korean market campaign activating the FOGO Mainnet ecosystem through trader identity, competitive gameplay, and Korean Telegram KOL distribution.</p>
+    </div>
+    <div class="hdr-meta">
+      <svg class="hdr-logo" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path fill="#FF3D00" d="M512 0A512 512 0 0 0 0 512a512 512 0 0 0 512 512 512 512 0 0 0 512-512A512 512 0 0 0 512 0Z"/><path fill="#fff" d="M692.844 236.366H469.997l-31.935 128.058h-96.23l-40.464 162.444a34.12 34.12 0 0 0 33 42.41h81.463L339.407 876.12l259.74-274.8c20.552-21.752 5.198-57.632-24.657-57.632H450.27l38.253-153.674h209.6l27.669-111.21a34.12 34.12 0 0 0-32.974-42.438z"/></svg>
+      <div class="hdr-dates">May 12 — Jun 30, 2026</div>
+      <div class="hdr-by">50 days · Korea Market · FOGO Mainnet</div>
+      <div class="hdr-badge">✓ Campaign Closed</div>
+    </div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-lbl">Korean Trader Cards</div><div class="kpi-val cv-lime">917</div><div class="kpi-sub">Minted by Korean traders</div></div>
+    <div class="kpi"><div class="kpi-lbl">On-Chain Volume</div><div class="kpi-val cv-fire">$7.0M</div><div class="kpi-sub">Korean traders · Valiant</div></div>
+    <div class="kpi"><div class="kpi-lbl">Transactions</div><div class="kpi-val cv-amber">747K</div><div class="kpi-sub">Korean on-chain activity</div></div>
+    <div class="kpi"><div class="kpi-lbl">Speed Game Taps</div><div class="kpi-val cv-blue">50.0M</div><div class="kpi-sub">771 Korean players</div></div>
+    <div class="kpi"><div class="kpi-lbl">Korea Content Views</div><div class="kpi-val cv-purple">36.8K</div><div class="kpi-sub">Korean KOL Telegram posts</div></div>
+    <div class="kpi"><div class="kpi-lbl">Korean KOL Reach</div><div class="kpi-val cv-teal">220K</div><div class="kpi-sub">Korean Telegram subscribers</div></div>
+  </div>
+</div>
+
+<!-- ──────────── CAMPAIGN TIMELINE ──────────── -->
+<div class="sec">
+  <div class="sec-label">Korea Campaign Overview</div>
+  <div class="phases">
+    <div class="phase act">
+      <div class="ph-date">May 12</div>
+      <div class="ph-label">Phase 1 — Korean Trader Card</div>
+      <div class="ph-detail">On-chain wallet profiles minted as trading cards by Korean crypto community. Volume leaderboard tracked via Fuul. 17 Korean KOLs activated across Telegram.</div>
+    </div>
+    <div class="phase act">
+      <div class="ph-date">Jun 1</div>
+      <div class="ph-label">Phase 2 — Speed Game</div>
+      <div class="ph-detail">10-second tap mini-game launched alongside card campaign. Went viral in Korean Telegram. 317K sessions, 771 Korean players, 50M taps. Drove major re-engagement wave.</div>
+    </div>
+    <div class="phase act">
+      <div class="ph-date">Jun 24</div>
+      <div class="ph-label">Phase 3 — Korea Final Push</div>
+      <div class="ph-detail">Korean KOL wave 2 final posts. Largest single-day card mint: 155 cards on Jun 28. Campaign closed Jun 30 with 550K $FOGO distributed to Korean community.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────── VALIANT VOLUME STORY ──────────── -->
+<div class="sec">
+  <div class="sec-label">Korea-Driven Valiant Volume</div>
+  <div class="milestones">
+    <div class="ms-item lit"><div class="ms-date">May 18 — Week 1</div><div class="ms-val">$4M</div><div class="ms-note">ATH daily volume hit</div></div>
+    <div class="ms-item lit"><div class="ms-date">May 25 — Week 2</div><div class="ms-val">$5M+</div><div class="ms-note">Sustained growth</div></div>
+    <div class="ms-item lit"><div class="ms-date">Jun 5 — Phase 2</div><div class="ms-val">$5.6M</div><div class="ms-note">Speed game boost</div></div>
+    <div class="ms-item lit"><div class="ms-date">Jun 30 — Close</div><div class="ms-val">$7.0M</div><div class="ms-note">Final total</div></div>
+  </div>
+  <div class="card card-full">
+    <div class="card-title">Cumulative On-Chain Volume Growth</div>
+    <div class="card-desc">$0 → $7M from Korean traders over campaign · Valiant DEX + perps</div>
+    <div class="ch-wrap h260"><canvas id="volChart"></canvas></div>
+  </div>
+  <div class="g2" style="margin-top:16px;">
+    <div class="quote"><div class="quote-text">"This campaign led to a new ATH for daily volume on Valiant."</div><div class="quote-attr">— Client, Week 1 Feedback</div></div>
+    <div class="quote"><div class="quote-text">"The volume activity has been amazing — hitting ATH twice now. Really happy with the results."</div><div class="quote-attr">— Client, Post-Campaign</div></div>
+  </div>
+</div>
+
+<!-- ──────────── TRADER CARD PERFORMANCE ──────────── -->
+<div class="sec">
+  <div class="sec-label">Korean Trader Card Performance</div>
+  <div class="card card-full">
+    <div class="card-title">Daily Card Mints</div>
+    <div class="card-desc">New Trader Cards minted by Korean community · May 12 – Jun 30</div>
+    <div class="ch-wrap h300"><canvas id="cardBar"></canvas></div>
+  </div>
+  <div class="card card-full" style="margin-top:20px;">
+    <div class="card-title">Cumulative Card Growth</div>
+    <div class="card-desc">Running total — campaign milestones annotated</div>
+    <div class="ch-wrap h260"><canvas id="cardArea"></canvas></div>
+  </div>
+</div>
+
+<!-- ──────────── CAMPAIGN FUNNEL ──────────── -->
+<div class="sec">
+  <div class="sec-label">Korea Campaign Funnel</div>
+  <div class="g2">
+    <div>
+      <div class="funnel">
+        <div class="funnel-row">
+          <div class="funnel-num cv-lime">917</div>
+          <div class="funnel-label">Korean Trader Cards Minted</div>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%;background:rgba(195,251,165,.5);"></div></div>
+          <div class="funnel-pct">100%</div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-num cv-amber">88</div>
+          <div class="funnel-label">Activated as Korean On-Chain Traders</div>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:9.6%;background:linear-gradient(90deg,var(--ember),var(--fire));"></div></div>
+          <div class="funnel-pct">9.6%</div>
+        </div>
+        <div class="funnel-row" style="border-bottom:none;">
+          <div class="funnel-num cv-fire">19</div>
+          <div class="funnel-label">Retained Week 1 Post-Campaign</div>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:2.1%;background:var(--fire);"></div></div>
+          <div class="funnel-pct">21.8% of traders</div>
+        </div>
+      </div>
+      <div class="insight" style="margin-top:14px;"><b>1 in 5 recruited Korean traders kept using FOGO chain the first week after incentives ended.</b> Korean traders show 7× higher retention vs raffle-only participants — evidence of genuine ecosystem adoption, not just incentive-chasing.</div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title">Korean Trader Engagement Depth</div>
+      <div class="card-desc">Volume profile of 88 activated Korean trading wallets</div>
+      <div class="mini-stat-row" style="margin-bottom:16px;margin-top:4px;">
+        <div class="mini-stat"><div class="mn cv-lime">$79.6K</div><div class="ml">avg volume per trading wallet</div></div>
+        <div class="mini-stat"><div class="mn cv-amber">$5.1K</div><div class="ml">median volume per trader</div></div>
+      </div>
+      <div class="krow"><div class="kname">$100K+ whales</div><div class="ktrack"><div class="kfill f" style="width:33%"></div></div><div class="kval">16 wallets</div></div>
+      <div class="krow"><div class="kname">$10K – $100K</div><div class="ktrack"><div class="kfill" style="width:50%"></div></div><div class="kval">24 wallets</div></div>
+      <div class="krow"><div class="kname">Under $10K</div><div class="ktrack"><div class="kfill" style="width:100%"></div></div><div class="kval">48 wallets</div></div>
+      <div class="note">16 Korean crypto whale wallets carry ~85% of total volume. p90 = $276K. Concentrated, high-value Korean cohort recruited through 88 activated wallets.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────── CONTENT PERFORMANCE ──────────── -->
+<div class="sec">
+  <div class="sec-label">Korea Content Performance</div>
+  <div class="ugc-stat-row">
+    <div class="ugc-stat"><div class="ugc-val cv-purple">36,811</div><div class="ugc-lbl">Korean KOL Telegram Views</div></div>
+    <div class="ugc-stat"><div class="ugc-val cv-fire">35,354</div><div class="ugc-lbl">X Content Impressions</div></div>
+    <div class="ugc-stat"><div class="ugc-val cv-lime">752</div><div class="ugc-lbl">UGC Posts Live on X</div></div>
+    <div class="ugc-stat"><div class="ugc-val cv-teal">78%</div><div class="ugc-lbl">Card Holders Shared on X</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">KOL Telegram Content</div>
+      <div class="card-desc">17 activated channels · 3 campaign waves · Korean market</div>
+      <div style="margin-top:6px;">
+        <div class="krow"><div class="kname">Phase 1 — Trader Card (May)</div><div class="ktrack"><div class="kfill" style="width:100%"></div></div><div class="kval">~21K views</div></div>
+        <div class="krow"><div class="kname">Phase 2 — Speed Game (Jun 1)</div><div class="ktrack"><div class="kfill" style="width:60%"></div></div><div class="kval">~12K views</div></div>
+        <div class="krow"><div class="kname">Phase 3 — Final Push (Jun 24)</div><div class="ktrack"><div class="kfill" style="width:18%"></div></div><div class="kval">~4K views</div></div>
+      </div>
+      <div class="note">Top post: 코인하는 해달 (SeaOtter) May 15 — 4,421 views · 14.7% CTR. EWL Jun 24 — 49.6% CTR, highest engagement rate of the campaign.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Korean UGC X Content</div>
+      <div class="card-desc">Korean community posts on X (Twitter) · 752 posts live · 35,354 total impressions</div>
+      <div style="margin-top:6px;">
+        <div class="krow"><div class="kname">Korean card holders sharing on X</div><div class="ktrack"><div class="kfill f" style="width:100%"></div></div><div class="kval">78% · 715 clicks</div></div>
+        <div class="krow"><div class="kname">UGC reward pool winners</div><div class="ktrack"><div class="kfill f" style="width:13%"></div></div><div class="kval">10 creators</div></div>
+      </div>
+      <div class="mini-stat-row" style="margin-top:14px;">
+        <div class="mini-stat" style="flex:1;"><div class="mn cv-lime">752</div><div class="ml">Total X posts live</div></div>
+        <div class="mini-stat" style="flex:1;"><div class="mn cv-fire">35,354</div><div class="ml">Total X impressions</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────── SPEED GAME ──────────── -->
+<div class="sec">
+  <div class="sec-label">Speed Run Mini Game</div>
+  <div class="game-wrap">
+    <div style="margin-bottom:22px;">
+      <div style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;color:var(--text);margin-bottom:3px;">⚡ FOGO Speed Run</div>
+      <div style="font-size:12px;color:var(--sub);">10-second tap game · Launched Jun 1 · Viral across Korean Telegram · Ran through Jun 30</div>
+    </div>
+    <div class="game-kpis">
+      <div><div class="gkv">771</div><div class="gkl">Korean Players</div></div>
+      <div><div class="gkv">317K</div><div class="gkl">Game Sessions</div></div>
+      <div><div class="gkv">50.04M</div><div class="gkl">Total Taps</div></div>
+      <div><div class="gkv">412</div><div class="gkl">Avg Sessions / Player</div></div>
+    </div>
+  </div>
+  <div class="game-chart-card">
+    <div class="card-title">Daily Sessions &amp; Player Activity</div>
+    <div class="card-desc">Bar = daily sessions · Line = unique daily players · Peak player days annotated</div>
+    <div class="ch-wrap h280"><canvas id="gameChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ──────────── ECOSYSTEM ENGAGEMENT ──────────── -->
+<div class="sec">
+  <div class="sec-label">Korean Ecosystem Engagement</div>
+  <div class="card card-full">
+    <div class="card-title">dApp Engagement — Korean On-Chain Users vs Click-Through</div>
+    <div class="card-desc">Of 88 Korean trading wallets activated: on-chain users per protocol · Campaign site dApp task clicks</div>
+    <div class="ch-wrap h280"><canvas id="dappChart"></canvas></div>
+    <div class="note">Valiant led all metrics: 55 unique Korean users, 458 on-chain transactions, 153 click-throughs. Pyron ranked 2nd for Korean clicks (103) despite fewer on-chain users — strong awareness-to-intent signal for a newer protocol. Ignition generated 2,871 transactions from 31 Korean users — the highest per-user transaction rate.</div>
+  </div>
+</div>
+
+<!-- ──────────── KOL TELEGRAM TABLE ──────────── -->
+<div class="sec">
+  <div class="sec-label">Korea KOL Distribution · Top Posts</div>
+  <div class="card card-full">
+    <div class="card-title">Top 14 Korean Telegram Posts by Views</div>
+    <div class="card-desc">17 Korean Telegram channels · May 12 – Jun 30 · Sorted by total views</div>
+    <div class="tbl-wrap" style="margin-top:16px;">
+      <table>
+        <thead><tr><th>#</th><th>Channel</th><th>Date</th><th>Phase</th><th class="r">Views</th><th class="r">Comments</th><th class="r">CTR</th><th>Link</th></tr></thead>
+        <tbody id="tgTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────── KOL ATTRIBUTION (TOP 5) ──────────── -->
+<div class="sec">
+  <div class="sec-label">Korea KOL Attribution — Top 5</div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Entries Driven — Top 5 Korean Channels</div>
+      <div class="card-desc">Cards minted via Korean KOL referral · total 917 cards</div>
+      <div class="ch-wrap h260" style="margin-top:8px;"><canvas id="kolEntryChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">On-Chain Volume Attributed — Top 5 Korean KOLs</div>
+      <div class="card-desc">On-chain volume from Korean KOL-referred wallets · total $7.0M</div>
+      <div class="ch-wrap h260" style="margin-top:8px;"><canvas id="kolVolChart"></canvas></div>
+    </div>
+  </div>
+  <div class="insight" style="margin-top:16px;"><b>EWL (Korean finance community): 28 entries → $1.99M volume (avg $71K per Korean entrant).</b> YapHope: 33 entries → $1.75M. Chukapikachu: 211 entries → $780K. Entry-volume and Korean audience type are different levers — EWL and YapHope activate high-volume Korean traders, while Chukapikachu and Coinboys drive broad Korean community participation.</div>
+</div>
+
+<!-- ──────────── WINNERS ──────────── -->
+<div class="sec">
+  <div class="sec-label">Korea Campaign Winners · 550,000 $FOGO Distributed</div>
+  <div class="prize-banner">
+    <div class="pb-item">
+      <div class="pb-lbl">Total Prize Pool</div>
+      <div class="pb-val cv-lime">550,000 $FOGO</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px;">Korean community · 230 winners across 4 pools</div>
+    </div>
+    <div class="pb-item">
+      <div class="pb-lbl">Leaderboard</div>
+      <div class="pb-val cv-fire">240K $FOGO</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px;">15 winners</div>
+    </div>
+    <div class="pb-item">
+      <div class="pb-lbl">Lucky Draw</div>
+      <div class="pb-val cv-blue">200K $FOGO</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px;">200 winners · 1K each</div>
+    </div>
+    <div class="pb-item">
+      <div class="pb-lbl">UGC + Speed Game</div>
+      <div class="pb-val cv-amber">110K $FOGO</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px;">10 UGC · 5 Speed Game</div>
+    </div>
+  </div>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="card">
+      <div class="card-title">Volume Leaderboard — Top 15</div>
+      <div class="card-desc">Ranked by total on-chain volume over campaign period</div>
+      <div class="tbl-wrap" style="margin-top:14px;">
+        <table><thead><tr><th>#</th><th>Handle</th><th class="r">$FOGO Prize</th></tr></thead><tbody id="lbTable"></tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">UGC Content Winners</div>
+      <div class="card-desc">10 selected creators · 6,000 $FOGO each</div>
+      <div class="tbl-wrap" style="margin-top:14px;">
+        <table><thead><tr><th>Handle</th><th>Content</th></tr></thead><tbody id="ugcTable"></tbody></table>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg,rgba(195,251,165,.05),rgba(255,107,0,.04));border-color:rgba(195,251,165,.2);">
+    <div class="card-title">Full Winner List</div>
+    <div class="card-desc">All 230 winners across Leaderboard, Lucky Draw, UGC, and Speed Game are published at:</div>
+    <div style="margin-top:10px;"><a href="https://fogotradingcards.com/winners" target="_blank" style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--lime);text-decoration:none;font-weight:600;">fogotradingcards.com/winners →</a></div>
+    <div class="note" style="border-top:none;padding-top:0;margin-top:8px;">Winners receive prize in $FOGO on FOGO Chain. To view balance, use <a href="https://portfolio.fogo.io" target="_blank" style="color:var(--lime);">portfolio.fogo.io</a> or Nightly Wallet.</div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <div class="footer-l">FOGO Trader Card Campaign · Korea Market · Season 1 · Report Date: Jul 6, 2026</div>
+  <div class="footer-r">Prepared by Holo Hive · Korea Division · fogotradingcards.com</div>
+</div>
+
+</div><!-- /page -->
+</div><!-- /dash -->
+
+<script>
+/* ── Gate ── */
+function unlock(){
+  if(document.getElementById('passInput').value==='FOGOCA2_2026'){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('dash').style.display='block';
+    buildCharts();
+  } else {
+    document.getElementById('gateErr').style.display='block';
+    document.getElementById('passInput').value='';
+  }
+}
+
+/* ── Colour palette ── */
+const FIRE='#FF3D00',EMBER='#FF6B00',LIME='#C3FBA5',BLUE='#60A5FA',PURPLE='#A78BFA',TEAL='#2DD4BF';
+const SUB='rgba(213,235,213,0.45)',BORDER='rgba(213,235,213,0.08)',GRID='rgba(213,235,213,0.06)';
+
+Chart.defaults.color=SUB;
+Chart.defaults.font.family="'JetBrains Mono', monospace";
+Chart.defaults.font.size=11;
+function gradFill(ctx,from,to){const g=ctx.chart.ctx.createLinearGradient(0,0,0,ctx.chart.height);g.addColorStop(0,from);g.addColorStop(1,to);return g;}
+
+/* ── Data ── */
+const cardLabels=["5/12","5/13","5/14","5/15","5/16","5/17","5/18","5/19","5/21","5/24","5/26","5/30","6/1","6/2","6/3","6/4","6/5","6/6","6/7","6/9","6/12","6/13","6/14","6/15","6/16","6/17","6/21","6/24","6/25","6/26","6/27","6/28","6/29","6/30"];
+const cardVals=[17,91,19,14,7,11,7,3,5,7,4,4,71,37,21,5,17,17,22,11,7,138,11,20,27,16,15,2,8,6,30,155,38,53];
+
+// Cumulative
+let cum=0;
+const cardCum=cardVals.map(v=>{cum+=v;return cum;});
+const cumLabels=cardLabels;
+const cumAnnotations={1:'launch',12:'speed game',21:'KOL wave',31:'final push'};
+
+const gameDates=["5/28","5/29","5/30","5/31","6/1","6/2","6/3","6/4","6/5","6/6","6/7","6/8","6/9","6/10","6/11","6/12","6/13","6/14","6/15","6/16","6/17","6/18","6/19","6/20","6/21","6/22","6/23","6/24","6/25","6/26","6/27","6/28","6/29","6/30"];
+const gameSess=[6,89,224,441,2500,4332,7072,8265,7564,9561,10831,11787,11695,11929,11761,11722,11693,12136,11953,7258,9932,11762,13023,13249,12930,12919,12356,12757,12324,12324,11921,12179,11712,4830];
+const gamePlayers=[3,7,12,9,115,99,74,75,67,71,73,51,61,44,45,55,123,58,69,71,55,45,43,44,53,41,41,52,58,65,86,195,87,91];
+
+const tgPosts=[
+["코인하는 해달 (SeaOtter)","May 15","Card",4421,13,"14.7%","seaotterbtc/18696"],
+["GemHive","Jun 3","Game",3500,11,"14.2%","GemHive/35064"],
+["We Crypto Together","May 22","Card",3090,34,"6.1%","WeCryptoTogether/63463"],
+["EWL","Jun 24","Ecosystem",2052,23,"49.6%","ewlreads/1237"],
+["코인소년 (Coinboys)","Jun 25","Final",1648,27,"10.5%","coinboys/19921"],
+["EWL","May 12","Card",1482,25,"35.8%","ewlreads/1124"],
+["코인소년 (Coinboys)","Jun 1","Game",1407,32,"8.9%","coinboys/19353"],
+["폐지줍는 츄카피 (Chukapikachu)","May 13","Card",1345,49,"12.3%","chukapikachu/9842"],
+["크립토하는 라쿤 (KoonCrypto)","Jun 1","Game",1232,16,"10.2%","Kooncrypto/2241"],
+["로우나의 코인방 (Rowna)","Jun 26","Final",1207,10,"8.6%","Rowna999/4326"],
+["폐지줍는 츄카피 (Chukapikachu)","May 13","Card",1198,2,"11.0%","chukapikachu/9843"],
+["로우나의 코인방 (Rowna)","Jun 2","Game",1178,15,"8.4%","Rowna999/4252"],
+["폐지줍는 츄카피 (Chukapikachu)","Jun 1","Game",1174,22,"10.7%","chukapikachu/10016"],
+["Cube","Jun 1","Game",1069,11,"11.6%","cubestudy1557/6456"]];
+
+// Top 5 KOL entries
+const kolETop5=[["Chukapikachu",211],["Coinboys",138],["WeCryptoTogether",91],["Others",73],["Rowna",68]];
+// Top 5 KOL volume
+const kolVTop5=[["EWL",1993929],["Others",1895535],["YapHope",1747159],["Chukapikachu",779571],["Cube",344436]];
+
+const lbWinners=[["@arr_kr",50000],["@Happyhelper7777",35000],["@ktylovejun2",25000],["@xCuongisreal",20000],["@GirinGirin25413",20000],["@jeongjo58799002",15000],["@0xjoasso",15000],["@RandyNguyenETH",15000],["@innerpeace300",15000],["@pangdungx",15000],["@ersan_01",5000],["@Dohonggiang291",5000],["@lee_jisun3722",5000],["@ovddak300",5000],["@xVeigo",5000]];
+const ugcWinners=[["@arr_kr","Ecosystem thread"],["@Happyhelper7777","Campaign content"],["@innerpeace300","Flames S2 video guide"],["@anthony_kim_k","Longform SVM research"],["@gajimoji","Multi-post contributor"],["@lmslms1004_","Campaign content"],["@ssgkgk1","Campaign content"],["@bluebird2758","FOGO Sessions UX review"],["@tronghaieth","Superluminal promo"],["@vanderrodd","Campaign content"]];
+
+/* ── Build all charts ── */
+function buildCharts(){
+
+  // 1. Volume Growth
+  new Chart(document.getElementById('volChart'),{
+    type:'line',
+    data:{
+      labels:['May 12','May 18','May 25','Jun 5','Jun 30'],
+      datasets:[{
+        data:[0,4.0,5.0,5.6,7.0],
+        borderColor:LIME,borderWidth:2.5,
+        pointBackgroundColor:LIME,pointRadius:[0,6,6,6,6],pointHoverRadius:8,
+        fill:true,
+        backgroundColor:ctx=>gradFill(ctx,'rgba(195,251,165,.25)','rgba(195,251,165,.02)'),
+        tension:0.4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>` $${c.raw}M on-chain volume`}}
+      },
+      scales:{
+        x:{grid:{color:GRID},ticks:{color:SUB}},
+        y:{grid:{color:GRID},ticks:{color:SUB,callback:v=>`$${v}M`},beginAtZero:true,max:8}
+      }
+    }
+  });
+
+  // 2. Daily Card Mints
+  new Chart(document.getElementById('cardBar'),{
+    type:'bar',
+    data:{
+      labels:cardLabels,
+      datasets:[{
+        data:cardVals,
+        backgroundColor:ctx=>{
+          const v=cardVals[ctx.dataIndex];
+          if(v>=100)return 'rgba(195,251,165,.9)';
+          if(v>=40)return 'rgba(195,251,165,.6)';
+          return 'rgba(195,251,165,.3)';
+        },
+        borderColor:'transparent',
+        borderRadius:3,
+        borderSkipped:false
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>` ${c.raw} cards`}}
+      },
+      scales:{
+        x:{grid:{color:'transparent'},ticks:{color:SUB,maxTicksLimit:12,maxRotation:0}},
+        y:{grid:{color:GRID},ticks:{color:SUB},beginAtZero:true}
+      }
+    }
+  });
+
+  // 3. Cumulative Cards
+  new Chart(document.getElementById('cardArea'),{
+    type:'line',
+    data:{
+      labels:cumLabels,
+      datasets:[{
+        data:cardCum,
+        borderColor:LIME,borderWidth:2.5,
+        fill:true,
+        backgroundColor:ctx=>gradFill(ctx,'rgba(195,251,165,.3)','rgba(195,251,165,.02)'),
+        pointRadius:cumLabels.map((_,i)=>cumAnnotations[i]?6:0),
+        pointBackgroundColor:EMBER,
+        tension:0.3
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>` ${c.raw} total cards`}}
+      },
+      scales:{
+        x:{grid:{color:'transparent'},ticks:{color:SUB,maxTicksLimit:10,maxRotation:0}},
+        y:{grid:{color:GRID},ticks:{color:SUB},beginAtZero:true}
+      }
+    }
+  });
+
+  // 4. Speed Game
+  new Chart(document.getElementById('gameChart'),{
+    type:'bar',
+    data:{
+      labels:gameDates,
+      datasets:[
+        {
+          label:'Sessions',
+          data:gameSess,
+          backgroundColor:ctx=>gameSess[ctx.dataIndex]>5000?'rgba(195,251,165,.55)':'rgba(195,251,165,.2)',
+          borderRadius:2,borderSkipped:false,yAxisID:'y'
+        },
+        {
+          label:'Players',
+          data:gamePlayers,
+          type:'line',
+          borderColor:EMBER,borderWidth:2.2,
+          pointRadius:gameDates.map((_,i)=>[4,16,31].includes(i)?5:0),
+          pointBackgroundColor:FIRE,
+          fill:false,tension:0.3,yAxisID:'y2'
+        }
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{
+          display:true,position:'top',align:'end',
+          labels:{color:SUB,boxWidth:10,padding:16,font:{size:10}}
+        }
+      },
+      scales:{
+        x:{grid:{color:'transparent'},ticks:{color:SUB,maxTicksLimit:12,maxRotation:0}},
+        y:{grid:{color:GRID},ticks:{color:SUB,callback:v=>v>=1000?v/1000+'k':v},position:'left'},
+        y2:{grid:{display:false},ticks:{color:SUB},position:'right',max:220}
+      }
+    }
+  });
+
+  // 5. Ecosystem Engagement — grouped bar
+  new Chart(document.getElementById('dappChart'),{
+    type:'bar',
+    data:{
+      labels:['Valiant (DEX · perps)','Ignition (staking)','Pyron','Brasa (staking)'],
+      datasets:[
+        {label:'On-Chain Users',data:[55,31,22,14],backgroundColor:'rgba(195,251,165,.65)',borderRadius:3},
+        {label:'dApp Task Clicks',data:[153,92,103,72],backgroundColor:'rgba(255,107,0,.6)',borderRadius:3},
+        {label:'On-Chain Txs',data:[458,2871,162,398],backgroundColor:'rgba(96,165,250,.25)',borderRadius:3,yAxisID:'y2'}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{
+          display:true,position:'top',align:'end',
+          labels:{color:SUB,boxWidth:10,padding:16,font:{size:10}}
+        }
+      },
+      scales:{
+        x:{grid:{color:'transparent'},ticks:{color:SUB}},
+        y:{grid:{color:GRID},ticks:{color:SUB},beginAtZero:true,title:{display:true,text:'Users / Clicks',color:SUB,font:{size:9}}},
+        y2:{grid:{display:false},ticks:{color:'rgba(96,165,250,.6)'},position:'right',beginAtZero:true,title:{display:true,text:'Transactions',color:'rgba(96,165,250,.6)',font:{size:9}}}
+      }
+    }
+  });
+
+  // 6. KOL Entries bar (horizontal)
+  new Chart(document.getElementById('kolEntryChart'),{
+    type:'bar',
+    data:{
+      labels:kolETop5.map(k=>k[0]),
+      datasets:[{
+        data:kolETop5.map(k=>k[1]),
+        backgroundColor:[LIME,'rgba(195,251,165,.7)','rgba(195,251,165,.5)','rgba(195,251,165,.35)','rgba(195,251,165,.25)'],
+        borderRadius:4,borderSkipped:false
+      }]
+    },
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>` ${c.raw} entries (${(c.raw/917*100).toFixed(1)}%)`}}
+      },
+      scales:{
+        x:{grid:{color:GRID},ticks:{color:SUB},beginAtZero:true},
+        y:{grid:{color:'transparent'},ticks:{color:SUB,font:{size:10}}}
+      }
+    }
+  });
+
+  // 7. KOL Volume bar (horizontal)
+  new Chart(document.getElementById('kolVolChart'),{
+    type:'bar',
+    data:{
+      labels:kolVTop5.map(k=>k[0]),
+      datasets:[{
+        data:kolVTop5.map(k=>k[1]),
+        backgroundColor:[FIRE,EMBER,'rgba(255,107,0,.6)','rgba(255,107,0,.4)','rgba(255,107,0,.25)'],
+        borderRadius:4,borderSkipped:false
+      }]
+    },
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>` $${c.raw>=1e6?(c.raw/1e6).toFixed(2)+'M':Math.round(c.raw/1000)+'K'}`}}
+      },
+      scales:{
+        x:{grid:{color:GRID},ticks:{color:SUB,callback:v=>v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+Math.round(v/1000)+'K'},beginAtZero:true},
+        y:{grid:{color:'transparent'},ticks:{color:SUB,font:{size:10}}}
+      }
+    }
+  });
+
+  // ── Tables ──
+  buildTgTable();
+  buildLbTable();
+  buildUgcTable();
+}
+
+function buildTgTable(){
+  const phaseColor={'Card':'rgba(195,251,165,.15)','Game':'rgba(255,107,0,.15)','Final':'rgba(255,61,0,.2)','Ecosystem':'rgba(96,165,250,.15)'};
+  const phaseText={'Card':'#C3FBA5','Game':'#FF6B00','Final':'#FF3D00','Ecosystem':'#60A5FA'};
+  document.getElementById('tgTable').innerHTML=tgPosts.map((r,i)=>
+    `<tr><td class="pos">${i+1}</td><td class="hl">${r[0]}</td><td class="mn-f" style="color:var(--dim)">${r[1]}</td>
+    <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:${phaseColor[r[2]]||'rgba(255,255,255,.06)'};color:${phaseText[r[2]]||'var(--sub)'}">${r[2]}</span></td>
+    <td class="r hl mn-f">${r[3].toLocaleString()}</td><td class="r mn-f">${r[4]}</td><td class="r mn-f">${r[5]}</td>
+    <td><a href="https://t.me/${r[6]}" target="_blank" rel="noopener" style="color:var(--lime);font-family:'JetBrains Mono',monospace;font-size:10px;text-decoration:none;">t.me/${r[6]}</a></td></tr>`
+  ).join('');
+}
+
+function buildLbTable(){
+  document.getElementById('lbTable').innerHTML=lbWinners.map(([h,a],i)=>
+    `<tr><td class="pos">${i+1}</td><td class="hl">${h}</td><td class="r fogo-amt">${a.toLocaleString()}</td></tr>`
+  ).join('');
+}
+
+function buildUgcTable(){
+  document.getElementById('ugcTable').innerHTML=ugcWinners.map(([h,d])=>
+    `<tr><td class="hl">${h}</td><td style="color:var(--dim)">${d}</td></tr>`
+  ).join('');
+}
+</script>
+</body>
+</html>
